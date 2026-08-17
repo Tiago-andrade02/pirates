@@ -1,0 +1,1820 @@
+{
+  "brands": [
+    {
+      "slug": "lattafa",
+      "name": "Lattafa",
+      "country": "Emiratos Árabes Unidos",
+      "description": "La marca árabe más icónica del mundo. Elegancia oriental con precios accesibles y calidad sorprendente."
+    },
+    {
+      "slug": "afnan",
+      "name": "Afnan",
+      "country": "Emiratos Árabes Unidos",
+      "description": "Composiciones modernas y sofisticadas, reconocidas por sus grandes proyecciones y duración."
+    },
+    {
+      "slug": "armaf",
+      "name": "Armaf",
+      "country": "Emiratos Árabes Unidos",
+      "description": "Fragrancias intensas y versátiles que dominan el mercado de las inspiraciones premium."
+    },
+    {
+      "slug": "maison-alhambra",
+      "name": "Maison Alhambra",
+      "country": "España",
+      "description": "Alta perfumería con acentos árabes. Frascos de lujo y aromas que enamoran."
+    },
+    {
+      "slug": "fragrance-world",
+      "name": "Fragrance World",
+      "country": "Emiratos Árabes Unidos",
+      "description": "Una de las casas con mayor proyección internacional, famosa por sus réplicas casi exactas."
+    },
+    {
+      "slug": "xerjoff",
+      "name": "Xerjoff",
+      "country": "Italia",
+      "description": "Alta perfumería de nicho italiana. Composiciones de lujo con ingredientes raros y acabados impecables."
+    },
+    {
+      "slug": "jean-paul-gaultier",
+      "name": "Jean Paul Gaultier",
+      "country": "Francia",
+      "description": "Las inspiraciones más icónicas del diseñador francés, recreadas en versiones árabes de alta calidad."
+    },
+    {
+      "slug": "french-avenue",
+      "name": "French Avenue",
+      "country": "Emiratos Árabes Unidos",
+      "description": "Récipes modernas con acabados de lujo. Famosos por sus inspiraciones cálidas y cremosas de altísima calidad."
+    }
+  ],
+  "perfumes": [
+    {
+      "slug": "asad",
+      "name": "Asad Negro",
+      "brand": "lattafa",
+      "gender": "hombre",
+      "aroma": [
+        "amaderado",
+        "ambar",
+        "dulce"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": 39990,
+      "price_100": 46990,
+      "stock": 24,
+      "description": "Asad es una fragancia intensa, especiada y masculina, diseñada para transmitir presencia y seguridad. La pimienta negra, la piña y el tabaco crean una salida potente, mientras que el café, el iris y el pachulí aportan profundidad. Su fondo de vainilla, ámbar y maderas secas deja una estela cálida, oscura y seductora.",
+      "notes_top": [
+        "Pimienta negra",
+        "Piña",
+        "Tabaco"
+      ],
+      "notes_heart": [
+        "Café",
+        "Iris",
+        "Pachulí"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Vainilla",
+        "Maderas secas",
+        "Benjuí",
+        "Ládano"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 4,
+      "inspired_by": "Dior Sauvage Elixir",
+      "image": "asad",
+      "is_new": false,
+      "best_seller": true,
+      "rating": 4.8,
+      "review_count": 412,
+      "top_rank": 3
+    },
+    {
+      "slug": "asad-bourbon",
+      "name": "Asad Bourbon",
+      "brand": "lattafa",
+      "gender": "unisex",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar",
+        "amaderado"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas"
+      ],
+      "price_30": 32990,
+      "price_50": 39990,
+      "price_100": 46990,
+      "stock": 20,
+      "description": "Asad Bourbon combina especias, cacao y vainilla Bourbon en una fragancia cálida, elegante y envolvente. La pimienta rosa, lavanda y ciruela Mirabelle aportan una salida aromática y ligeramente frutal, mientras que el cacao y la nuez moscada aportan profundidad. El fondo de vetiver, ámbar y vainilla Bourbon deja una estela sofisticada y adictiva.",
+      "notes_top": [
+        "Pimienta rosa",
+        "Lavanda",
+        "Ciruela Mirabelle"
+      ],
+      "notes_heart": [
+        "Cacao",
+        "Davana",
+        "Nuez moscada"
+      ],
+      "notes_base": [
+        "Vetiver",
+        "Vainilla Bourbon",
+        "Ámbar"
+      ],
+      "duration": 5,
+      "projection": 4,
+      "sweetness": 5,
+      "inspired_by": "Original de Lattafa",
+      "image": "asad-bourbon",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "asad-elixir",
+      "name": "Asad Elixir",
+      "brand": "lattafa",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "ambar",
+        "amaderado"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "fiesta"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 46990,
+      "stock": 15,
+      "description": "Asad Elixir es una versión más profunda e intensa del ADN de Asad. La apertura combina pimienta rosa, azafrán y pomelo, seguida de un corazón de tabaco, cedro y vainilla. Su fondo de pachulí, olíbano, cashmeran y ámbar seco crea una fragancia oscura, sofisticada y de gran presencia.",
+      "notes_top": [
+        "Pimienta rosa",
+        "Azafrán",
+        "Pomelo"
+      ],
+      "notes_heart": [
+        "Tabaco",
+        "Cedro",
+        "Vainilla"
+      ],
+      "notes_base": [
+        "Pachulí",
+        "Olíbano",
+        "Cashmeran",
+        "Ámbar seco"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 4,
+      "inspired_by": "Dior Sauvage Elixir",
+      "image": "asad-elixir",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "khamrah",
+      "name": "Khamrah",
+      "brand": "lattafa",
+      "gender": "unisex",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas",
+        "fiesta"
+      ],
+      "price_30": 44990,
+      "price_50": null,
+      "price_100": null,
+      "stock": 31,
+      "description": "Khamrah es una fragancia dulce, especiada y adictiva, perfecta para quienes buscan un aroma cálido y llamativo. La combinación de canela, nuez moscada, dátiles y praliné crea un perfil gourmand irresistible, mientras que la vainilla, haba tonka y ámbar aportan un fondo profundo y envolvente. Ideal para destacar en noches frías y ocasiones especiales.",
+      "notes_top": [
+        "Bergamota",
+        "Canela",
+        "Nuez moscada"
+      ],
+      "notes_heart": [
+        "Acorde de dátiles",
+        "Lirio de los valles",
+        "Praliné",
+        "Nardo"
+      ],
+      "notes_base": [
+        "Haba tonka tostada",
+        "Benjuí",
+        "Mirra",
+        "Akigalawood",
+        "Vainilla",
+        "Maderas ambaradas"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 5,
+      "inspired_by": "Kilian Angels' Share",
+      "image": "khamrah",
+      "is_new": false,
+      "best_seller": true,
+      "rating": 4.9,
+      "review_count": 520,
+      "top_rank": 4
+    },
+    {
+      "slug": "khamrah-qahwa",
+      "name": "Khamrah Qahwa",
+      "brand": "lattafa",
+      "gender": "unisex",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar",
+        "amaderado"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas",
+        "fiesta"
+      ],
+      "price_30": 44990,
+      "price_50": null,
+      "price_100": 68990,
+      "stock": 0,
+      "description": "Khamrah Qahwa lleva el ADN dulce y especiado de Khamrah a un terreno más profundo y adictivo gracias al café. La canela, el cardamomo y el jengibre abren la fragancia con intensidad, mientras que el praliné y las frutas confitadas aportan dulzura. En el fondo, café, vainilla y haba tonka crean un aroma cálido, cremoso y envolvente.",
+      "notes_top": [
+        "Jengibre",
+        "Canela",
+        "Cardamomo"
+      ],
+      "notes_heart": [
+        "Praliné",
+        "Frutas confitadas",
+        "Flores blancas"
+      ],
+      "notes_base": [
+        "Café Arábica",
+        "Haba tonka",
+        "Almizcle",
+        "Benjuí",
+        "Vainilla"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 5,
+      "inspired_by": "Original de Lattafa",
+      "image": "khamrah-qahwa",
+      "is_new": false,
+      "best_seller": true,
+      "rating": 4.8,
+      "review_count": 196,
+      "top_rank": 6
+    },
+    {
+      "slug": "yara",
+      "name": "Yara Rosa",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "floral"
+      ],
+      "season": [
+        "primavera",
+        "verano",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "citas"
+      ],
+      "price_30": 32990,
+      "price_50": 39990,
+      "price_100": 46990,
+      "stock": 38,
+      "description": "Yara es una fragancia femenina dulce, suave y femenina, con un perfil floral, tropical y cremoso. La mandarina, heliotropo y orquídea aportan una salida delicada, mientras que las notas tropicales y gourmand crean un corazón dulce. Su fondo de vainilla, sándalo y almizcle aporta calidez y suavidad.",
+      "notes_top": [
+        "Mandarina",
+        "Heliotropo",
+        "Orquídea"
+      ],
+      "notes_heart": [
+        "Notas tropicales",
+        "Acorde gourmand"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Sándalo",
+        "Almizcle"
+      ],
+      "duration": 4,
+      "projection": 3,
+      "sweetness": 5,
+      "inspired_by": "Original de Lattafa",
+      "image": "yara",
+      "is_new": false,
+      "best_seller": true,
+      "rating": 4.7,
+      "review_count": 381,
+      "top_rank": 2
+    },
+    {
+      "slug": "yara-moi",
+      "name": "Yara Moi",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "floral",
+        "vainilla"
+      ],
+      "season": [
+        "primavera",
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "diario",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": 39990,
+      "price_100": 46990,
+      "stock": 18,
+      "description": "Yara Moi es una fragancia femenina, elegante y sensual que combina frutas jugosas con un corazón floral cremoso. La pera, pimienta rosa y grosella negra aportan una salida fresca y dulce, mientras que la tuberosa, jazmín y almendra crean un corazón sofisticado. La vainilla, cashmeran y pachulí completan el aroma con un fondo cálido y envolvente.",
+      "notes_top": [
+        "Pera",
+        "Pimienta rosa",
+        "Grosella negra"
+      ],
+      "notes_heart": [
+        "Tuberosa",
+        "Jazmín",
+        "Almendra"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Cashmeran",
+        "Pachulí"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 5,
+      "inspired_by": "Original de Lattafa",
+      "image": "yara-moi",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "yara-elixir",
+      "name": "Yara Elixir",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "citas",
+        "noche"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 46990,
+      "stock": 14,
+      "description": "La versión intensa y cálida de Yara. Más floral, más cremosa, con un extra de ámbar y vainilla para noches elegantes.",
+      "notes_top": [
+        "Orquídea",
+        "Bergamota",
+        "Pera"
+      ],
+      "notes_heart": [
+        "Vainilla",
+        "Jazmín",
+        "Heliotropo"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Sándalo",
+        "Almizcle"
+      ],
+      "duration": 4,
+      "projection": 3,
+      "sweetness": 4,
+      "inspired_by": "Composición original",
+      "image": "yara-elixir",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "yara-candy",
+      "name": "Yara Candy",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "vainilla"
+      ],
+      "season": [
+        "primavera",
+        "verano",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": 39990,
+      "price_100": null,
+      "stock": 22,
+      "description": "Dulce de algodón, frutillas y crema en un frasco. Un gourmand alegre y juvenil para las amantes de los aromas candy.",
+      "notes_top": [
+        "Algodón de azúcar",
+        "Frutilla",
+        "Frambuesa"
+      ],
+      "notes_heart": [
+        "Vainilla",
+        "Caramelo",
+        "Heliotropo"
+      ],
+      "notes_base": [
+        "Almizcle",
+        "Ámbar",
+        "Sándalo"
+      ],
+      "duration": 3,
+      "projection": 3,
+      "sweetness": 5,
+      "inspired_by": "Composición original",
+      "image": "yara-candy",
+      "is_new": true,
+      "best_seller": true,
+      "rating": 4.5,
+      "review_count": 0,
+      "top_rank": 10
+    },
+    {
+      "slug": "eclaire",
+      "name": "Eclaire",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "citas",
+        "noche",
+        "diario"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 71990,
+      "stock": 20,
+      "description": "Eclaire es una fragancia extremadamente dulce, cremosa y gourmand, perfecta para quienes aman los aromas que recuerdan a un postre. El caramelo, la leche y el azúcar crean una apertura deliciosa, mientras que la miel y las flores blancas aportan suavidad. La vainilla, el praliné y el almizcle dejan un fondo cremoso, cálido y adictivo.",
+      "notes_top": [
+        "Caramelo",
+        "Leche",
+        "Azúcar"
+      ],
+      "notes_heart": [
+        "Flores blancas",
+        "Miel"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Praliné",
+        "Almizcle"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 5,
+      "inspired_by": "Bianco Latte – Giardini di Toscana",
+      "image": "eclaire",
+      "is_new": true,
+      "best_seller": true,
+      "rating": 4.5,
+      "review_count": 0,
+      "top_rank": 8
+    },
+    {
+      "slug": "eclaire-pistacho",
+      "name": "Eclaire Pistacho",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "vainilla"
+      ],
+      "season": [
+        "primavera",
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "citas",
+        "diario"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 79990,
+      "stock": 16,
+      "description": "Eclaire Pistache es una fragancia gourmand, cremosa y adictiva construida alrededor del pistacho. La crema de pistacho y el pistacho tostado crean una apertura dulce y ligeramente tostada, mientras que la crema pastelera, el coco y el cacao aportan una sensación de postre. El fondo de vainilla, leche y almizcle deja una estela suave, cremosa y reconfortante.",
+      "notes_top": [
+        "Crema de pistacho",
+        "Pistacho tostado"
+      ],
+      "notes_heart": [
+        "Crema pastelera",
+        "Coco",
+        "Cacao"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Leche",
+        "Almizcle"
+      ],
+      "duration": 4,
+      "projection": 3,
+      "sweetness": 5,
+      "inspired_by": "Original de Lattafa",
+      "image": "eclaire-pistacho",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "fakhar-black",
+      "name": "Fakhar Black",
+      "brand": "lattafa",
+      "gender": "hombre",
+      "aroma": [
+        "fresco",
+        "amaderado",
+        "ambar"
+      ],
+      "season": [
+        "primavera",
+        "verano",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "oficina",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 67990,
+      "stock": 22,
+      "description": "Fakhar Black es una fragancia masculina fresca, aromática y moderna. La manzana, bergamota y jengibre generan una apertura fresca y energética, seguida de un corazón de lavanda, salvia, enebro y geranio. El fondo de haba tonka, cedro, amberwood y vetiver aporta profundidad sin perder su carácter limpio y versátil.",
+      "notes_top": [
+        "Manzana",
+        "Bergamota",
+        "Jengibre"
+      ],
+      "notes_heart": [
+        "Lavanda",
+        "Salvia",
+        "Bayas de enebro",
+        "Geranio"
+      ],
+      "notes_base": [
+        "Haba tonka",
+        "Cedro",
+        "Amberwood",
+        "Vetiver"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 3,
+      "inspired_by": "Yves Saint Laurent Y Eau de Parfum",
+      "image": "fakhar-black",
+      "is_new": false,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 298
+    },
+    {
+      "slug": "fakhar-rose",
+      "name": "Fakhar Rose",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "floral",
+        "fresco"
+      ],
+      "season": [
+        "primavera",
+        "verano"
+      ],
+      "occasion": [
+        "diario",
+        "oficina",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 67990,
+      "stock": 14,
+      "description": "Fakhar Rose es una fragancia femenina luminosa, floral y sensual, con una apertura frutal que evoluciona hacia un corazón intenso de flores blancas. La rosa, el jazmín y la tuberosa aportan elegancia, mientras que la vainilla, el sándalo y el almizcle blanco dejan un fondo cálido, suave y femenino.",
+      "notes_top": [
+        "Aldehídos",
+        "Lirio",
+        "Granada",
+        "Notas frutales",
+        "Flor de azahar"
+      ],
+      "notes_heart": [
+        "Rosa",
+        "Jazmín",
+        "Gardenia",
+        "Tuberosa"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Sándalo",
+        "Ambroxan",
+        "Almizcle blanco",
+        "Vetiver",
+        "Pachulí"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 4,
+      "inspired_by": "Givenchy L'Interdit",
+      "image": "fakhar-rose",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "honor-and-glory",
+      "name": "Honor & Glory",
+      "brand": "lattafa",
+      "gender": "unisex",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas",
+        "fiesta"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 58490,
+      "stock": 12,
+      "description": "Honor & Glory es una fragancia dulce, especiada y gourmand, con una combinación irresistible de piña cremosa y crème brûlée. Las especias aportan profundidad, mientras que la vainilla, el sándalo y el cashmeran crean un fondo cálido, cremoso y envolvente. Una fragancia llamativa y adictiva, perfecta para quienes disfrutan los aromas dulces y diferentes.",
+      "notes_top": [
+        "Piña brûlée",
+        "Crème brûlée"
+      ],
+      "notes_heart": [
+        "Canela",
+        "Benjuí",
+        "Cúrcuma",
+        "Pimienta negra"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Cashmeran",
+        "Sándalo",
+        "Musgo"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 5,
+      "inspired_by": "Perfil gourmand oriental",
+      "image": "honor-and-glory",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "9pm",
+      "name": "9PM",
+      "brand": "afnan",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "ambar",
+        "fresco"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas",
+        "fiesta"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 58990,
+      "stock": 0,
+      "description": "9PM es la fragancia de fiesta por excelencia. Su explosión frutal y dulce, con canela y vainilla, crea una proyección brutal que se siente en toda la pista. Diseñado para no pasar desapercibido.",
+      "notes_top": [
+        "Manzana",
+        "Canela",
+        "Bergamota"
+      ],
+      "notes_heart": [
+        "Lavanda",
+        "Salvia",
+        "Geranio"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Ámbar",
+        "Tonka",
+        "Cuero"
+      ],
+      "duration": 4,
+      "projection": 5,
+      "sweetness": 5,
+      "inspired_by": "Jean Paul Gaultier Ultra Male",
+      "image": "9pm",
+      "is_new": false,
+      "best_seller": true,
+      "rating": 4.8,
+      "review_count": 465,
+      "top_rank": 1,
+      "stock_30": 0,
+      "stock_50": 0,
+      "stock_100": 0
+    },
+    {
+      "slug": "9pm-night-out",
+      "name": "9PM Night Out",
+      "brand": "afnan",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "amaderado",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "fiesta",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 70990,
+      "stock": 12,
+      "description": "9PM Night Out lleva la noche a otro nivel: frutas oscuras, ámbar y vainilla con un toque especiado y licoroso. Intenso, seductor y hecho para salir.",
+      "notes_top": [
+        "Manzana",
+        "Canela",
+        "Bergamota"
+      ],
+      "notes_heart": [
+        "Lavanda",
+        "Ámbar",
+        "Especias"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Tabaco",
+        "Almizcle"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 4,
+      "inspired_by": "Afnan 9PM Night Out",
+      "image": "9pm-night-out",
+      "is_new": true,
+      "best_seller": true,
+      "rating": 4.6,
+      "review_count": 0,
+      "top_rank": 7
+    },
+    {
+      "slug": "club-de-nuit-intense",
+      "name": "Club de Nuit Intense Man",
+      "brand": "armaf",
+      "gender": "hombre",
+      "aroma": [
+        "citrico",
+        "fresco",
+        "amaderado"
+      ],
+      "season": [
+        "primavera",
+        "verano",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "oficina",
+        "citas"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 70990,
+      "stock": 27,
+      "description": "Club de Nuit Intense Man es una fragancia masculina elegante, potente y sofisticada. Su apertura combina limón, bergamota, manzana, piña y grosella negra para crear un impacto fresco y frutal. El corazón floral se mezcla con abedul, aportando un característico toque ahumado y masculino. Su fondo de almizcle, ámbar gris, pachulí y vainilla completa una fragancia versátil y de gran presencia.",
+      "notes_top": [
+        "Limón",
+        "Manzana",
+        "Bergamota",
+        "Grosella negra",
+        "Piña"
+      ],
+      "notes_heart": [
+        "Rosa",
+        "Abedul",
+        "Jazmín"
+      ],
+      "notes_base": [
+        "Almizcle",
+        "Ámbar gris",
+        "Pachulí",
+        "Vainilla"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 3,
+      "inspired_by": "Creed Aventus",
+      "image": "club-de-nuit-intense",
+      "is_new": false,
+      "best_seller": true,
+      "rating": 4.7,
+      "review_count": 602,
+      "top_rank": 5
+    },
+    {
+      "slug": "hawas-ice",
+      "name": "Hawas Ice",
+      "brand": "french-avenue",
+      "gender": "hombre",
+      "aroma": [
+        "fresco",
+        "citrico",
+        "dulce"
+      ],
+      "season": [
+        "primavera",
+        "verano"
+      ],
+      "occasion": [
+        "diario",
+        "fiesta",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 58990,
+      "stock": 18,
+      "description": "La versión helada del mítico Hawas. Acuático, cítrico y con un toque mentolado que lo hace perfecto para el calor. Frescura extrema con buena proyección.",
+      "notes_top": [
+        "Bergamota",
+        "Pomelo",
+        "Menta"
+      ],
+      "notes_heart": [
+        "Manzana",
+        "Salvia",
+        "Notas acuáticas"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Almizcle",
+        "Cedro"
+      ],
+      "duration": 3,
+      "projection": 4,
+      "sweetness": 2,
+      "inspired_by": "Rasasi Hawas",
+      "image": "hawas-ice",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "hawas-tropical",
+      "name": "Hawas Tropical",
+      "brand": "french-avenue",
+      "gender": "unisex",
+      "aroma": [
+        "fresco",
+        "citrico",
+        "dulce"
+      ],
+      "season": [
+        "primavera",
+        "verano"
+      ],
+      "occasion": [
+        "diario",
+        "fiesta"
+      ],
+      "price_30": 32990,
+      "price_50": null,
+      "price_100": 58990,
+      "stock": 14,
+      "description": "La versión tropical de Hawas. Frutas exóticas, notas acuáticas y un fondo dulce y almizclado. Frescura veraniega con personalidad.",
+      "notes_top": [
+        "Maracuyá",
+        "Piña",
+        "Pomelo"
+      ],
+      "notes_heart": [
+        "Notas acuáticas",
+        "Jazmín",
+        "Coco"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Almizcle",
+        "Cedro"
+      ],
+      "duration": 3,
+      "projection": 4,
+      "sweetness": 3,
+      "inspired_by": "Rasasi Hawas",
+      "image": "hawas-tropical",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "odyssey-mandarin-sky",
+      "name": "Odyssey Mandarin Sky",
+      "brand": "armaf",
+      "gender": "hombre",
+      "aroma": [
+        "citrico",
+        "dulce",
+        "fresco"
+      ],
+      "season": [
+        "primavera",
+        "verano",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "fiesta",
+        "citas"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 80990,
+      "stock": 16,
+      "description": "Odyssey Mandarin Sky es una fragancia masculina dulce, cítrica y adictiva. La mandarina y la naranja aportan una salida jugosa y vibrante, acompañadas por azafrán y salvia. En el corazón aparece un delicioso acorde de caramelo y haba tonka, mientras que el ambroxan, cedro y vetiver aportan profundidad. Una fragancia moderna, juvenil y perfecta para destacar.",
+      "notes_top": [
+        "Mandarina",
+        "Naranja",
+        "Azafrán",
+        "Salvia"
+      ],
+      "notes_heart": [
+        "Caramelo",
+        "Haba tonka",
+        "Tagetes"
+      ],
+      "notes_base": [
+        "Ambroxan",
+        "Cedro",
+        "Vetiver"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 5,
+      "inspired_by": "Jean Paul Gaultier Scandal Pour Homme",
+      "image": "odyssey-mandarin-sky",
+      "is_new": true,
+      "best_seller": true,
+      "rating": 4.5,
+      "review_count": 0,
+      "top_rank": 9
+    },
+    {
+      "slug": "noble-blush",
+      "name": "Noble Blush",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "floral"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "citas",
+        "diario"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 58490,
+      "stock": 15,
+      "description": "Noble Blush es una fragancia femenina dulce, cremosa y delicada. La rosa con leche crea una apertura suave y romántica, mientras que la almendra y el merengue aportan un carácter gourmand y aterciopelado. Su fondo de vainilla, sándalo y almizcle completa el aroma con una sensación cálida, limpia y envolvente.",
+      "notes_top": [
+        "Leche de rosa"
+      ],
+      "notes_heart": [
+        "Almendra",
+        "Merengue"
+      ],
+      "notes_base": [
+        "Sándalo",
+        "Vainilla",
+        "Almizcle"
+      ],
+      "duration": 3,
+      "projection": 3,
+      "sweetness": 4,
+      "inspired_by": "Original de Lattafa",
+      "image": "noble-blush",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "haya",
+      "name": "Haya",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "floral",
+        "vainilla"
+      ],
+      "season": [
+        "primavera",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "citas"
+      ],
+      "price_30": 32990,
+      "price_50": null,
+      "price_100": null,
+      "stock": 13,
+      "description": "Un oriental floral y especiado con un corazón ambarino. Cálido, femenino y con carácter.",
+      "notes_top": [
+        "Azafrán",
+        "Bergamota",
+        "Pimienta rosa"
+      ],
+      "notes_heart": [
+        "Flor de azahar",
+        "Rosa",
+        "Canela"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Pachulí",
+        "Almizcle"
+      ],
+      "duration": 4,
+      "projection": 3,
+      "sweetness": 3,
+      "inspired_by": "Composición original",
+      "image": "haya",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "sublime",
+      "name": "Sublime",
+      "brand": "lattafa",
+      "gender": "mujer",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "floral"
+      ],
+      "season": [
+        "primavera",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "citas"
+      ],
+      "price_30": 32990,
+      "price_50": null,
+      "price_100": 58490,
+      "stock": 17,
+      "description": "Sublime es una fragancia frutal, dulce y vibrante que combina manzana y ciruela con un corazón floral luminoso. Su fondo de almizcle, musgo y oud caramelizado aporta profundidad y una sensación cálida y envolvente. Una opción moderna y llamativa para quienes buscan un perfume frutal con personalidad.",
+      "notes_top": [
+        "Ciruela",
+        "Manzana"
+      ],
+      "notes_heart": [
+        "Magnolia",
+        "Jazmín",
+        "Nota solar",
+        "Ládano",
+        "Ámbar"
+      ],
+      "notes_base": [
+        "Almizcle",
+        "Musgo",
+        "Oud caramelizado"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 4,
+      "inspired_by": "Kayali Eden Sparkling Lychee 39",
+      "image": "sublime",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "yum-yum",
+      "name": "Yum Yum",
+      "brand": "armaf",
+      "gender": "mujer",
+      "aroma": "dulce",
+      "season": "primavera",
+      "occasion": "diario",
+      "price_30": null,
+      "price_50": 39990,
+      "price_100": null,
+      "stock": 15,
+      "description": "Yum Yum es una fragancia dulce, frutal y divertida, con un perfil juvenil y femenino. Las bayas silvestres, cereza, naranja y bergamota crean una salida jugosa y vibrante. En el corazón aparecen rosa, flores blancas y vainilla, mientras que las notas atalcadas, almizcle y ámbar aportan un fondo suave y envolvente. Ideal para quienes buscan un perfume alegre, dulce y fácil de disfrutar.",
+      "notes_top": [
+        "Bayas silvestres",
+        "Cereza",
+        "Naranja",
+        "Bergamota"
+      ],
+      "notes_heart": [
+        "Rosa",
+        "Flores blancas",
+        "Vainilla"
+      ],
+      "notes_base": [
+        "Notas atalcadas",
+        "Almizcle",
+        "Ámbar"
+      ],
+      "duration": 3,
+      "projection": 3,
+      "sweetness": 4,
+      "inspired_by": "Original de Armaf",
+      "image": "yum-yum",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "jpg-le-beau",
+      "name": "Le Beau Le Parfum Intenso",
+      "brand": "jean-paul-gaultier",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "amaderado"
+      ],
+      "season": [
+        "primavera",
+        "verano",
+        "otono"
+      ],
+      "occasion": [
+        "citas",
+        "noche",
+        "fiesta"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 70990,
+      "stock": 14,
+      "description": "Le Beau es una fragancia fresca, tropical y seductora, perfecta para quienes buscan un aroma masculino que combine frescura con un toque dulce. La bergamota aporta una salida vibrante, mientras que la madera de coco y el haba tonka crean un fondo exótico, cremoso y adictivo. Una fragancia ideal para destacar en días cálidos y transmitir una sensación de frescura y sensualidad.",
+      "notes_top": [
+        "Bergamota"
+      ],
+      "notes_heart": [
+        "Madera de coco"
+      ],
+      "notes_base": [
+        "Haba tonka"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 4,
+      "inspired_by": "Original de Jean Paul Gaultier",
+      "image": "jpg-le-beau",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "jpg-le-male-elixir",
+      "name": "Le Male Elixir",
+      "brand": "jean-paul-gaultier",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas",
+        "fiesta"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 70990,
+      "stock": 14,
+      "description": "Le Male Elixir es una fragancia intensa, dulce y sensual, diseñada para llamar la atención. La lavanda y la menta aportan una apertura fresca y aromática, mientras que la vainilla y el benjuí le dan un corazón cálido y envolvente. En el fondo, la miel, el haba tonka y el tabaco crean una estela profunda, dulce y adictiva. Una opción perfecta para noches en las que querés dejar huella.",
+      "notes_top": [
+        "Lavanda",
+        "Menta"
+      ],
+      "notes_heart": [
+        "Vainilla",
+        "Benjuí"
+      ],
+      "notes_base": [
+        "Miel",
+        "Haba tonka",
+        "Tabaco"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 5,
+      "inspired_by": "Original de Jean Paul Gaultier",
+      "image": "jpg-le-male-elixir",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.7,
+      "review_count": 0
+    },
+    {
+      "slug": "jpg-le-male-le-parfum",
+      "name": "Le Male Le Parfum",
+      "brand": "jean-paul-gaultier",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "amaderado"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "oficina",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 70990,
+      "stock": 14,
+      "description": "Le Male Le Parfum es una fragancia elegante, intensa y sofisticada que lleva el clásico ADN de Le Male hacia un perfil más oscuro y refinado. El cardamomo aporta un toque especiado en la salida, mientras que la lavanda y el iris aportan elegancia y suavidad. Su fondo de vainilla crea una estela cálida, cremosa y adictiva. Perfecto para ocasiones especiales y noches donde buscás un aroma elegante y masculino.",
+      "notes_top": [
+        "Cardamomo"
+      ],
+      "notes_heart": [
+        "Lavanda",
+        "Iris"
+      ],
+      "notes_base": [
+        "Vainilla"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 4,
+      "inspired_by": "Original de Jean Paul Gaultier",
+      "image": "jpg-le-male-le-parfum",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "invictus",
+      "name": "Invictus",
+      "brand": "maison-alhambra",
+      "gender": "hombre",
+      "aroma": [
+        "fresco",
+        "citrico",
+        "amaderado"
+      ],
+      "season": [
+        "primavera",
+        "verano"
+      ],
+      "occasion": [
+        "diario",
+        "fiesta",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 38400,
+      "stock": 16,
+      "description": "Pomelo, notas acuáticas y una base ambarina. Fresco, deportivo y versátil, inspirado en el famoso Invictus.",
+      "notes_top": [
+        "Pomelo",
+        "Mandarina",
+        "Sal marina"
+      ],
+      "notes_heart": [
+        "Laurier",
+        "Jazmín",
+        "Notas acuáticas"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Madera",
+        "Almizcle"
+      ],
+      "duration": 3,
+      "projection": 4,
+      "sweetness": 2,
+      "inspired_by": "Paco Rabanne Invictus",
+      "image": "invictus",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "phantom",
+      "name": "Phantom",
+      "brand": "fragrance-world",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "amaderado",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 38400,
+      "stock": 15,
+      "description": "Lavanda, limón y un fondo de cacao y almizcle. Moderno, juvenil y con una salida explosiva.",
+      "notes_top": [
+        "Limón",
+        "Bergamota",
+        "Lavanda"
+      ],
+      "notes_heart": [
+        "Lavanda",
+        "Salvia",
+        "Pachulí"
+      ],
+      "notes_base": [
+        "Cacao",
+        "Almizcle",
+        "Madera"
+      ],
+      "duration": 3,
+      "projection": 3,
+      "sweetness": 3,
+      "inspired_by": "Paco Rabanne Phantom",
+      "image": "phantom",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "kingdom",
+      "name": "Kingdom",
+      "brand": "lattafa",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "ambar"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas"
+      ],
+      "price_30": 32990,
+      "price_50": null,
+      "price_100": 78990,
+      "stock": 15,
+      "description": "The Kingdom For Men es una fragancia masculina intensa, aromática y dulce, con una combinación moderna de lavanda, menta y salvia. El corazón mezcla vainilla, tabaco y flor de azahar, creando un perfil cálido y seductor. En el fondo, la haba tonka, el benjuí y el ládano aportan profundidad y una estela elegante y envolvente.",
+      "notes_top": [
+        "Lavanda",
+        "Menta",
+        "Salvia"
+      ],
+      "notes_heart": [
+        "Vainilla",
+        "Tabaco",
+        "Flor de azahar"
+      ],
+      "notes_base": [
+        "Haba tonka",
+        "Benjuí",
+        "Ládano"
+      ],
+      "duration": 4,
+      "projection": 4,
+      "sweetness": 5,
+      "inspired_by": "Jean Paul Gaultier Le Male Elixir",
+      "image": "kingdom",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.5,
+      "review_count": 0
+    },
+    {
+      "slug": "erba-pura",
+      "name": "Erba Pura",
+      "brand": "xerjoff",
+      "gender": "unisex",
+      "aroma": [
+        "citrico",
+        "fresco",
+        "dulce"
+      ],
+      "season": [
+        "primavera",
+        "verano",
+        "otono"
+      ],
+      "occasion": [
+        "diario",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": 54990,
+      "price_100": 80990,
+      "stock": 14,
+      "description": "Erba Pura es una fragancia vibrante, frutal y envolvente que combina cítricos mediterráneos con un corazón de frutas y un fondo cálido de ámbar, vainilla y almizcle blanco. Su aroma es moderno, dulce y llamativo, ideal para quienes buscan una fragancia que deje huella.",
+      "notes_top": [
+        "Limón",
+        "Bergamota de Calabria",
+        "Naranja siciliana"
+      ],
+      "notes_heart": [
+        "Frutas mediterráneas"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Vainilla de Madagascar",
+        "Almizcle blanco"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 5,
+      "inspired_by": "Original de Xerjoff",
+      "image": "erba-pura",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.6,
+      "review_count": 0
+    },
+    {
+      "slug": "opera",
+      "name": "Opera",
+      "brand": "xerjoff",
+      "gender": "unisex",
+      "aroma": [
+        "ambar",
+        "dulce",
+        "amaderado"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas",
+        "fiesta"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 76990,
+      "stock": 10,
+      "description": "Opera es una fragancia sofisticada, elegante y de gran presencia. Una combinación de frutas y rosa turca da paso a un corazón cálido de cuero, ámbar y ylang-ylang, sobre una base profunda de vainilla, pachulí, maderas y almizcle. Una fragancia pensada para destacar con elegancia.",
+      "notes_top": [
+        "Frutas",
+        "Rosa turca"
+      ],
+      "notes_heart": [
+        "Cuero",
+        "Ámbar",
+        "Nuez moscada",
+        "Ylang-ylang"
+      ],
+      "notes_base": [
+        "Cedro de Virginia",
+        "Vetiver de Haití",
+        "Almizcle",
+        "Pachulí",
+        "Vainilla"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 4,
+      "inspired_by": "Original de Xerjoff",
+      "image": "opera",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.7,
+      "review_count": 0
+    },
+    {
+      "slug": "erba-gold",
+      "name": "Erba Gold",
+      "brand": "xerjoff",
+      "gender": "unisex",
+      "aroma": [
+        "citrico",
+        "fresco",
+        "dulce"
+      ],
+      "season": [
+        "primavera",
+        "verano"
+      ],
+      "occasion": [
+        "diario",
+        "citas",
+        "fiesta"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 76990,
+      "stock": 12,
+      "description": "Erba Gold es una fragancia fresca, frutal y luminosa con un marcado carácter tropical. Su salida cítrica se combina con manzana verde, melón y pera, mientras que las especias aportan profundidad y el fondo de vainilla, ámbar, almizcle y maderas deja una estela cálida y envolvente.",
+      "notes_top": [
+        "Limón de Amalfi",
+        "Naranja brasileña",
+        "Bergamota de Calabria",
+        "Jengibre"
+      ],
+      "notes_heart": [
+        "Clavo",
+        "Manzana verde",
+        "Cardamomo de Guatemala",
+        "Melón",
+        "Pera"
+      ],
+      "notes_base": [
+        "Ámbar",
+        "Vainilla de Madagascar",
+        "Almizcle",
+        "Notas amaderadas"
+      ],
+      "duration": 5,
+      "projection": 4,
+      "sweetness": 5,
+      "inspired_by": "Original de Xerjoff",
+      "image": "erba-gold",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.7,
+      "review_count": 0
+    },
+    {
+      "slug": "oud-of-glory",
+      "name": "Oud of Glory",
+      "brand": "lattafa",
+      "gender": "unisex",
+      "aroma": [
+        "amaderado",
+        "ambar",
+        "dulce"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "fiesta"
+      ],
+      "price_30": 39990,
+      "price_50": null,
+      "price_100": 58490,
+      "stock": 13,
+      "description": "Oud For Glory es una fragancia intensa, oscura y sofisticada, construida alrededor del oud y las especias. El azafrán, la nuez moscada y la lavanda generan una salida potente y especiada, mientras que el oud y el pachulí dominan el corazón. Su fondo de oud, pachulí y almizcle crea una estela profunda, elegante y de gran presencia.",
+      "notes_top": [
+        "Azafrán",
+        "Nuez moscada",
+        "Lavanda"
+      ],
+      "notes_heart": [
+        "Oud",
+        "Pachulí"
+      ],
+      "notes_base": [
+        "Oud",
+        "Pachulí",
+        "Almizcle"
+      ],
+      "duration": 5,
+      "projection": 5,
+      "sweetness": 2,
+      "inspired_by": "Initio Oud for Greatness",
+      "image": "oud-of-glory",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.7,
+      "review_count": 0
+    },
+    {
+      "slug": "jpg-le-male-divine",
+      "name": "Le Male Divine",
+      "brand": "jean-paul-gaultier",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "ambar",
+        "amaderado"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": null,
+      "price_100": 70990,
+      "stock": 10,
+      "description": "Le Male Divine lleva el ADN de la casa francesa hacia un perfil dulce, ambarado y adictivo. La manzana verde y el cardamomo abren con una chispa fresca y especiada, la lavanda y el iris aportan la firma elegante de Le Male, mientras que la vainilla, el ámbar y el cedro construyen un fondo cálido, cremoso y envolvente. Una fragancia moderna y seductora, perfecta para noches especiales.",
+      "notes_top": [
+        "Manzana verde",
+        "Cardamomo",
+        "Lavanda"
+      ],
+      "notes_heart": [
+        "Iris",
+        "Flor de naranjo"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Ámbar",
+        "Cedro"
+      ],
+      "duration": 5,
+      "projection": 4,
+      "sweetness": 4,
+      "inspired_by": "Original de Jean Paul Gaultier",
+      "image": "jpg-le-male-divine",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.6,
+      "review_count": 0
+    },
+    {
+      "slug": "liquid-brun",
+      "name": "Liquid Brun",
+      "brand": "french-avenue",
+      "gender": "hombre",
+      "aroma": [
+        "dulce",
+        "vainilla",
+        "amaderado"
+      ],
+      "season": [
+        "otono",
+        "invierno"
+      ],
+      "occasion": [
+        "noche",
+        "citas"
+      ],
+      "price_30": null,
+      "price_50": 54990,
+      "price_100": 84990,
+      "stock": 12,
+      "description": "Liquid Brun es una fragancia cálida, cremosa y adictiva, inspirada en la elegancia de la alta perfumería francesa. La bergamota y la naranja ofrecen una salida luminosa y jugosa, mientras que la canela y la flor de naranjo aportan un corazón especiado y envolvente. Su fondo de vainilla, ámbar, caramelo y haba tonka deja una estela dulce, sofisticada y de larga duración. Ideal para el invierno y las noches frías.",
+      "notes_top": [
+        "Bergamota",
+        "Naranja",
+        "Lavanda"
+      ],
+      "notes_heart": [
+        "Canela",
+        "Flor de naranjo",
+        "Violeta"
+      ],
+      "notes_base": [
+        "Vainilla",
+        "Ámbar",
+        "Caramelo",
+        "Haba tonka"
+      ],
+      "duration": 5,
+      "projection": 4,
+      "sweetness": 5,
+      "inspired_by": "PDM Althair",
+      "image": "liquid-brun",
+      "is_new": true,
+      "best_seller": false,
+      "rating": 4.6,
+      "review_count": 0
+    }
+  ]
+}

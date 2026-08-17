@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# base de datos local (SQLite)
+/data/
+/data/*.db
+/data/*.db-*
+
+# debug logs
+/logs/
+*.log
+devpid.txt
