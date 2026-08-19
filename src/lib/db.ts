@@ -283,17 +283,23 @@ async function seedIfEmpty(database: Client) {
   }
 }
 
-let initialized = false;
+let initPromise: Promise<void> | null = null;
+
+async function ensureInit(db: Client) {
+  if (!initPromise) {
+    initPromise = (async () => {
+      await createSchema(db);
+      await migrate(db);
+      await seedIfEmpty(db);
+      await reconcileStock(db);
+      await backfillPackageDefaults(db);
+    })();
+  }
+  return initPromise;
+}
 
 export async function getDb(): Promise<Client> {
   const db = getDbSync();
-  if (!initialized) {
-    initialized = true;
-    await createSchema(db);
-    await migrate(db);
-    await seedIfEmpty(db);
-    await reconcileStock(db);
-    await backfillPackageDefaults(db);
-  }
+  await ensureInit(db);
   return db;
 }
