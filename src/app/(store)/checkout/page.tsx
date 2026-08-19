@@ -104,7 +104,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <h1 className="font-serif text-4xl text-white">Checkout</h1>
+      <h1 className="font-serif text-3xl text-white sm:text-4xl">Checkout</h1>
       <p className="mt-2 text-sm text-muted">
         {count} {count === 1 ? "producto" : "productos"} · Pago seguro con Mercado Pago
       </p>

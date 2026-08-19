@@ -191,33 +191,35 @@ export default async function CatalogPage(props: CatalogPageProps) {
   const hasFilters = activeCount > 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <header className="flex flex-wrap items-end justify-between gap-6">
+      <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10 lg:px-8">
+      <header className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-faint">
             Catálogo
           </p>
-          <h1 className="mt-2 font-serif text-4xl text-white sm:text-5xl">
+          <h1 className="mt-2 font-serif text-3xl text-white sm:text-4xl lg:text-5xl">
             Perfumes
           </h1>
-          <p className="mt-3 text-sm text-muted">
+          <p className="mt-2 text-sm text-muted sm:mt-3">
             {perfumes.length}{" "}
             {perfumes.length === 1 ? "perfume encontrado" : "perfumes encontrados"}
           </p>
         </div>
-        <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
-          <div className="w-full min-w-[240px] sm:w-72">
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="w-full sm:w-72">
             <SearchBox />
           </div>
-          {hasFilters && (
-            <Link
-              href="/perfumes"
-              className="h-10 rounded-full border border-line px-5 text-sm text-muted transition-colors hover:border-white/40 hover:text-white"
-            >
-              Limpiar filtros ({activeCount})
-            </Link>
-          )}
-          <SortSelect baseParams={baseParams} current={filters.order ?? ""} />
+          <div className="flex items-center gap-3">
+            {hasFilters && (
+              <Link
+                href="/perfumes"
+                className="h-10 shrink-0 rounded-full border border-line px-5 text-sm text-muted transition-colors hover:border-white/40 hover:text-white"
+              >
+                Limpiar filtros ({activeCount})
+              </Link>
+            )}
+            <SortSelect baseParams={baseParams} current={filters.order ?? ""} />
+          </div>
         </div>
       </header>
 
@@ -237,7 +239,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
         </div>
       )}
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[240px_1fr]">
+        <div className="mt-6 grid gap-6 sm:mt-10 sm:gap-10 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">
           <FilterGroup
             label="Marca"
@@ -321,7 +323,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-6">
               {perfumes.map((perfume) => (
                 <ProductCard key={perfume.id} perfume={perfume} />
               ))}

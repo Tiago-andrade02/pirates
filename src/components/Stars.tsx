@@ -18,7 +18,7 @@ export function Stars({ value, className }: { value: number; className?: string 
 export function Meter({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex items-center justify-between gap-4">
-      <span className="w-28 shrink-0 text-sm text-muted">{label}</span>
+      <span className="w-20 shrink-0 text-xs text-muted sm:w-28 sm:text-sm">{label}</span>
       <div className="flex flex-1 gap-1">
         {Array.from({ length: 5 }).map((_, i) => (
           <span

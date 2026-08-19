@@ -96,7 +96,7 @@ export function NavSearch() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96">
+        <div className="absolute right-0 top-full z-50 mt-2 w-[min(calc(100vw-2rem),24rem)] sm:w-96">
           <form
             onSubmit={onSubmit}
             className="relative overflow-hidden rounded-2xl border border-line bg-background/95 shadow-2xl shadow-black/50 backdrop-blur-md"

@@ -60,14 +60,14 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-4">
-        <p className="text-xs uppercase tracking-widest text-faint">
+      <div className="flex flex-1 flex-col gap-1 p-3 sm:gap-1.5 sm:p-4">
+        <p className="text-[10px] uppercase tracking-widest text-faint sm:text-xs">
           {perfume.brand.name}
         </p>
-        <h3 className="font-serif text-lg leading-tight text-white">
+        <h3 className="font-serif text-sm leading-tight text-white sm:text-lg">
           {perfume.name}
         </h3>
-        <div className="flex items-center gap-1.5 text-xs text-muted">
+        <div className="flex items-center gap-1.5 text-[10px] text-muted sm:text-xs">
           <span className="flex items-center gap-0.5 text-white">
             <StarIcon className="h-3.5 w-3.5 text-white" />
             <span className="font-semibold">{perfume.rating.toFixed(1)}</span>
@@ -83,26 +83,26 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
                 <div>
                   {price50 !== null ? (
                     <>
-                      <p className="text-[11px] text-faint">Desde 50 ml</p>
-                      <p className="text-base font-semibold text-white">
+                      <p className="text-[10px] text-faint sm:text-[11px]">Desde 50 ml</p>
+                      <p className="text-sm font-semibold text-white sm:text-base">
                         {formatARS(price50)}
                       </p>
                     </>
                   ) : price !== null ? (
-                    <p className="text-base font-semibold text-white">
+                    <p className="text-sm font-semibold text-white sm:text-base">
                       {formatARS(price)}
                     </p>
                   ) : (
-                    <p className="text-sm text-faint">Consultar</p>
+                    <p className="text-xs text-faint sm:text-sm">Consultar</p>
                   )}
                 </div>
               </div>
               {displayPrice !== null && (
-                <div className="mt-1.5 space-y-0.5">
-                  <p className="text-xs font-medium text-emerald-400">
+                <div className="mt-1 space-y-0.5 sm:mt-1.5">
+                  <p className="text-[10px] font-medium text-emerald-400 sm:text-xs">
                     Transferencia: {transferPrice !== null ? formatARS(transferPrice) : "—"}
                   </p>
-                  <p className="text-xs text-muted">
+                  <p className="hidden text-[10px] text-muted sm:block sm:text-xs">
                     3 cuotas sin interés de{" "}
                     {installment !== null ? formatARS(installment) : "—"}
                   </p>

@@ -35,7 +35,7 @@ export function CartView() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <h1 className="font-serif text-4xl text-white">Carrito</h1>
+      <h1 className="font-serif text-3xl text-white sm:text-4xl">Carrito</h1>
       <p className="mt-2 text-sm text-muted">
         {count} {count === 1 ? "producto" : "productos"}
       </p>
@@ -58,15 +58,15 @@ export function CartView() {
                 />
               </Link>
 
-              <div className="flex flex-1 flex-col">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
                     <p className="text-xs uppercase tracking-widest text-faint">
                       {item.brandName}
                     </p>
                     <Link
                       href={`/perfumes/${item.slug}`}
-                      className="mt-0.5 font-serif text-lg text-white transition-colors hover:text-neutral-300"
+                      className="mt-0.5 block truncate font-serif text-base text-white transition-colors hover:text-neutral-300 sm:text-lg"
                     >
                       {item.name}
                     </Link>
@@ -77,7 +77,7 @@ export function CartView() {
                   <button
                     type="button"
                     onClick={() => removeItem(item.slug, item.size)}
-                    className="rounded-full px-3 py-1.5 text-xs text-faint transition-colors hover:bg-surface-3 hover:text-white"
+                    className="shrink-0 rounded-full px-2 py-1.5 text-xs text-faint transition-colors hover:bg-surface-3 hover:text-white sm:px-3"
                   >
                     Quitar
                   </button>

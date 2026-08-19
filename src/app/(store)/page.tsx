@@ -109,7 +109,7 @@ export default async function HomePage() {
           src="/logo.png"
           alt=""
           aria-hidden
-          className="hero-fade pointer-events-none absolute left-[62%] top-1/2 w-[85%] max-w-6xl -translate-x-1/2 -translate-y-1/2 select-none object-contain opacity-[0.04] grayscale"
+          className="hero-fade pointer-events-none absolute left-1/2 top-1/2 w-[85%] max-w-6xl -translate-x-1/2 -translate-y-1/2 select-none object-contain opacity-[0.04] grayscale sm:left-[62%]"
         />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
@@ -162,7 +162,7 @@ export default async function HomePage() {
             </div>
 
             <p
-              className="hero-fade-up mt-10 text-[11px] uppercase tracking-[0.25em] text-faint"
+              className="hero-fade-up mt-10 hidden text-center text-[11px] uppercase tracking-[0.25em] text-faint sm:block"
               style={{ animationDelay: "480ms" }}
             >
               Alta calidad · Envío gratis desde $80.000 · Atención personalizada
@@ -199,7 +199,7 @@ export default async function HomePage() {
           title="Más vendidos"
           href="/perfumes?destacados=1"
         />
-        <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {bestSellers.map((perfume) => (
             <ProductCard key={perfume.id} perfume={perfume} />
           ))}
@@ -214,7 +214,7 @@ export default async function HomePage() {
             title="Novedades"
             href="/perfumes?novedad=1"
           />
-          <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+          <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
             {newArrivals.map((perfume) => (
               <ProductCard key={perfume.id} perfume={perfume} />
             ))}
