@@ -3,8 +3,8 @@ import { createProduct } from "../../actions";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { PageHeader } from "@/components/admin/ui";
 
-export default function NuevoProductoPage() {
-  const brands = getBrands();
+export default async function NuevoProductoPage() {
+  const brands = await getBrands();
 
   return (
     <div className="space-y-6">

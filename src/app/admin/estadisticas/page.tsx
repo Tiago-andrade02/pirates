@@ -9,13 +9,13 @@ import {
 import { formatARS, formatNumber } from "@/lib/format";
 import { PageHeader, StatCard } from "@/components/admin/ui";
 
-export default function AdminEstadisticasPage() {
-  const stats = getDashboardStats();
-  const monthly = getMonthlyRevenue(6);
-  const topSellers = getTopSellers(8);
-  const topBrands = getTopBrands(8);
-  const byProvince = getSalesByProvince();
-  const repeat = getRepeatCustomers();
+export default async function AdminEstadisticasPage() {
+  const stats = await getDashboardStats();
+  const monthly = await getMonthlyRevenue(6);
+  const topSellers = await getTopSellers(8);
+  const topBrands = await getTopBrands(8);
+  const byProvince = await getSalesByProvince();
+  const repeat = await getRepeatCustomers();
 
   const maxRevenue = Math.max(...monthly.map((m) => m.revenue), 1);
   const maxBrand = Math.max(...topBrands.map((b) => b.revenue), 1);

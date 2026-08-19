@@ -11,8 +11,8 @@ export default async function AdminStockPage({
   searchParams: Promise<{ ok?: string }>;
 }) {
   const { ok } = await searchParams;
-  const products = getAdminProducts();
-  const lowStock = getLowStockItems();
+  const products = await getAdminProducts();
+  const lowStock = await getLowStockItems();
   const outOfStock = products.filter((p) => p.stock <= 0);
 
   return (

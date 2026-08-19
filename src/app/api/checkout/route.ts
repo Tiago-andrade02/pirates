@@ -102,10 +102,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const db = getDb();
-  const perfumeBySlug = db.prepare(
-    "SELECT id, name, price_30, price_50, price_100, stock FROM perfumes WHERE slug = ?"
-  );
+  const db = await getDb();
 
   const orderItems: { perfumeId: number; name: string; size: number; price: number; qty: number }[] = [];
   let subtotal = 0;
@@ -115,7 +112,11 @@ export async function POST(request: Request) {
     if (!Number.isFinite(qty) || qty <= 0) {
       return Response.json({ error: "Cantidad inválida" }, { status: 400 });
     }
-    const perfume = perfumeBySlug.get(item.slug) as PerfumeRow | undefined;
+    const perfumeResult = await db.execute({
+      sql: "SELECT id, name, price_30, price_50, price_100, stock FROM perfumes WHERE slug = ?",
+      args: [item.slug],
+    });
+    const perfume = perfumeResult.rows[0] as unknown as PerfumeRow | undefined;
     if (!perfume) {
       return Response.json({ error: `Producto no encontrado: ${item.slug}` }, { status: 400 });
     }
@@ -142,7 +143,7 @@ export async function POST(request: Request) {
   let shippingCost = 0;
   let productType = "CP";
   try {
-    const pkg = computePackageForItems(body.items);
+    const pkg = await computePackageForItems(body.items);
     const provider = getShippingProvider();
     const options = await provider.quote({
       postalCodeDestination: postalCode,
@@ -207,23 +208,20 @@ export async function POST(request: Request) {
   }
 
   const now = new Date().toISOString();
-  const customerResult = db
-    .prepare(
-      "INSERT INTO customers (name, email, phone, province, created_at) VALUES (?, ?, ?, ?, ?)"
-    )
-    .run(name, body.customer?.email?.trim() || null, phone, province, now);
+  const customerResult = await db.execute({
+    sql: "INSERT INTO customers (name, email, phone, province, created_at) VALUES (?, ?, ?, ?, ?)",
+    args: [name, body.customer?.email?.trim() || null, phone, province, now],
+  });
   const customerId = Number(customerResult.lastInsertRowid);
 
-  const orderResult = db
-    .prepare(
-      `INSERT INTO orders (
+  const orderResult = await db.execute({
+    sql: `INSERT INTO orders (
          code, customer_id, status, subtotal, shipping, total, payment_method,
          province, postal_code, locality, address_street, address_number,
          address_floor, address_apartment, delivery_type, agency_code,
          shipping_service, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
       code,
       customerId,
       "pendiente",
@@ -241,15 +239,16 @@ export async function POST(request: Request) {
       deliveryType,
       (shipping.agencyCode ?? "").trim(),
       productType,
-      now
-    );
+      now,
+    ],
+  });
   const orderId = Number(orderResult.lastInsertRowid);
 
-  const insertItem = db.prepare(
-    "INSERT INTO order_items (order_id, perfume_id, name, size, price, qty) VALUES (?, ?, ?, ?, ?, ?)"
-  );
   for (const item of orderItems) {
-    insertItem.run(orderId, item.perfumeId, item.name, item.size, item.price, item.qty);
+    await db.execute({
+      sql: "INSERT INTO order_items (order_id, perfume_id, name, size, price, qty) VALUES (?, ?, ?, ?, ?, ?)",
+      args: [orderId, item.perfumeId, item.name, item.size, item.price, item.qty],
+    });
   }
 
   return Response.json({

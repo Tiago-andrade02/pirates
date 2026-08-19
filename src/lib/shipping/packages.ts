@@ -13,12 +13,8 @@ export interface PackageInfo extends PackageDimensions {
 // El peso y las dimensiones del paquete se calculan SIEMPRE en el backend a
 // partir de los datos reales del producto (perfumes.package_*). El cliente
 // nunca puede enviar peso ni dimensiones.
-export function computePackageForItems(items: LineItem[]): PackageInfo {
-  const db = getDb();
-  const stmt = db.prepare(
-    `SELECT package_weight, package_length, package_width, package_height
-     FROM perfumes WHERE slug = ?`
-  );
+export async function computePackageForItems(items: LineItem[]): Promise<PackageInfo> {
+  const db = await getDb();
 
   let weightGrams = 0;
   let lengthCm = 0;
@@ -31,7 +27,12 @@ export function computePackageForItems(items: LineItem[]): PackageInfo {
     if (!Number.isFinite(qty) || qty <= 0) {
       throw new Error(`Cantidad inválida para ${item.slug}`);
     }
-    const row = stmt.get(item.slug) as
+    const result = await db.execute({
+      sql: `SELECT package_weight, package_length, package_width, package_height
+       FROM perfumes WHERE slug = ?`,
+      args: [item.slug],
+    });
+    const row = result.rows[0] as unknown as
       | {
           package_weight: number;
           package_length: number;

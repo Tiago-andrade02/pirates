@@ -52,7 +52,7 @@ export async function generateMetadata(
   props: PerfumePageProps
 ): Promise<Metadata> {
   const { slug } = await props.params;
-  const perfume = getPerfumeBySlug(slug);
+  const perfume = await getPerfumeBySlug(slug);
   if (!perfume) return {};
   return {
     title: `${perfume.name} — ${perfume.brand.name}`,
@@ -70,10 +70,10 @@ function Badge({ label }: { label: string }) {
 
 export default async function PerfumePage(props: PerfumePageProps) {
   const { slug } = await props.params;
-  const perfume = getPerfumeBySlug(slug);
+  const perfume = await getPerfumeBySlug(slug);
   if (!perfume) notFound();
 
-  const related = getRelated(perfume, 4);
+  const related = await getRelated(perfume, 4);
   const basePrice = perfume.prices["50"] ?? perfume.prices["100"] ?? perfume.prices["30"];
 
   return (

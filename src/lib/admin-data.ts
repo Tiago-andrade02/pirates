@@ -111,7 +111,8 @@ function mapOrder(row: OrderRow, items: OrderItemRow[]): Order {
   };
 }
 
-export function getOrders(status: OrderStatus | null, q: string | null): Order[] {
+export async function getOrders(status: OrderStatus | null, q: string | null): Promise<Order[]> {
+  const db = await getDb();
   const where: string[] = [];
   const params: (string | number)[] = [];
   if (status) {
@@ -128,51 +129,48 @@ export function getOrders(status: OrderStatus | null, q: string | null): Order[]
   const sql = `${ORDER_SELECT} ${
     where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""
   } ORDER BY o.created_at DESC LIMIT 200`;
-  const rows = getDb()
-    .prepare(sql)
-    .all(...params) as unknown as OrderRow[];
-  const items = getDb()
-    .prepare("SELECT * FROM order_items ORDER BY id")
-    .all() as unknown as OrderItemRow[];
+  const rowsResult = await db.execute({ sql, args: params });
+  const rows = rowsResult.rows as unknown as OrderRow[];
+  const itemsResult = await db.execute({ sql: "SELECT * FROM order_items ORDER BY id", args: [] });
+  const items = itemsResult.rows as unknown as OrderItemRow[];
 
   return rows.map((row) => mapOrder(row, items.filter((i) => i.order_id === row.id)));
 }
 
-export function getOrderById(id: number): Order | null {
-  const row = getDb()
-    .prepare(`${ORDER_SELECT} WHERE o.id = ?`)
-    .get(id) as OrderRow | undefined;
+export async function getOrderById(id: number): Promise<Order | null> {
+  const db = await getDb();
+  const rowResult = await db.execute({ sql: `${ORDER_SELECT} WHERE o.id = ?`, args: [id] });
+  const row = rowResult.rows[0] as unknown as OrderRow | undefined;
   if (!row) return null;
-  const items = getDb()
-    .prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id")
-    .all(id) as unknown as OrderItemRow[];
+  const itemsResult = await db.execute({ sql: "SELECT * FROM order_items WHERE order_id = ? ORDER BY id", args: [row.id] });
+  const items = itemsResult.rows as unknown as OrderItemRow[];
   return mapOrder(row, items);
 }
 
-export function getOrderByCode(code: string): Order | null {
-  const row = getDb()
-    .prepare(`${ORDER_SELECT} WHERE o.code = ?`)
-    .get(code) as OrderRow | undefined;
+export async function getOrderByCode(code: string): Promise<Order | null> {
+  const db = await getDb();
+  const rowResult = await db.execute({ sql: `${ORDER_SELECT} WHERE o.code = ?`, args: [code] });
+  const row = rowResult.rows[0] as unknown as OrderRow | undefined;
   if (!row) return null;
-  const items = getDb()
-    .prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id")
-    .all(row.id) as unknown as OrderItemRow[];
+  const itemsResult = await db.execute({ sql: "SELECT * FROM order_items WHERE order_id = ? ORDER BY id", args: [row.id] });
+  const items = itemsResult.rows as unknown as OrderItemRow[];
   return mapOrder(row, items);
 }
 
-export function getCustomers(): Customer[] {
-  const rows = getDb()
-    .prepare(
-      `SELECT c.*,
+export async function getCustomers(): Promise<Customer[]> {
+  const db = await getDb();
+  const rowsResult = await db.execute({
+    sql: `SELECT c.*,
               COUNT(o.id) AS orders_count,
               COALESCE(SUM(CASE WHEN o.status != 'cancelado' THEN o.total END), 0) AS total_spent,
               MAX(CASE WHEN o.status != 'cancelado' THEN o.created_at END) AS last_order_at
        FROM customers c
        LEFT JOIN orders o ON o.customer_id = c.id
        GROUP BY c.id
-       ORDER BY total_spent DESC`
-    )
-    .all() as unknown as (Customer & {
+       ORDER BY total_spent DESC`,
+    args: [],
+  });
+  const rows = rowsResult.rows as unknown as (Customer & {
     created_at: string;
     orders_count: number;
     total_spent: number;
@@ -193,65 +191,66 @@ export function getCustomers(): Customer[] {
   }));
 }
 
-export function getDashboardStats() {
-  const db = getDb();
+export async function getDashboardStats() {
+  const db = await getDb();
 
-  const scalar = (sql: string) => {
-    const row = db.prepare(sql).get() as { value: number };
+  const scalar = async (sql: string) => {
+    const result = await db.execute({ sql, args: [] });
+    const row = result.rows[0] as unknown as { value: number };
     return row.value;
   };
 
-  const todaySales = scalar(
+  const todaySales = await scalar(
     `SELECT COALESCE(SUM(total), 0) AS value FROM orders
      WHERE status != 'cancelado' AND date(created_at) = date('now')`
   );
-  const todayOrders = scalar(
+  const todayOrders = await scalar(
     `SELECT COUNT(*) AS value FROM orders
      WHERE status != 'cancelado' AND date(created_at) = date('now')`
   );
 
-  const monthRevenue = scalar(
+  const monthRevenue = await scalar(
     `SELECT COALESCE(SUM(total), 0) AS value FROM orders
      WHERE status != 'cancelado' AND substr(created_at, 1, 7) = strftime('%Y-%m', 'now')`
   );
-  const monthOrders = scalar(
+  const monthOrders = await scalar(
     `SELECT COUNT(*) AS value FROM orders
      WHERE status != 'cancelado' AND substr(created_at, 1, 7) = strftime('%Y-%m', 'now')`
   );
 
-  const monthCost = scalar(
+  const monthCost = await scalar(
     `SELECT COALESCE(SUM(CASE WHEN p.cost IS NOT NULL THEN p.cost * oi.qty ELSE oi.price * oi.qty * 0.5 END), 0) AS value
      FROM order_items oi
      JOIN orders o ON o.id = oi.order_id
      LEFT JOIN perfumes p ON p.id = oi.perfume_id
      WHERE o.status != 'cancelado' AND substr(o.created_at, 1, 7) = strftime('%Y-%m', 'now')`
   );
-  const monthExpenses = scalar(
+  const monthExpenses = await scalar(
     `SELECT COALESCE(SUM(amount), 0) AS value FROM expenses
      WHERE substr(date, 1, 7) = strftime('%Y-%m', 'now')`
   );
   const monthProfit = monthRevenue - monthCost - monthExpenses;
 
-  const pendingOrders = scalar(
+  const pendingOrders = await scalar(
     `SELECT COUNT(*) AS value FROM orders WHERE status = 'pendiente'`
   );
-  const lowStock = scalar(
+  const lowStock = await scalar(
     `SELECT COUNT(*) AS value FROM perfumes WHERE stock <= ${LOW_STOCK_THRESHOLD}`
   );
-  const outOfStock = scalar(`SELECT COUNT(*) AS value FROM perfumes WHERE stock <= 0`);
+  const outOfStock = await scalar(`SELECT COUNT(*) AS value FROM perfumes WHERE stock <= 0`);
 
-  const topProductRow = db
-    .prepare(
-      `SELECT name, SUM(qty) AS qty FROM order_items GROUP BY name ORDER BY qty DESC LIMIT 1`
-    )
-    .get() as { name: string; qty: number } | undefined;
+  const topProductResult = await db.execute({
+    sql: `SELECT name, SUM(qty) AS qty FROM order_items GROUP BY name ORDER BY qty DESC LIMIT 1`,
+    args: [],
+  });
+  const topProductRow = topProductResult.rows[0] as unknown as { name: string; qty: number } | undefined;
 
-  const newCustomersMonth = scalar(
+  const newCustomersMonth = await scalar(
     `SELECT COUNT(*) AS value FROM customers
      WHERE substr(created_at, 1, 7) = strftime('%Y-%m', 'now')`
   );
 
-  const averageTicket = scalar(
+  const averageTicket = await scalar(
     `SELECT ROUND(COALESCE(AVG(total), 0), 0) AS value FROM orders WHERE status != 'cancelado'`
   );
 
@@ -277,19 +276,19 @@ export interface PurchaseWithItems {
   items: { id: number; perfumeId: number; perfumeName: string; qty: number; size: number; unitCost: number; line: number }[];
 }
 
-export function getPurchases(): PurchaseWithItems[] {
-  const purchases = getDb()
-    .prepare("SELECT * FROM supplier_purchases ORDER BY date DESC")
-    .all() as unknown as (SupplierPurchase & { date: string; total_cost: number; note: string })[];
+export async function getPurchases(): Promise<PurchaseWithItems[]> {
+  const db = await getDb();
+  const purchasesResult = await db.execute({ sql: "SELECT * FROM supplier_purchases ORDER BY date DESC", args: [] });
+  const purchases = purchasesResult.rows as unknown as (SupplierPurchase & { date: string; total_cost: number; note: string })[];
 
-  const items = getDb()
-    .prepare(
-      `SELECT pi.id, pi.purchase_id, pi.perfume_id, pi.qty, pi.unit_cost, pi.size, p.name AS perfume_name
+  const itemsResult = await db.execute({
+    sql: `SELECT pi.id, pi.purchase_id, pi.perfume_id, pi.qty, pi.unit_cost, pi.size, p.name AS perfume_name
        FROM supplier_purchase_items pi
        JOIN perfumes p ON p.id = pi.perfume_id
-       ORDER BY pi.purchase_id, pi.id`
-    )
-    .all() as unknown as {
+       ORDER BY pi.purchase_id, pi.id`,
+    args: [],
+  });
+  const items = itemsResult.rows as unknown as {
     id: number;
     purchase_id: number;
     perfume_id: number;
@@ -321,10 +320,10 @@ export function getPurchases(): PurchaseWithItems[] {
   }));
 }
 
-export function getExpenses(): Expense[] {
-  const rows = getDb()
-    .prepare("SELECT * FROM expenses ORDER BY date DESC")
-    .all() as unknown as (Expense & { date: string; amount: number })[];
+export async function getExpenses(): Promise<Expense[]> {
+  const db = await getDb();
+  const rowsResult = await db.execute({ sql: "SELECT * FROM expenses ORDER BY date DESC", args: [] });
+  const rows = rowsResult.rows as unknown as (Expense & { date: string; amount: number })[];
   return rows.map((row) => ({
     id: row.id,
     category: row.category as ExpenseCategory,
@@ -334,22 +333,23 @@ export function getExpenses(): Expense[] {
   }));
 }
 
-export function getExpensesTotal(): number {
-  const row = getDb()
-    .prepare("SELECT COALESCE(SUM(amount), 0) AS value FROM expenses")
-    .get() as { value: number };
+export async function getExpensesTotal(): Promise<number> {
+  const db = await getDb();
+  const result = await db.execute({ sql: "SELECT COALESCE(SUM(amount), 0) AS value FROM expenses", args: [] });
+  const row = result.rows[0] as unknown as { value: number };
   return row.value;
 }
 
-export function getLowStockItems() {
-  return getDb()
-    .prepare(
-      `SELECT p.id, p.slug, p.name, p.stock, b.name AS brand_name, p.price_50
+export async function getLowStockItems() {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `SELECT p.id, p.slug, p.name, p.stock, b.name AS brand_name, p.price_50
        FROM perfumes p JOIN brands b ON b.id = p.brand_id
        WHERE p.stock <= ?
-       ORDER BY p.stock ASC`
-    )
-    .all(LOW_STOCK_THRESHOLD) as unknown as {
+       ORDER BY p.stock ASC`,
+    args: [LOW_STOCK_THRESHOLD],
+  });
+  return result.rows as unknown as {
     id: number;
     slug: string;
     name: string;
@@ -359,24 +359,25 @@ export function getLowStockItems() {
   }[];
 }
 
-export function getTopSellers(limit = 5) {
-  return getDb()
-    .prepare(
-      `SELECT oi.name, SUM(oi.qty) AS units, SUM(oi.price * oi.qty) AS revenue
+export async function getTopSellers(limit = 5) {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `SELECT oi.name, SUM(oi.qty) AS units, SUM(oi.price * oi.qty) AS revenue
        FROM order_items oi
        JOIN orders o ON o.id = oi.order_id
        WHERE o.status != 'cancelado'
        GROUP BY oi.name
        ORDER BY units DESC
-       LIMIT ?`
-    )
-    .all(limit) as unknown as { name: string; units: number; revenue: number }[];
+       LIMIT ?`,
+    args: [limit],
+  });
+  return result.rows as unknown as { name: string; units: number; revenue: number }[];
 }
 
-export function getTopBrands(limit = 5) {
-  return getDb()
-    .prepare(
-      `SELECT b.name, COUNT(oi.id) AS items, SUM(oi.price * oi.qty) AS revenue
+export async function getTopBrands(limit = 5) {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `SELECT b.name, COUNT(oi.id) AS items, SUM(oi.price * oi.qty) AS revenue
        FROM order_items oi
        JOIN orders o ON o.id = oi.order_id
        JOIN perfumes p ON p.id = oi.perfume_id
@@ -384,34 +385,37 @@ export function getTopBrands(limit = 5) {
        WHERE o.status != 'cancelado'
        GROUP BY b.id
        ORDER BY revenue DESC
-       LIMIT ?`
-    )
-    .all(limit) as unknown as { name: string; items: number; revenue: number }[];
+       LIMIT ?`,
+    args: [limit],
+  });
+  return result.rows as unknown as { name: string; items: number; revenue: number }[];
 }
 
-export function getSalesByProvince() {
-  return getDb()
-    .prepare(
-      `SELECT province, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue
+export async function getSalesByProvince() {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `SELECT province, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue
        FROM orders
        WHERE status != 'cancelado'
        GROUP BY province
-       ORDER BY revenue DESC`
-    )
-    .all() as unknown as { province: string; orders: number; revenue: number }[];
+       ORDER BY revenue DESC`,
+    args: [],
+  });
+  return result.rows as unknown as { province: string; orders: number; revenue: number }[];
 }
 
-export function getMonthlyRevenue(months = 6) {
-  const rows = getDb()
-    .prepare(
-      `SELECT substr(created_at, 1, 7) AS month, COALESCE(SUM(total), 0) AS revenue, COUNT(*) AS orders
+export async function getMonthlyRevenue(months = 6) {
+  const db = await getDb();
+  const rowsResult = await db.execute({
+    sql: `SELECT substr(created_at, 1, 7) AS month, COALESCE(SUM(total), 0) AS revenue, COUNT(*) AS orders
        FROM orders
        WHERE status != 'cancelado'
        GROUP BY month
        ORDER BY month ASC
-       LIMIT ?`
-    )
-    .all(months) as unknown as { month: string; revenue: number; orders: number }[];
+       LIMIT ?`,
+    args: [months],
+  });
+  const rows = rowsResult.rows as unknown as { month: string; revenue: number; orders: number }[];
 
   const now = new Date();
   const labels: { month: string; label: string; revenue: number; orders: number }[] = [];
@@ -526,24 +530,24 @@ function mapAdminProduct(row: Record<string, unknown>): AdminProduct {
   };
 }
 
-export function getAdminProducts(): AdminProduct[] {
-  const rows = getDb()
-    .prepare(`${ADMIN_PRODUCT_SELECT} ORDER BY p.name ASC`)
-    .all() as unknown as Record<string, unknown>[];
+export async function getAdminProducts(): Promise<AdminProduct[]> {
+  const db = await getDb();
+  const rowsResult = await db.execute({ sql: `${ADMIN_PRODUCT_SELECT} ORDER BY p.name ASC`, args: [] });
+  const rows = rowsResult.rows as unknown as Record<string, unknown>[];
   return rows.map(mapAdminProduct);
 }
 
-export function getAdminProductById(id: number): AdminProduct | null {
-  const row = getDb()
-    .prepare(`${ADMIN_PRODUCT_SELECT} WHERE p.id = ?`)
-    .get(id) as Record<string, unknown> | undefined;
+export async function getAdminProductById(id: number): Promise<AdminProduct | null> {
+  const db = await getDb();
+  const rowResult = await db.execute({ sql: `${ADMIN_PRODUCT_SELECT} WHERE p.id = ?`, args: [id] });
+  const row = rowResult.rows[0] as unknown as Record<string, unknown> | undefined;
   return row ? mapAdminProduct(row) : null;
 }
 
-export function getRepeatCustomers() {
-  const row = getDb()
-    .prepare(
-      `SELECT
+export async function getRepeatCustomers() {
+  const db = await getDb();
+  const rowResult = await db.execute({
+    sql: `SELECT
          COUNT(*) AS total_customers,
          SUM(CASE WHEN order_counts.cnt >= 2 THEN 1 ELSE 0 END) AS repeat_customers
        FROM (
@@ -551,9 +555,10 @@ export function getRepeatCustomers() {
          FROM customers c
          LEFT JOIN orders o ON o.customer_id = c.id AND o.status != 'cancelado'
          GROUP BY c.id
-       ) AS order_counts`
-    )
-    .get() as { total_customers: number; repeat_customers: number };
+       ) AS order_counts`,
+    args: [],
+  });
+  const row = rowResult.rows[0] as unknown as { total_customers: number; repeat_customers: number };
   return {
     totalCustomers: row.total_customers,
     repeatCustomers: row.repeat_customers,

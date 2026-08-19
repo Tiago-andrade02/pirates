@@ -40,7 +40,7 @@ export default async function AdminPedidosPage({
     ? (sp.status as OrderStatus)
     : null) as OrderStatus | null;
   const q = sp.q?.trim() || null;
-  const orders = getOrders(status, q);
+  const orders = await getOrders(status, q);
 
   const okMessage = sp.ok ? OK_MESSAGES[sp.ok] : null;
   const errorMessage = sp.error ? ERROR_MESSAGES[sp.error] : null;

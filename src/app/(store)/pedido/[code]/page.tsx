@@ -79,7 +79,7 @@ export default async function PedidoPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = await params;
-  const order = getOrderByCode(code.trim().toUpperCase());
+  const order = await getOrderByCode(code.trim().toUpperCase());
   if (!order || !ORDER_STATUSES.includes(order.status)) notFound();
 
   const statusStyle = STATUS_STYLES[order.status];

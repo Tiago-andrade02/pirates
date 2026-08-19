@@ -96,10 +96,10 @@ function SectionHeading({
   );
 }
 
-export default function HomePage() {
-  const bestSellers = getBestSellers(4);
-  const newArrivals = getNewArrivals(4);
-  const brands = getBrands();
+export default async function HomePage() {
+  const bestSellers = await getBestSellers(4);
+  const newArrivals = await getNewArrivals(4);
+  const brands = await getBrands();
 
   return (
     <>

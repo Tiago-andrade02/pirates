@@ -20,7 +20,7 @@ export default async function AdminProductosPage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { ok, error } = await searchParams;
-  const products = getAdminProducts();
+  const products = await getAdminProducts();
 
   return (
     <div className="space-y-6">

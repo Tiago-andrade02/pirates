@@ -11,8 +11,8 @@ export default async function AdminMayoristaPage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { ok, error } = await searchParams;
-  const purchases = getPurchases();
-  const products = getAdminProducts();
+  const purchases = await getPurchases();
+  const products = await getAdminProducts();
 
   return (
     <div className="space-y-8">

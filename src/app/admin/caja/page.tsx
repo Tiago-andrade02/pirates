@@ -8,12 +8,13 @@ import { TrashIcon } from "@/components/icons";
 const inputCls =
   "w-full rounded-xl border border-line bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-faint focus:border-gold focus:outline-none";
 
-export default function AdminCajaPage() {
-  const expenses = getExpenses();
-  const stats = getDashboardStats();
+export default async function AdminCajaPage() {
+  const expenses = await getExpenses();
+  const stats = await getDashboardStats();
   const monthExpenses = expenses
     .filter((e) => e.date.startsWith(new Date().toISOString().slice(0, 7)))
     .reduce((acc, e) => acc + e.amount, 0);
+  const totalExpenses = await getExpensesTotal();
 
   return (
     <div className="space-y-8">
@@ -27,7 +28,7 @@ export default function AdminCajaPage() {
           value={formatARS(monthExpenses)}
           hint={`${expenses.filter((e) => e.date.startsWith(new Date().toISOString().slice(0, 7))).length} registros`}
         />
-        <StatCard label="Gastos totales" value={formatARS(getExpensesTotal())} />
+        <StatCard label="Gastos totales" value={formatARS(totalExpenses)} />
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">

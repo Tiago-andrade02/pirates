@@ -11,8 +11,8 @@ export const metadata: Metadata = {
     "Todas las marcas árabes que importamos: Lattafa, Afnan, Armaf, Maison Alhambra, Fragrance World, French Avenue y más.",
 };
 
-export default function BrandsPage() {
-  const brands = getBrandsWithCounts();
+export default async function BrandsPage() {
+  const brands = await getBrandsWithCounts();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

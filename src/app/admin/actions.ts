@@ -167,7 +167,7 @@ function ensureProductImages(slug: string, name: string, brandName: string) {
 
 export async function createProduct(formData: FormData) {
   await requireAdmin();
-  const db = getDb();
+  const db = await getDb();
 
   const name = String(formData.get("name") ?? "").trim();
   if (!name) redirect("/admin/productos?error=nombre");
@@ -178,9 +178,8 @@ export async function createProduct(formData: FormData) {
   const slug = slugify(name);
   const image = slug;
 
-  const brandRow = db.prepare("SELECT name FROM brands WHERE id = ?").get(brandId) as
-    | { name: string }
-    | undefined;
+  const brandResult = await db.execute({ sql: "SELECT name FROM brands WHERE id = ?", args: [brandId] });
+  const brandRow = brandResult.rows[0] as unknown as { name: string } | undefined;
   const brandName = brandRow?.name ?? "PIRATES";
 
   const s30 = int(formData.get("stock_30")) ?? 0;
@@ -188,17 +187,15 @@ export async function createProduct(formData: FormData) {
   const s100 = int(formData.get("stock_100")) ?? 0;
   const stockTotal = s30 + s50 + s100;
 
-  const result = db
-    .prepare(
-      `INSERT INTO perfumes (
+  const result = await db.execute({
+    sql: `INSERT INTO perfumes (
         slug, name, brand_id, gender, aroma, season, occasion,
         price_30, price_50, price_100, cost,
         stock, stock_30, stock_50, stock_100, description,
         notes_top, notes_heart, notes_base, duration, projection, sweetness,
         inspired_by, image, is_new, best_seller, rating, review_count
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .run(
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
       slug,
       name,
       brandId,
@@ -226,76 +223,77 @@ export async function createProduct(formData: FormData) {
       formData.get("is_new") === "on" ? 1 : 0,
       formData.get("best_seller") === "on" ? 1 : 0,
       4.5,
-      0
-    );
+      0,
+    ],
+  });
 
   ensureProductImages(slug, name, brandName);
   revalidatePath("/admin/productos");
   revalidatePath("/perfumes");
-  redirect(`/admin/productos?ok=creado&id=${result.lastInsertRowid}`);
+  redirect(`/admin/productos?ok=creado&id=${Number(result.lastInsertRowid)}`);
 }
 
 export async function updateProduct(formData: FormData) {
   await requireAdmin();
-  const db = getDb();
+  const db = await getDb();
   const id = int(formData.get("id"));
   if (id === null) redirect("/admin/productos");
 
   const name = String(formData.get("name") ?? "").trim();
   if (!name) redirect(`/admin/productos?error=nombre`);
 
-  const row = db.prepare("SELECT slug, brand_id FROM perfumes WHERE id = ?").get(id) as
-    | { slug: string; brand_id: number }
-    | undefined;
+  const rowResult = await db.execute({ sql: "SELECT slug, brand_id FROM perfumes WHERE id = ?", args: [id] });
+  const row = rowResult.rows[0] as unknown as { slug: string; brand_id: number } | undefined;
   if (!row) redirect("/admin/productos");
 
-  const brandRow = db
-    .prepare("SELECT name FROM brands WHERE id = ?")
-    .get(Number(formData.get("brand_id") ?? row.brand_id)) as
-    | { name: string }
-    | undefined;
+  const brandResult = await db.execute({
+    sql: "SELECT name FROM brands WHERE id = ?",
+    args: [Number(formData.get("brand_id") ?? row.brand_id)],
+  });
+  const brandRow = brandResult.rows[0] as unknown as { name: string } | undefined;
 
   const s30 = int(formData.get("stock_30")) ?? 0;
   const s50 = int(formData.get("stock_50")) ?? 0;
   const s100 = int(formData.get("stock_100")) ?? 0;
   const stockTotal = s30 + s50 + s100;
 
-  db.prepare(
-    `UPDATE perfumes SET
+  await db.execute({
+    sql: `UPDATE perfumes SET
        name = ?, brand_id = ?, gender = ?, aroma = ?, season = ?, occasion = ?,
        price_30 = ?, price_50 = ?, price_100 = ?, cost = ?,
        stock = ?, stock_30 = ?, stock_50 = ?, stock_100 = ?, description = ?,
        notes_top = ?, notes_heart = ?, notes_base = ?,
        duration = ?, projection = ?, sweetness = ?, inspired_by = ?,
        is_new = ?, best_seller = ?
-     WHERE id = ?`
-  ).run(
-    name,
-    int(formData.get("brand_id")) ?? row.brand_id,
-    String(formData.get("gender") ?? "unisex"),
-    tags(formData, "aroma", "dulce"),
-    tags(formData, "season", "todo-el-ano"),
-    tags(formData, "occasion", "diario"),
-    sizePrice(formData, "30"),
-    sizePrice(formData, "50"),
-    sizePrice(formData, "100"),
-    moneyNum(formData.get("cost")) ?? null,
-    stockTotal,
-    s30,
-    s50,
-    s100,
-    String(formData.get("description") ?? "").trim(),
-    JSON.stringify(notesList(formData.get("notes_top"))),
-    JSON.stringify(notesList(formData.get("notes_heart"))),
-    JSON.stringify(notesList(formData.get("notes_base"))),
-    int(formData.get("duration")) ?? 3,
-    int(formData.get("projection")) ?? 3,
-    int(formData.get("sweetness")) ?? 3,
-    String(formData.get("inspired_by") ?? "").trim() || null,
-    formData.get("is_new") === "on" ? 1 : 0,
-    formData.get("best_seller") === "on" ? 1 : 0,
-    id
-  );
+     WHERE id = ?`,
+    args: [
+      name,
+      int(formData.get("brand_id")) ?? row.brand_id,
+      String(formData.get("gender") ?? "unisex"),
+      tags(formData, "aroma", "dulce"),
+      tags(formData, "season", "todo-el-ano"),
+      tags(formData, "occasion", "diario"),
+      sizePrice(formData, "30"),
+      sizePrice(formData, "50"),
+      sizePrice(formData, "100"),
+      moneyNum(formData.get("cost")) ?? null,
+      stockTotal,
+      s30,
+      s50,
+      s100,
+      String(formData.get("description") ?? "").trim(),
+      JSON.stringify(notesList(formData.get("notes_top"))),
+      JSON.stringify(notesList(formData.get("notes_heart"))),
+      JSON.stringify(notesList(formData.get("notes_base"))),
+      int(formData.get("duration")) ?? 3,
+      int(formData.get("projection")) ?? 3,
+      int(formData.get("sweetness")) ?? 3,
+      String(formData.get("inspired_by") ?? "").trim() || null,
+      formData.get("is_new") === "on" ? 1 : 0,
+      formData.get("best_seller") === "on" ? 1 : 0,
+      id,
+    ],
+  });
 
   ensureProductImages(row.slug, name, brandRow?.name ?? "PIRATES");
   revalidatePath("/admin/productos");
@@ -306,15 +304,14 @@ export async function updateProduct(formData: FormData) {
 
 export async function deleteProduct(formData: FormData) {
   await requireAdmin();
-  const db = getDb();
+  const db = await getDb();
   const id = int(formData.get("id"));
   if (id === null) redirect("/admin/productos");
 
-  const row = db.prepare("SELECT slug FROM perfumes WHERE id = ?").get(id) as
-    | { slug: string }
-    | undefined;
+  const rowResult = await db.execute({ sql: "SELECT slug FROM perfumes WHERE id = ?", args: [id] });
+  const row = rowResult.rows[0] as unknown as { slug: string } | undefined;
   if (row) {
-    db.prepare("DELETE FROM perfumes WHERE id = ?").run(id);
+    await db.execute({ sql: "DELETE FROM perfumes WHERE id = ?", args: [id] });
     for (const variant of [1, 2]) {
       const file = imagePath(row.slug, variant);
       if (fs.existsSync(file)) {
@@ -339,11 +336,11 @@ export async function updateProductStock(formData: FormData) {
   const s50 = int(formData.get("stock_50")) ?? 0;
   const s100 = int(formData.get("stock_100")) ?? 0;
   const stockTotal = s30 + s50 + s100;
-  getDb()
-    .prepare(
-      "UPDATE perfumes SET stock = ?, stock_30 = ?, stock_50 = ?, stock_100 = ? WHERE id = ?"
-    )
-    .run(stockTotal, s30, s50, s100, id);
+  const db = await getDb();
+  await db.execute({
+    sql: "UPDATE perfumes SET stock = ?, stock_30 = ?, stock_50 = ?, stock_100 = ? WHERE id = ?",
+    args: [stockTotal, s30, s50, s100, id],
+  });
   revalidatePath("/admin/stock");
   revalidatePath("/admin/productos");
   redirect("/admin/stock?ok=1");
@@ -356,28 +353,24 @@ export async function updateOrderStatus(formData: FormData) {
   const valid = ["pendiente", "pagado", "preparando", "enviado", "entregado", "cancelado"];
   if (id === null || !valid.includes(status)) redirect("/admin/pedidos");
 
-  const previous = getDb()
-    .prepare("SELECT status FROM orders WHERE id = ?")
-    .get(id) as { status: OrderStatus } | undefined;
+  const db = await getDb();
+
+  const previousResult = await db.execute({ sql: "SELECT status FROM orders WHERE id = ?", args: [id] });
+  const previous = previousResult.rows[0] as unknown as { status: OrderStatus } | undefined;
   if (!previous) redirect("/admin/pedidos");
 
-  getDb()
-    .prepare("UPDATE orders SET status = ? WHERE id = ?")
-    .run(status, id);
+  await db.execute({ sql: "UPDATE orders SET status = ? WHERE id = ?", args: [status, id] });
 
-  // Si el pedido se cancela y estaba en estados de venta, devolvemos stock.
   if (status === "cancelado" && previous.status !== "cancelado") {
-    const items = getDb()
-      .prepare("SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?")
-      .all(id) as { perfume_id: number | null; qty: number; size: number }[];
+    const itemsResult = await db.execute({ sql: "SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?", args: [id] });
+    const items = itemsResult.rows as unknown as { perfume_id: number | null; qty: number; size: number }[];
     for (const item of items) {
       if (item.perfume_id !== null) {
         const size = parseSize(String(item.size));
-        getDb()
-          .prepare(
-            `UPDATE perfumes SET stock_${size} = stock_${size} + ?, stock = stock + ? WHERE id = ?`
-          )
-          .run(item.qty, item.qty, item.perfume_id);
+        await db.execute({
+          sql: `UPDATE perfumes SET stock_${size} = stock_${size} + ?, stock = stock + ? WHERE id = ?`,
+          args: [item.qty, item.qty, item.perfume_id],
+        });
       }
     }
   }
@@ -392,7 +385,7 @@ export async function resendOrderEmail(formData: FormData) {
   const id = int(formData.get("id"));
   if (id === null) redirect("/admin/pedidos");
 
-  const order = getOrderById(id);
+  const order = await getOrderById(id);
   if (!order) redirect("/admin/pedidos");
   if (!hasEmailConfig()) {
     redirect(`/admin/pedidos/${id}?error=email-no-configurado`);
@@ -411,7 +404,7 @@ export async function resendOrderEmail(formData: FormData) {
 
 export async function createPurchase(formData: FormData) {
   await requireAdmin();
-  const db = getDb();
+  const db = await getDb();
 
   const supplier = String(formData.get("supplier") ?? "").trim();
   const date = String(formData.get("date") ?? "").trim() || new Date().toISOString();
@@ -444,28 +437,28 @@ export async function createPurchase(formData: FormData) {
 
   const totalCost = entries.reduce((acc, e) => acc + e.unitCost * e.qty, 0);
 
-  db.exec("BEGIN");
+  await db.executeMultiple("BEGIN");
   try {
-    const result = db
-      .prepare(
-        "INSERT INTO supplier_purchases (supplier, total_cost, date, note) VALUES (?, ?, ?, ?)"
-      )
-      .run(supplier, totalCost, date, note);
+    const result = await db.execute({
+      sql: "INSERT INTO supplier_purchases (supplier, total_cost, date, note) VALUES (?, ?, ?, ?)",
+      args: [supplier, totalCost, date, note],
+    });
     const purchaseId = Number(result.lastInsertRowid);
 
-    const insertItem = db.prepare(
-      "INSERT INTO supplier_purchase_items (purchase_id, perfume_id, qty, unit_cost, size) VALUES (?, ?, ?, ?, ?)"
-    );
     for (const entry of entries) {
-      insertItem.run(purchaseId, entry.perfumeId, entry.qty, entry.unitCost, entry.size);
+      await db.execute({
+        sql: "INSERT INTO supplier_purchase_items (purchase_id, perfume_id, qty, unit_cost, size) VALUES (?, ?, ?, ?, ?)",
+        args: [purchaseId, entry.perfumeId, entry.qty, entry.unitCost, entry.size],
+      });
       const col = `stock_${entry.size}`;
-      db.prepare(
-        `UPDATE perfumes SET ${col} = ${col} + ?, stock = stock + ? WHERE id = ?`
-      ).run(entry.qty, entry.qty, entry.perfumeId);
+      await db.execute({
+        sql: `UPDATE perfumes SET ${col} = ${col} + ?, stock = stock + ? WHERE id = ?`,
+        args: [entry.qty, entry.qty, entry.perfumeId],
+      });
     }
-    db.exec("COMMIT");
+    await db.executeMultiple("COMMIT");
   } catch (error) {
-    db.exec("ROLLBACK");
+    await db.executeMultiple("ROLLBACK");
     throw error;
   }
 
@@ -479,25 +472,26 @@ export async function deletePurchase(formData: FormData) {
   await requireAdmin();
   const id = int(formData.get("id"));
   if (id === null) redirect("/admin/mayorista");
-  const db = getDb();
-  const items = db
-    .prepare(
-      "SELECT perfume_id, qty, size FROM supplier_purchase_items WHERE purchase_id = ?"
-    )
-    .all(id) as { perfume_id: number; qty: number; size: number }[];
-  db.exec("BEGIN");
+  const db = await getDb();
+  const itemsResult = await db.execute({
+    sql: "SELECT perfume_id, qty, size FROM supplier_purchase_items WHERE purchase_id = ?",
+    args: [id],
+  });
+  const items = itemsResult.rows as unknown as { perfume_id: number; qty: number; size: number }[];
+  await db.executeMultiple("BEGIN");
   try {
     for (const item of items) {
       const size = parseSize(String(item.size));
-      db.prepare(
-        `UPDATE perfumes SET stock_${size} = MAX(0, stock_${size} - ?), stock = MAX(0, stock - ?) WHERE id = ?`
-      ).run(item.qty, item.qty, item.perfume_id);
+      await db.execute({
+        sql: `UPDATE perfumes SET stock_${size} = MAX(0, stock_${size} - ?), stock = MAX(0, stock - ?) WHERE id = ?`,
+        args: [item.qty, item.qty, item.perfume_id],
+      });
     }
-    db.prepare("DELETE FROM supplier_purchase_items WHERE purchase_id = ?").run(id);
-    db.prepare("DELETE FROM supplier_purchases WHERE id = ?").run(id);
-    db.exec("COMMIT");
+    await db.execute({ sql: "DELETE FROM supplier_purchase_items WHERE purchase_id = ?", args: [id] });
+    await db.execute({ sql: "DELETE FROM supplier_purchases WHERE id = ?", args: [id] });
+    await db.executeMultiple("COMMIT");
   } catch (error) {
-    db.exec("ROLLBACK");
+    await db.executeMultiple("ROLLBACK");
     throw error;
   }
   revalidatePath("/admin/mayorista");
@@ -507,7 +501,7 @@ export async function deletePurchase(formData: FormData) {
 
 export async function createExpense(formData: FormData) {
   await requireAdmin();
-  const db = getDb();
+  const db = await getDb();
   const category = String(formData.get("category") ?? "otros");
   const description = String(formData.get("description") ?? "").trim();
   const amount = moneyNum(formData.get("amount"));
@@ -515,9 +509,10 @@ export async function createExpense(formData: FormData) {
   if (amount === null || amount <= 0) {
     redirect("/admin/caja?error=monto");
   }
-  db.prepare(
-    "INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)"
-  ).run(category, description || "Sin descripción", amount, date);
+  await db.execute({
+    sql: "INSERT INTO expenses (category, description, amount, date) VALUES (?, ?, ?, ?)",
+    args: [category, description || "Sin descripción", amount, date],
+  });
   revalidatePath("/admin/caja");
   redirect("/admin/caja?ok=gasto");
 }
@@ -526,22 +521,22 @@ export async function deleteExpense(formData: FormData) {
   await requireAdmin();
   const id = int(formData.get("id"));
   if (id === null) redirect("/admin/caja");
-  getDb().prepare("DELETE FROM expenses WHERE id = ?").run(id);
+  const db = await getDb();
+  await db.execute({ sql: "DELETE FROM expenses WHERE id = ?", args: [id] });
   revalidatePath("/admin/caja");
   redirect("/admin/caja?ok=borrado");
 }
 
 export async function restockLow() {
   await requireAdmin();
-  const db = getDb();
-  const ids = db
-    .prepare(
-      `SELECT id FROM perfumes WHERE stock <= ?`
-    )
-    .all(LOW_STOCK_THRESHOLD) as { id: number }[];
-  const update = db.prepare("UPDATE perfumes SET stock = ? WHERE id = ?");
+  const db = await getDb();
+  const idsResult = await db.execute({
+    sql: `SELECT id FROM perfumes WHERE stock <= ?`,
+    args: [LOW_STOCK_THRESHOLD],
+  });
+  const ids = idsResult.rows as unknown as { id: number }[];
   for (const row of ids) {
-    update.run(LOW_STOCK_THRESHOLD + 10, row.id);
+    await db.execute({ sql: "UPDATE perfumes SET stock = ? WHERE id = ?", args: [LOW_STOCK_THRESHOLD + 10, row.id] });
   }
   revalidatePath("/admin/stock");
   revalidatePath("/admin/productos");

@@ -1,8 +1,8 @@
 import { getCustomers } from "@/lib/admin-data";
 import { PageHeader, Money, Th, Td } from "@/components/admin/ui";
 
-export default function AdminClientesPage() {
-  const customers = getCustomers();
+export default async function AdminClientesPage() {
+  const customers = await getCustomers();
 
   return (
     <div className="space-y-6">

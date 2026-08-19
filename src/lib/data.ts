@@ -108,151 +108,157 @@ function parseTags(value: string): string[] {
   return [trimmed];
 }
 
-// Los tags (aromas, estaciones, ocasiones) se guardan como array JSON en una
-// columna TEXT. Este helper construye un match "contiene" para ese array.
 function tagMatch(column: string, value: string): { sql: string; params: string[] } {
   return { sql: `${column} LIKE ?`, params: [`%"${value}"%`] };
 }
 
-function mapPerfume(row: PerfumeRow): Perfume {
+function mapPerfume(row: Record<string, unknown>): Perfume {
+  const r = row as unknown as PerfumeRow;
   const prices: Prices = {
-    "30": row.price_30,
-    "50": row.price_50,
-    "100": row.price_100,
+    "30": r.price_30,
+    "50": r.price_50,
+    "100": r.price_100,
   };
   return {
-    id: row.id,
-    slug: row.slug,
-    name: row.name,
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
     brand: {
-      id: row.brand_id,
-      slug: row.brand_slug,
-      name: row.brand_name,
-      country: row.brand_country,
-      description: row.brand_description,
+      id: r.brand_id,
+      slug: r.brand_slug,
+      name: r.brand_name,
+      country: r.brand_country,
+      description: r.brand_description,
     },
-    gender: row.gender as Gender,
-    aromas: parseTags(row.aroma) as Aroma[],
-    seasons: parseTags(row.season) as Season[],
-    occasions: parseTags(row.occasion) as Occasion[],
+    gender: r.gender as Gender,
+    aromas: parseTags(r.aroma) as Aroma[],
+    seasons: parseTags(r.season) as Season[],
+    occasions: parseTags(r.occasion) as Occasion[],
     prices,
-    stock: row.stock,
-    description: row.description,
+    stock: r.stock,
+    description: r.description,
     package: {
-      weightGrams: row.package_weight,
-      lengthCm: row.package_length,
-      widthCm: row.package_width,
-      heightCm: row.package_height,
+      weightGrams: r.package_weight,
+      lengthCm: r.package_length,
+      widthCm: r.package_width,
+      heightCm: r.package_height,
     },
     notes: {
-      top: JSON.parse(row.notes_top),
-      heart: JSON.parse(row.notes_heart),
-      base: JSON.parse(row.notes_base),
+      top: JSON.parse(r.notes_top),
+      heart: JSON.parse(r.notes_heart),
+      base: JSON.parse(r.notes_base),
     },
-    duration: row.duration,
-    projection: row.projection,
-    sweetness: row.sweetness,
-    inspiredBy: row.inspired_by,
-    image: row.image,
-    isNew: row.is_new === 1,
-    bestSeller: row.best_seller === 1,
-    topRank: row.top_rank ?? null,
-    rating: row.rating,
-    reviewCount: row.review_count,
+    duration: r.duration,
+    projection: r.projection,
+    sweetness: r.sweetness,
+    inspiredBy: r.inspired_by,
+    image: r.image,
+    isNew: r.is_new === 1,
+    bestSeller: r.best_seller === 1,
+    topRank: r.top_rank ?? null,
+    rating: r.rating,
+    reviewCount: r.review_count,
   };
 }
 
-export function getBrands(): Brand[] {
-  const rows = getDb()
-    .prepare("SELECT * FROM brands ORDER BY name")
-    .all() as unknown as Brand[];
-  return rows.map((row) => ({ ...row }));
+export async function getBrands(): Promise<Brand[]> {
+  const db = await getDb();
+  const result = await db.execute("SELECT * FROM brands ORDER BY name");
+  return result.rows.map((row) => ({ ...row })) as unknown as Brand[];
 }
 
 export interface BrandWithCount extends Brand {
   count: number;
 }
 
-export function getBrandsWithCounts(): BrandWithCount[] {
-  const rows = getDb()
-    .prepare(
-      `SELECT b.*, COUNT(p.id) AS count
-       FROM brands b
-       LEFT JOIN perfumes p ON p.brand_id = b.id
-       GROUP BY b.id
-       ORDER BY b.name`
-    )
-    .all() as unknown as BrandWithCount[];
-  return rows.map((row) => ({ ...row }));
+export async function getBrandsWithCounts(): Promise<BrandWithCount[]> {
+  const db = await getDb();
+  const result = await db.execute(
+    `SELECT b.*, COUNT(p.id) AS count
+     FROM brands b
+     LEFT JOIN perfumes p ON p.brand_id = b.id
+     GROUP BY b.id
+     ORDER BY b.name`
+  );
+  return result.rows.map((row) => ({ ...row })) as unknown as BrandWithCount[];
 }
 
-export function getBrandBySlug(slug: string): Brand | null {
-  const row = getDb()
-    .prepare("SELECT * FROM brands WHERE slug = ?")
-    .get(slug) as Brand | undefined;
-  return row ? { ...row } : null;
+export async function getBrandBySlug(slug: string): Promise<Brand | null> {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: "SELECT * FROM brands WHERE slug = ?",
+    args: [slug],
+  });
+  const row = result.rows[0];
+  return row ? ({ ...row } as unknown as Brand) : null;
 }
 
-export function getPerfumeBySlug(slug: string): Perfume | null {
-  const row = getDb()
-    .prepare(`${SELECT_PERFUME} WHERE p.slug = ?`)
-    .get(slug) as PerfumeRow | undefined;
+export async function getPerfumeBySlug(slug: string): Promise<Perfume | null> {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `${SELECT_PERFUME} WHERE p.slug = ?`,
+    args: [slug],
+  });
+  const row = result.rows[0];
   return row ? mapPerfume(row) : null;
 }
 
-export function getPerfumesByIds(ids: number[]): Perfume[] {
+export async function getPerfumesByIds(ids: number[]): Promise<Perfume[]> {
   if (ids.length === 0) return [];
+  const db = await getDb();
   const placeholders = ids.map(() => "?").join(",");
-  const rows = getDb()
-    .prepare(`${SELECT_PERFUME} WHERE p.id IN (${placeholders})`)
-    .all(...ids) as unknown as PerfumeRow[];
-  return rows.map(mapPerfume);
+  const result = await db.execute({
+    sql: `${SELECT_PERFUME} WHERE p.id IN (${placeholders})`,
+    args: ids,
+  });
+  return result.rows.map(mapPerfume);
 }
 
-export function getBestSellers(limit = 8): Perfume[] {
-  const rows = getDb()
-    .prepare(
-      `${SELECT_PERFUME} WHERE p.best_seller = 1 ORDER BY COALESCE(p.top_rank, 999) ASC, p.rating DESC, p.review_count DESC LIMIT ?`
-    )
-    .all(limit) as unknown as PerfumeRow[];
-  return rows.map(mapPerfume);
+export async function getBestSellers(limit = 8): Promise<Perfume[]> {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `${SELECT_PERFUME} WHERE p.best_seller = 1 ORDER BY COALESCE(p.top_rank, 999) ASC, p.rating DESC, p.review_count DESC LIMIT ?`,
+    args: [limit],
+  });
+  return result.rows.map(mapPerfume);
 }
 
-export function getNewArrivals(limit = 8): Perfume[] {
-  const rows = getDb()
-    .prepare(
-      `${SELECT_PERFUME} WHERE p.is_new = 1 ORDER BY p.id DESC LIMIT ?`
-    )
-    .all(limit) as unknown as PerfumeRow[];
-  return rows.map(mapPerfume);
+export async function getNewArrivals(limit = 8): Promise<Perfume[]> {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `${SELECT_PERFUME} WHERE p.is_new = 1 ORDER BY p.id DESC LIMIT ?`,
+    args: [limit],
+  });
+  return result.rows.map(mapPerfume);
 }
 
-export function getRelated(perfume: Perfume, limit = 4): Perfume[] {
+export async function getRelated(perfume: Perfume, limit = 4): Promise<Perfume[]> {
+  const db = await getDb();
   const firstAroma = perfume.aromas[0] ?? "";
   const firstOccasion = perfume.occasions[0] ?? "";
-  const rows = getDb()
-    .prepare(
-      `${SELECT_PERFUME}
+  const result = await db.execute({
+    sql: `${SELECT_PERFUME}
        WHERE p.id != ? AND (
          p.brand_id = ?
          OR ${tagMatch("p.aroma", firstAroma).sql}
          OR ${tagMatch("p.occasion", firstOccasion).sql}
        )
        ORDER BY (p.brand_id = ?) DESC, p.rating DESC
-       LIMIT ?`
-    )
-    .all(
+       LIMIT ?`,
+    args: [
       perfume.id,
       perfume.brand.id,
       `%"${firstAroma}"%`,
       `%"${firstOccasion}"%`,
       perfume.brand.id,
-      limit
-    ) as unknown as PerfumeRow[];
-  return rows.map(mapPerfume);
+      limit,
+    ],
+  });
+  return result.rows.map(mapPerfume);
 }
 
-export function getCatalog(filters: CatalogFilters): Perfume[] {
+export async function getCatalog(filters: CatalogFilters): Promise<Perfume[]> {
+  const db = await getDb();
   const where: string[] = [];
   const params: (string | number | null)[] = [];
 
@@ -328,6 +334,6 @@ export function getCatalog(filters: CatalogFilters): Perfume[] {
     where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""
   } ORDER BY ${order}`;
 
-  const rows = getDb().prepare(sql).all(...params) as unknown as PerfumeRow[];
-  return rows.map(mapPerfume);
+  const result = await db.execute({ sql, args: params });
+  return result.rows.map(mapPerfume);
 }

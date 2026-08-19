@@ -10,11 +10,13 @@ import { PageHeader, StatCard, StatusBadge, Money, Th, Td } from "@/components/a
 
 const today = new Date();
 
-export default function AdminDashboardPage() {
-  const stats = getDashboardStats();
-  const recentOrders = getOrders(null, null).slice(0, 6);
-  const lowStock = getLowStockItems().slice(0, 5);
-  const topSellers = getTopSellers(5);
+export default async function AdminDashboardPage() {
+  const stats = await getDashboardStats();
+  const allOrders = await getOrders(null, null);
+  const recentOrders = allOrders.slice(0, 6);
+  const allLowStock = await getLowStockItems();
+  const lowStock = allLowStock.slice(0, 5);
+  const topSellers = await getTopSellers(5);
 
   return (
     <div className="space-y-8">

@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const db = getDb();
+  const db = await getDb();
   let payment;
   try {
     payment = await getPayment(notificationId);
@@ -39,35 +39,43 @@ export async function POST(request: Request) {
     return Response.json({ ok: true });
   }
 
-  const order = db
-    .prepare("SELECT id, status FROM orders WHERE code = ?")
-    .get(payment.external_reference) as { id: number; status: string } | undefined;
+  const orderResult = await db.execute({
+    sql: "SELECT id, status FROM orders WHERE code = ?",
+    args: [payment.external_reference],
+  });
+  const order = orderResult.rows[0] as unknown as { id: number; status: string } | undefined;
   if (!order || order.status === "pagado") {
     return Response.json({ ok: true });
   }
 
-  db.exec("BEGIN");
+  await db.executeMultiple("BEGIN");
   try {
-    db.prepare("UPDATE orders SET status = 'pagado' WHERE id = ?").run(order.id);
+    await db.execute({
+      sql: "UPDATE orders SET status = 'pagado' WHERE id = ?",
+      args: [order.id],
+    });
 
-    const items = db
-      .prepare("SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?")
-      .all(order.id) as { perfume_id: number; qty: number; size: number }[];
+    const itemsResult = await db.execute({
+      sql: "SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?",
+      args: [order.id],
+    });
+    const items = itemsResult.rows as unknown as { perfume_id: number; qty: number; size: number }[];
     for (const item of items) {
       const size = [30, 50, 100].includes(item.size) ? item.size : 100;
-      db.prepare(
-        `UPDATE perfumes SET stock_${size} = MAX(0, stock_${size} - ?), stock = MAX(0, stock - ?) WHERE id = ?`
-      ).run(item.qty, item.qty, item.perfume_id);
+      await db.execute({
+        sql: `UPDATE perfumes SET stock_${size} = MAX(0, stock_${size} - ?), stock = MAX(0, stock - ?) WHERE id = ?`,
+        args: [item.qty, item.qty, item.perfume_id],
+      });
     }
-    db.exec("COMMIT");
+    await db.executeMultiple("COMMIT");
   } catch (error) {
-    db.exec("ROLLBACK");
+    await db.executeMultiple("ROLLBACK");
     throw error;
   }
 
   // Notificación con el detalle del pedido (email SMTP). Fire-and-forget:
   // si falla el envío, no debe romper la respuesta del webhook.
-  const fullOrder = getOrderById(order.id);
+  const fullOrder = await getOrderById(order.id);
   if (fullOrder) {
     sendOrderEmail(fullOrder).catch((error) => {
       console.error("[notify] No se pudo enviar el email del pedido", error);

@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
   let pkg;
   try {
-    pkg = computePackageForItems(body.items);
+    pkg = await computePackageForItems(body.items);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error calculando el paquete";
     return Response.json({ error: message }, { status: 400 });

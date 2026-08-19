@@ -80,8 +80,8 @@ export default async function CatalogPage(props: CatalogPageProps) {
   }
 
   const { filters, baseParams } = parseFilters(params);
-  const perfumes = getCatalog(filters);
-  const brands = getBrands();
+  const perfumes = await getCatalog(filters);
+  const brands = await getBrands();
 
   const brandOptions = brands.map((brand) => ({
     value: brand.slug,

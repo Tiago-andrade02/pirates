@@ -16,7 +16,7 @@ export default async function DetallePedidoPage({
 }) {
   const { id } = await params;
   const sp = await searchParams;
-  const order = getOrderById(Number(id));
+  const order = await getOrderById(Number(id));
   if (!order) notFound();
 
   const message =

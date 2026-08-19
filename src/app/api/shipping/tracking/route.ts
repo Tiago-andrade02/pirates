@@ -18,15 +18,15 @@ export async function GET(request: Request) {
     return Response.json({ error: "Falta el código de pedido" }, { status: 400 });
   }
 
-  const db = getDb();
-  const order = db
-    .prepare(
-      `SELECT code, status, created_at, shipping_provider, shipping_service,
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `SELECT code, status, created_at, shipping_provider, shipping_service,
               tracking_number, tracking_url, tracking_events, shipped_at,
               delivery_type, postal_code, locality
-       FROM orders WHERE code = ?`
-    )
-    .get(code) as
+       FROM orders WHERE code = ?`,
+    args: [code],
+  });
+  const order = result.rows[0] as unknown as
     | {
         code: string;
         status: string;

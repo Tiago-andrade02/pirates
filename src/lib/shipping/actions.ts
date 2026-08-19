@@ -36,16 +36,17 @@ async function requireAdmin() {
   }
 }
 
-function getOrder(id: number): OrderRow | null {
-  const row = getDb()
-    .prepare(
-      `SELECT id, code, customer_id, status, subtotal, province, postal_code, locality,
+async function getOrder(id: number): Promise<OrderRow | null> {
+  const db = await getDb();
+  const result = await db.execute({
+    sql: `SELECT id, code, customer_id, status, subtotal, province, postal_code, locality,
               address_street, address_number, address_floor, address_apartment,
               delivery_type, agency_code, shipping_provider, shipping_service,
               tracking_number, tracking_events
-       FROM orders WHERE id = ?`
-    )
-    .get(id) as OrderRow | undefined;
+       FROM orders WHERE id = ?`,
+    args: [id],
+  });
+  const row = result.rows[0] as unknown as OrderRow | undefined;
   return row ?? null;
 }
 
@@ -78,8 +79,8 @@ export async function createShipment(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!Number.isFinite(id)) redirect("/admin/pedidos");
 
-  const db = getDb();
-  const order = getOrder(id);
+  const db = await getDb();
+  const order = await getOrder(id);
   if (!order) redirect("/admin/pedidos");
 
   if (order.shipping_provider) {
@@ -99,26 +100,28 @@ export async function createShipment(formData: FormData) {
     redirect(`/admin/pedidos?error=cp-faltante&id=${id}`);
   }
 
-  const items = db
-    .prepare(
-      `SELECT p.slug, oi.qty
+  const itemsResult = await db.execute({
+    sql: `SELECT p.slug, oi.qty
        FROM order_items oi
        JOIN perfumes p ON p.id = oi.perfume_id
-       WHERE oi.order_id = ?`
-    )
-    .all(id) as { slug: string; qty: number }[];
+       WHERE oi.order_id = ?`,
+    args: [id],
+  });
+  const items = itemsResult.rows as unknown as { slug: string; qty: number }[];
 
   let pkg;
   try {
-    pkg = computePackageForItems(items);
+    pkg = await computePackageForItems(items);
   } catch (error) {
     logError("createShipment/package", error);
     redirect(`/admin/pedidos?error=empaque&id=${id}`);
   }
 
-  const customer = db
-    .prepare("SELECT name, email, phone FROM customers WHERE id = ?")
-    .get(order.customer_id) as { name: string; email: string | null; phone: string | null } | undefined;
+  const customerResult = await db.execute({
+    sql: "SELECT name, email, phone FROM customers WHERE id = ?",
+    args: [order.customer_id],
+  });
+  const customer = customerResult.rows[0] as unknown as { name: string; email: string | null; phone: string | null } | undefined;
 
   const deliveryType: DeliveryType = order.delivery_type === "S" ? "S" : "D";
   const provider = getShippingProvider();
@@ -156,19 +159,20 @@ export async function createShipment(formData: FormData) {
     redirect(`/admin/pedidos?error=despacho-fallido&id=${id}`);
   }
 
-  db.prepare(
-    `UPDATE orders SET
+  await db.execute({
+    sql: `UPDATE orders SET
        shipping_provider = ?, shipping_service = ?, tracking_number = ?,
        tracking_url = ?, shipped_at = ?, status = 'enviado'
-     WHERE id = ?`
-  ).run(
-    result.provider,
-    result.service,
-    result.trackingNumber ?? "",
-    result.trackingUrl ?? "",
-    result.shippedAt,
-    id
-  );
+     WHERE id = ?`,
+    args: [
+      result.provider,
+      result.service,
+      result.trackingNumber ?? "",
+      result.trackingUrl ?? "",
+      result.shippedAt,
+      id,
+    ],
+  });
 
   orderPath(id);
   redirect(`/admin/pedidos?ok=despachado&id=${id}`);
@@ -180,7 +184,7 @@ export async function refreshTracking(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!Number.isFinite(id)) redirect("/admin/pedidos");
 
-  const order = getOrder(id);
+  const order = await getOrder(id);
   if (!order) redirect("/admin/pedidos");
   if (!order.tracking_number) {
     redirect(`/admin/pedidos?error=sin-tracking&id=${id}`);
@@ -197,9 +201,11 @@ export async function refreshTracking(formData: FormData) {
     logError("refreshTracking", error);
   }
 
-  getDb()
-    .prepare("UPDATE orders SET tracking_events = ? WHERE id = ?")
-    .run(JSON.stringify(events), id);
+  const db = await getDb();
+  await db.execute({
+    sql: "UPDATE orders SET tracking_events = ? WHERE id = ?",
+    args: [JSON.stringify(events), id],
+  });
 
   orderPath(id);
   redirect(`/admin/pedidos?ok=tracking-actualizado&id=${id}`);
@@ -215,9 +221,11 @@ export async function updateTrackingNumber(formData: FormData) {
     redirect("/admin/pedidos");
   }
 
-  getDb()
-    .prepare("UPDATE orders SET tracking_number = ? WHERE id = ?")
-    .run(number, id);
+  const db = await getDb();
+  await db.execute({
+    sql: "UPDATE orders SET tracking_number = ? WHERE id = ?",
+    args: [number, id],
+  });
 
   orderPath(id);
   redirect(`/admin/pedidos?ok=tracking-registrado&id=${id}`);
@@ -231,7 +239,7 @@ export async function cancelShipment(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!Number.isFinite(id)) redirect("/admin/pedidos");
 
-  const order = getOrder(id);
+  const order = await getOrder(id);
   if (!order) redirect("/admin/pedidos");
 
   const provider = getShippingProvider();
