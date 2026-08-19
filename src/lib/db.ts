@@ -283,6 +283,15 @@ async function seedIfEmpty(database: Client) {
   }
 }
 
+async function reconcilePrices(database: Client) {
+  for (const p of seed.perfumes) {
+    await database.execute({
+      sql: `UPDATE perfumes SET price_30 = ?, price_50 = ?, price_100 = ? WHERE slug = ?`,
+      args: [p.price_30 ?? null, p.price_50 ?? null, p.price_100 ?? null, p.slug],
+    });
+  }
+}
+
 let initPromise: Promise<void> | null = null;
 
 async function ensureInit(db: Client) {
@@ -292,6 +301,7 @@ async function ensureInit(db: Client) {
       await migrate(db);
       await seedIfEmpty(db);
       await reconcileStock(db);
+      await reconcilePrices(db);
       await backfillPackageDefaults(db);
     })();
   }

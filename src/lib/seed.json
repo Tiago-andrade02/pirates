@@ -70,7 +70,7 @@
       ],
       "price_30": null,
       "price_50": 39990,
-      "price_100": 46990,
+      "price_100": 47990,
       "stock": 24,
       "description": "Asad es una fragancia intensa, especiada y masculina, diseñada para transmitir presencia y seguridad. La pimienta negra, la piña y el tabaco crean una salida potente, mientras que el café, el iris y el pachulí aportan profundidad. Su fondo de vainilla, ámbar y maderas secas deja una estela cálida, oscura y seductora.",
       "notes_top": [
@@ -122,7 +122,7 @@
       ],
       "price_30": 32990,
       "price_50": 39990,
-      "price_100": 46990,
+      "price_100": 47990,
       "stock": 20,
       "description": "Asad Bourbon combina especias, cacao y vainilla Bourbon en una fragancia cálida, elegante y envolvente. La pimienta rosa, lavanda y ciruela Mirabelle aportan una salida aromática y ligeramente frutal, mientras que el cacao y la nuez moscada aportan profundidad. El fondo de vetiver, ámbar y vainilla Bourbon deja una estela sofisticada y adictiva.",
       "notes_top": [
@@ -170,7 +170,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 46990,
+      "price_100": 47990,
       "stock": 15,
       "description": "Asad Elixir es una versión más profunda e intensa del ADN de Asad. La apertura combina pimienta rosa, azafrán y pomelo, seguida de un corazón de tabaco, cedro y vainilla. Su fondo de pachulí, olíbano, cashmeran y ámbar seco crea una fragancia oscura, sofisticada y de gran presencia.",
       "notes_top": [
@@ -220,7 +220,7 @@
       ],
       "price_30": 44990,
       "price_50": null,
-      "price_100": null,
+      "price_100": 70990,
       "stock": 31,
       "description": "Khamrah es una fragancia dulce, especiada y adictiva, perfecta para quienes buscan un aroma cálido y llamativo. La combinación de canela, nuez moscada, dátiles y praliné crea un perfil gourmand irresistible, mientras que la vainilla, haba tonka y ámbar aportan un fondo profundo y envolvente. Ideal para destacar en noches frías y ocasiones especiales.",
       "notes_top": [
@@ -275,7 +275,7 @@
       ],
       "price_30": 44990,
       "price_50": null,
-      "price_100": 68990,
+      "price_100": 70990,
       "stock": 0,
       "description": "Khamrah Qahwa lleva el ADN dulce y especiado de Khamrah a un terreno más profundo y adictivo gracias al café. La canela, el cardamomo y el jengibre abren la fragancia con intensidad, mientras que el praliné y las frutas confitadas aportan dulzura. En el fondo, café, vainilla y haba tonka crean un aroma cálido, cremoso y envolvente.",
       "notes_top": [
@@ -327,7 +327,7 @@
       ],
       "price_30": 32990,
       "price_50": 39990,
-      "price_100": 46990,
+      "price_100": 47990,
       "stock": 38,
       "description": "Yara es una fragancia femenina dulce, suave y femenina, con un perfil floral, tropical y cremoso. La mandarina, heliotropo y orquídea aportan una salida delicada, mientras que las notas tropicales y gourmand crean un corazón dulce. Su fondo de vainilla, sándalo y almizcle aporta calidez y suavidad.",
       "notes_top": [
@@ -376,7 +376,7 @@
       ],
       "price_30": null,
       "price_50": 39990,
-      "price_100": 46990,
+      "price_100": 47990,
       "stock": 18,
       "description": "Yara Moi es una fragancia femenina, elegante y sensual que combina frutas jugosas con un corazón floral cremoso. La pera, pimienta rosa y grosella negra aportan una salida fresca y dulce, mientras que la tuberosa, jazmín y almendra crean un corazón sofisticado. La vainilla, cashmeran y pachulí completan el aroma con un fondo cálido y envolvente.",
       "notes_top": [
@@ -424,7 +424,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 46990,
+      "price_100": 47990,
       "stock": 14,
       "description": "La versión intensa y cálida de Yara. Más floral, más cremosa, con un extra de ámbar y vainilla para noches elegantes.",
       "notes_top": [
@@ -522,7 +522,7 @@
       ],
       "price_30": 39990,
       "price_50": null,
-      "price_100": 71990,
+      "price_100": 73990,
       "stock": 20,
       "description": "Eclaire es una fragancia extremadamente dulce, cremosa y gourmand, perfecta para quienes aman los aromas que recuerdan a un postre. El caramelo, la leche y el azúcar crean una apertura deliciosa, mientras que la miel y las flores blancas aportan suavidad. La vainilla, el praliné y el almizcle dejan un fondo cremoso, cálido y adictivo.",
       "notes_top": [
@@ -570,7 +570,7 @@
       ],
       "price_30": 39990,
       "price_50": null,
-      "price_100": 79990,
+      "price_100": 82490,
       "stock": 16,
       "description": "Eclaire Pistache es una fragancia gourmand, cremosa y adictiva construida alrededor del pistacho. La crema de pistacho y el pistacho tostado crean una apertura dulce y ligeramente tostada, mientras que la crema pastelera, el coco y el cacao aportan una sensación de postre. El fondo de vainilla, leche y almizcle deja una estela suave, cremosa y reconfortante.",
       "notes_top": [
@@ -619,7 +619,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 67990,
+      "price_100": 69990,
       "stock": 22,
       "description": "Fakhar Black es una fragancia masculina fresca, aromática y moderna. La manzana, bergamota y jengibre generan una apertura fresca y energética, seguida de un corazón de lavanda, salvia, enebro y geranio. El fondo de haba tonka, cedro, amberwood y vetiver aporta profundidad sin perder su carácter limpio y versátil.",
       "notes_top": [
@@ -670,7 +670,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 67990,
+      "price_100": 69990,
       "stock": 14,
       "description": "Fakhar Rose es una fragancia femenina luminosa, floral y sensual, con una apertura frutal que evoluciona hacia un corazón intenso de flores blancas. La rosa, el jazmín y la tuberosa aportan elegancia, mientras que la vainilla, el sándalo y el almizcle blanco dejan un fondo cálido, suave y femenino.",
       "notes_top": [
@@ -725,7 +725,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 58490,
+      "price_100": 59990,
       "stock": 12,
       "description": "Honor & Glory es una fragancia dulce, especiada y gourmand, con una combinación irresistible de piña cremosa y crème brûlée. Las especias aportan profundidad, mientras que la vainilla, el sándalo y el cashmeran crean un fondo cálido, cremoso y envolvente. Una fragancia llamativa y adictiva, perfecta para quienes disfrutan los aromas dulces y diferentes.",
       "notes_top": [
@@ -775,7 +775,7 @@
       ],
       "price_30": 39990,
       "price_50": null,
-      "price_100": 58990,
+      "price_100": 60490,
       "stock": 0,
       "description": "9PM es la fragancia de fiesta por excelencia. Su explosión frutal y dulce, con canela y vainilla, crea una proyección brutal que se siente en toda la pista. Diseñado para no pasar desapercibido.",
       "notes_top": [
@@ -829,7 +829,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 70990,
+      "price_100": 72990,
       "stock": 12,
       "description": "9PM Night Out lleva la noche a otro nivel: frutas oscuras, ámbar y vainilla con un toque especiado y licoroso. Intenso, seductor y hecho para salir.",
       "notes_top": [
@@ -880,7 +880,7 @@
       ],
       "price_30": 39990,
       "price_50": null,
-      "price_100": 70990,
+      "price_100": 72990,
       "stock": 27,
       "description": "Club de Nuit Intense Man es una fragancia masculina elegante, potente y sofisticada. Su apertura combina limón, bergamota, manzana, piña y grosella negra para crear un impacto fresco y frutal. El corazón floral se mezcla con abedul, aportando un característico toque ahumado y masculino. Su fondo de almizcle, ámbar gris, pachulí y vainilla completa una fragancia versátil y de gran presencia.",
       "notes_top": [
@@ -933,7 +933,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 58990,
+      "price_100": 60490,
       "stock": 18,
       "description": "La versión helada del mítico Hawas. Acuático, cítrico y con un toque mentolado que lo hace perfecto para el calor. Frescura extrema con buena proyección.",
       "notes_top": [
@@ -1031,7 +1031,7 @@
       ],
       "price_30": 39990,
       "price_50": null,
-      "price_100": 80990,
+      "price_100": 83490,
       "stock": 16,
       "description": "Odyssey Mandarin Sky es una fragancia masculina dulce, cítrica y adictiva. La mandarina y la naranja aportan una salida jugosa y vibrante, acompañadas por azafrán y salvia. En el corazón aparece un delicioso acorde de caramelo y haba tonka, mientras que el ambroxan, cedro y vetiver aportan profundidad. Una fragancia moderna, juvenil y perfecta para destacar.",
       "notes_top": [
@@ -1081,7 +1081,7 @@
       ],
       "price_30": 39990,
       "price_50": null,
-      "price_100": 58490,
+      "price_100": 59990,
       "stock": 15,
       "description": "Noble Blush es una fragancia femenina dulce, cremosa y delicada. La rosa con leche crea una apertura suave y romántica, mientras que la almendra y el merengue aportan un carácter gourmand y aterciopelado. Su fondo de vainilla, sándalo y almizcle completa el aroma con una sensación cálida, limpia y envolvente.",
       "notes_top": [
@@ -1174,7 +1174,7 @@
       ],
       "price_30": 32990,
       "price_50": null,
-      "price_100": 58490,
+      "price_100": 59990,
       "stock": 17,
       "description": "Sublime es una fragancia frutal, dulce y vibrante que combina manzana y ciruela con un corazón floral luminoso. Su fondo de almizcle, musgo y oud caramelizado aporta profundidad y una sensación cálida y envolvente. Una opción moderna y llamativa para quienes buscan un perfume frutal con personalidad.",
       "notes_top": [
@@ -1494,7 +1494,7 @@
       ],
       "price_30": 32990,
       "price_50": null,
-      "price_100": 78990,
+      "price_100": 80990,
       "stock": 15,
       "description": "The Kingdom For Men es una fragancia masculina intensa, aromática y dulce, con una combinación moderna de lavanda, menta y salvia. El corazón mezcla vainilla, tabaco y flor de azahar, creando un perfil cálido y seductor. En el fondo, la haba tonka, el benjuí y el ládano aportan profundidad y una estela elegante y envolvente.",
       "notes_top": [
@@ -1543,7 +1543,7 @@
       ],
       "price_30": null,
       "price_50": 54990,
-      "price_100": 80990,
+      "price_100": 83490,
       "stock": 14,
       "description": "Erba Pura es una fragancia vibrante, frutal y envolvente que combina cítricos mediterráneos con un corazón de frutas y un fondo cálido de ámbar, vainilla y almizcle blanco. Su aroma es moderno, dulce y llamativo, ideal para quienes buscan una fragancia que deje huella.",
       "notes_top": [
@@ -1590,7 +1590,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 76990,
+      "price_100": 79490,
       "stock": 10,
       "description": "Opera es una fragancia sofisticada, elegante y de gran presencia. Una combinación de frutas y rosa turca da paso a un corazón cálido de cuero, ámbar y ylang-ylang, sobre una base profunda de vainilla, pachulí, maderas y almizcle. Una fragancia pensada para destacar con elegancia.",
       "notes_top": [
@@ -1641,7 +1641,7 @@
       ],
       "price_30": null,
       "price_50": null,
-      "price_100": 76990,
+      "price_100": 78990,
       "stock": 12,
       "description": "Erba Gold es una fragancia fresca, frutal y luminosa con un marcado carácter tropical. Su salida cítrica se combina con manzana verde, melón y pera, mientras que las especias aportan profundidad y el fondo de vainilla, ámbar, almizcle y maderas deja una estela cálida y envolvente.",
       "notes_top": [
@@ -1693,7 +1693,7 @@
       ],
       "price_30": 39990,
       "price_50": null,
-      "price_100": 58490,
+      "price_100": 59990,
       "stock": 13,
       "description": "Oud For Glory es una fragancia intensa, oscura y sofisticada, construida alrededor del oud y las especias. El azafrán, la nuez moscada y la lavanda generan una salida potente y especiada, mientras que el oud y el pachulí dominan el corazón. Su fondo de oud, pachulí y almizcle crea una estela profunda, elegante y de gran presencia.",
       "notes_top": [
@@ -1787,7 +1787,7 @@
       ],
       "price_30": null,
       "price_50": 54990,
-      "price_100": 84990,
+      "price_100": 87490,
       "stock": 12,
       "description": "Liquid Brun es una fragancia cálida, cremosa y adictiva, inspirada en la elegancia de la alta perfumería francesa. La bergamota y la naranja ofrecen una salida luminosa y jugosa, mientras que la canela y la flor de naranjo aportan un corazón especiado y envolvente. Su fondo de vainilla, ámbar, caramelo y haba tonka deja una estela dulce, sofisticada y de larga duración. Ideal para el invierno y las noches frías.",
       "notes_top": [

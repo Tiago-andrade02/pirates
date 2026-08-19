@@ -49,3 +49,8 @@ next-env.d.ts
 /logs/
 *.log
 devpid.txt
+
+# SQLite local files
+auth
+auth-* 
+auth-*
