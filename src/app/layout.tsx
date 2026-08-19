@@ -19,6 +19,12 @@ const playfair = Playfair_Display({
   weight: ["400", "500", "600", "700"],
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL ?? "https://pirates-perfumeria.vercel.app"),
   title: {

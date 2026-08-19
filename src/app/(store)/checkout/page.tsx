@@ -84,17 +84,17 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-line bg-surface text-muted">
-          <CartIcon className="h-8 w-8" />
+      <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center sm:py-24">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-line bg-surface text-muted sm:h-20 sm:w-20">
+          <CartIcon className="h-7 w-7 sm:h-8 sm:w-8" />
         </div>
-        <h1 className="mt-6 font-serif text-3xl text-white">No hay nada para pagar</h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted">
+        <h1 className="mt-5 font-serif text-2xl text-white sm:mt-6 sm:text-3xl">No hay nada para pagar</h1>
+        <p className="mt-2.5 text-sm leading-relaxed text-muted sm:mt-3">
           Tu carrito está vacío. Agregá fragancias y volvé para finalizar la compra.
         </p>
         <Link
           href="/perfumes"
-          className="mt-8 inline-flex h-12 items-center rounded-full bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-neutral-200"
+          className="mt-7 inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-8 sm:h-12 sm:px-7"
         >
           Explorar catálogo
         </Link>
@@ -103,19 +103,19 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <h1 className="font-serif text-3xl text-white sm:text-4xl">Checkout</h1>
-      <p className="mt-2 text-sm text-muted">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8 lg:py-10">
+      <h1 className="font-serif text-2xl text-white sm:text-3xl lg:text-4xl">Checkout</h1>
+      <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">
         {count} {count === 1 ? "producto" : "productos"} · Pago seguro con Mercado Pago
       </p>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_360px]">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <section className="rounded-2xl border border-line bg-surface p-6">
-            <h2 className="font-serif text-xl text-white">Datos de contacto</h2>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1fr_360px] lg:mt-10 lg:gap-10">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          <section className="rounded-2xl border border-line bg-surface p-4 sm:p-6">
+            <h2 className="font-serif text-base text-white sm:text-xl">Datos de contacto</h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4 sm:mt-5">
               <label className="block">
-                <span className="mb-1.5 block text-xs text-muted">Nombre y apellido *</span>
+                <span className="mb-1 block text-xs text-muted sm:mb-1.5">Nombre y apellido *</span>
                 <input
                   required
                   value={name}
@@ -125,7 +125,7 @@ export default function CheckoutPage() {
                 />
               </label>
               <label className="block">
-                <span className="mb-1.5 block text-xs text-muted">WhatsApp *</span>
+                <span className="mb-1 block text-xs text-muted sm:mb-1.5">WhatsApp *</span>
                 <input
                   required
                   type="tel"
@@ -136,7 +136,7 @@ export default function CheckoutPage() {
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="mb-1.5 block text-xs text-muted">Email (opcional)</span>
+                <span className="mb-1 block text-xs text-muted sm:mb-1.5">Email (opcional)</span>
                 <input
                   type="email"
                   value={email}
@@ -168,23 +168,23 @@ export default function CheckoutPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-semibold text-black transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-semibold text-black transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60 sm:h-12"
           >
             {loading ? "Iniciando pago…" : "Ir a pagar"}
             <CreditCardIcon className="h-4 w-4" />
           </button>
-          <p className="text-center text-xs text-faint">
+          <p className="text-center text-[11px] text-faint sm:text-xs">
             Serás redirigido a Mercado Pago para completar el pago de forma segura.
           </p>
         </form>
 
-        <aside className="h-fit rounded-2xl border border-line bg-surface p-6 lg:sticky lg:top-24">
-          <h2 className="font-serif text-xl text-white">Tu pedido</h2>
-          <ul className="mt-5 space-y-3">
+        <aside className="h-fit rounded-2xl border border-line bg-surface p-4 sm:p-6 lg:sticky lg:top-24">
+          <h2 className="font-serif text-lg text-white sm:text-xl">Tu pedido</h2>
+          <ul className="mt-4 space-y-2.5 sm:mt-5 sm:space-y-3">
             {items.map((item) => (
               <li key={`${item.slug}-${item.size}`} className="flex items-start justify-between gap-3 text-sm">
-                <div>
-                  <p className="text-white">{item.name}</p>
+                <div className="min-w-0">
+                  <p className="truncate text-white">{item.name}</p>
                   <p className="text-xs text-faint">
                     {item.size} ml · {item.qty} × {formatARS(item.price)}
                   </p>
@@ -193,7 +193,7 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
-          <dl className="mt-5 space-y-3 border-t border-line pt-5 text-sm">
+          <dl className="mt-4 space-y-2.5 border-t border-line pt-4 text-sm sm:mt-5 sm:space-y-3 sm:pt-5">
             <div className="flex justify-between">
               <dt className="text-muted">Subtotal</dt>
               <dd className="text-white">{formatARS(subtotal)}</dd>
@@ -211,12 +211,12 @@ export default function CheckoutPage() {
               </dd>
             </div>
           </dl>
-          <div className="mt-5 flex justify-between border-t border-line pt-5">
+          <div className="mt-4 flex justify-between border-t border-line pt-4 sm:mt-5 sm:pt-5">
             <span className="text-sm font-semibold text-white">Total</span>
-            <span className="font-serif text-2xl text-white">{formatARS(total)}</span>
+            <span className="font-serif text-xl text-white sm:text-2xl">{formatARS(total)}</span>
           </div>
           {shipping && (
-            <p className="mt-4 rounded-xl border border-line bg-background p-3 text-xs text-muted">
+            <p className="mt-3 rounded-xl border border-line bg-background p-2.5 text-xs text-muted sm:mt-4 sm:p-3">
               {shipping.deliveryType === "S" ? "Retiro en sucursal" : "Envío a domicilio"}
               {shipping.deliveryType === "D" && shipping.street
                 ? ` · ${shipping.street} ${shipping.number}`

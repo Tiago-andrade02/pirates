@@ -11,19 +11,19 @@ export function CartView() {
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-line bg-surface text-muted">
-          <CartIcon className="h-8 w-8" />
+      <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center sm:py-24">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full border border-line bg-surface text-muted sm:h-20 sm:w-20">
+          <CartIcon className="h-7 w-7 sm:h-8 sm:w-8" />
         </div>
-        <h1 className="mt-6 font-serif text-3xl text-white">
+        <h1 className="mt-5 font-serif text-2xl text-white sm:mt-6 sm:text-3xl">
           Tu carrito está vacío
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted">
+        <p className="mt-2.5 text-sm leading-relaxed text-muted sm:mt-3">
           Explorá el catálogo y encontrá la fragancia que te representa.
         </p>
         <Link
           href="/perfumes"
-          className="mt-8 inline-flex h-12 items-center rounded-full bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-neutral-200"
+          className="mt-7 inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-8 sm:h-12 sm:px-7"
         >
           Explorar catálogo
         </Link>
@@ -34,22 +34,22 @@ export function CartView() {
   const shipping = subtotal >= 80000 ? 0 : 6500;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <h1 className="font-serif text-3xl text-white sm:text-4xl">Carrito</h1>
-      <p className="mt-2 text-sm text-muted">
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:py-8 lg:py-10">
+      <h1 className="font-serif text-2xl text-white sm:text-3xl lg:text-4xl">Carrito</h1>
+      <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">
         {count} {count === 1 ? "producto" : "productos"}
       </p>
 
-      <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_360px]">
-        <ul className="space-y-4">
+      <div className="mt-6 grid gap-6 sm:mt-8 sm:gap-8 lg:grid-cols-[1fr_360px] lg:mt-10 lg:gap-10">
+        <ul className="space-y-3 sm:space-y-4">
           {items.map((item) => (
             <li
               key={`${item.slug}-${item.size}`}
-              className="flex gap-4 rounded-2xl border border-line bg-surface p-4 sm:p-5"
+              className="flex gap-3 rounded-2xl border border-line bg-surface p-3 sm:gap-4 sm:p-5"
             >
               <Link
                 href={`/perfumes/${item.slug}`}
-                className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-background sm:h-28 sm:w-28"
+                className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-line bg-background sm:h-28 sm:w-28"
               >
                 <ProductImage
                   image={item.image}
@@ -61,51 +61,51 @@ export function CartView() {
               <div className="flex min-w-0 flex-1 flex-col">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-widest text-faint">
+                    <p className="text-[10px] uppercase tracking-widest text-faint sm:text-xs">
                       {item.brandName}
                     </p>
                     <Link
                       href={`/perfumes/${item.slug}`}
-                      className="mt-0.5 block truncate font-serif text-base text-white transition-colors hover:text-neutral-300 sm:text-lg"
+                      className="mt-0.5 block truncate font-serif text-sm text-white transition-colors hover:text-neutral-300 sm:text-base lg:text-lg"
                     >
                       {item.name}
                     </Link>
-                    <p className="mt-1 text-xs text-muted">
+                    <p className="mt-0.5 text-[10px] text-muted sm:mt-1 sm:text-xs">
                       {item.size} ml · {formatARS(item.price)} c/u
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeItem(item.slug, item.size)}
-                    className="shrink-0 rounded-full px-2 py-1.5 text-xs text-faint transition-colors hover:bg-surface-3 hover:text-white sm:px-3"
+                    className="shrink-0 rounded-full px-1.5 py-1 text-[10px] text-faint transition-colors hover:bg-surface-3 hover:text-white sm:px-3 sm:text-xs"
                   >
                     Quitar
                   </button>
                 </div>
 
-                <div className="mt-auto flex items-center justify-between pt-3">
+                <div className="mt-auto flex items-center justify-between pt-2 sm:pt-3">
                   <div className="flex items-center rounded-full border border-line bg-background">
                     <button
                       type="button"
                       onClick={() => setQty(item.slug, item.size, item.qty - 1)}
-                      className="flex h-9 w-9 items-center justify-center text-muted transition-colors hover:text-white"
+                      className="flex h-8 w-8 items-center justify-center text-muted transition-colors hover:text-white sm:h-9 sm:w-9"
                       aria-label="Disminuir cantidad"
                     >
                       −
                     </button>
-                    <span className="w-7 text-center text-sm text-white">
+                    <span className="w-6 text-center text-xs text-white sm:w-7 sm:text-sm">
                       {item.qty}
                     </span>
                     <button
                       type="button"
                       onClick={() => setQty(item.slug, item.size, item.qty + 1)}
-                      className="flex h-9 w-9 items-center justify-center text-muted transition-colors hover:text-white"
+                      className="flex h-8 w-8 items-center justify-center text-muted transition-colors hover:text-white sm:h-9 sm:w-9"
                       aria-label="Aumentar cantidad"
                     >
                       +
                     </button>
                   </div>
-                  <p className="text-base font-semibold text-white">
+                  <p className="text-sm font-semibold text-white sm:text-base">
                     {formatARS(item.price * item.qty)}
                   </p>
                 </div>
@@ -114,9 +114,9 @@ export function CartView() {
           ))}
         </ul>
 
-        <aside className="h-fit rounded-2xl border border-line bg-surface p-6 lg:sticky lg:top-24">
-          <h2 className="font-serif text-xl text-white">Resumen</h2>
-          <dl className="mt-5 space-y-3 text-sm">
+        <aside className="h-fit rounded-2xl border border-line bg-surface p-4 sm:p-6 lg:sticky lg:top-24">
+          <h2 className="font-serif text-lg text-white sm:text-xl">Resumen</h2>
+          <dl className="mt-4 space-y-2.5 text-sm sm:mt-5 sm:space-y-3">
             <div className="flex justify-between">
               <dt className="text-muted">Subtotal</dt>
               <dd className="text-white">{formatARS(subtotal)}</dd>
@@ -136,15 +136,15 @@ export function CartView() {
               <dd className="text-faint">Disponible pronto</dd>
             </div>
           </dl>
-          <div className="mt-5 flex justify-between border-t border-line pt-5">
+          <div className="mt-4 flex justify-between border-t border-line pt-4 sm:mt-5 sm:pt-5">
             <span className="text-sm font-semibold text-white">Total</span>
-            <span className="font-serif text-2xl text-white">
+            <span className="font-serif text-xl text-white sm:text-2xl">
               {formatARS(subtotal + shipping)}
             </span>
           </div>
 
           {subtotal < 80000 && (
-            <p className="mt-4 flex items-start gap-2 rounded-xl border border-line bg-background p-3 text-xs text-muted">
+            <p className="mt-3 flex items-start gap-2 rounded-xl border border-line bg-background p-2.5 text-xs text-muted sm:mt-4 sm:p-3">
               <TruckIcon className="mt-0.5 h-4 w-4 shrink-0 text-faint" />
               Te faltan {formatARS(80000 - subtotal)} para el envío gratis.
             </p>
@@ -152,12 +152,12 @@ export function CartView() {
 
           <Link
             href="/checkout"
-            className="mt-5 flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-black transition-colors hover:bg-neutral-200"
+            className="mt-4 flex h-11 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-5 sm:h-12"
           >
             Finalizar compra
           </Link>
 
-          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-faint">
+          <div className="mt-4 flex items-center justify-center gap-2 text-xs text-faint sm:mt-5">
             <CreditCardIcon className="h-4 w-4" />
             Pagos con Mercado Pago
           </div>
@@ -169,7 +169,7 @@ export function CartView() {
           <button
             type="button"
             onClick={clear}
-            className="mt-6 w-full text-center text-xs text-faint transition-colors hover:text-white"
+            className="mt-5 w-full text-center text-xs text-faint transition-colors hover:text-white sm:mt-6"
           >
             Vaciar carrito
           </button>

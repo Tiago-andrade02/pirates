@@ -191,16 +191,16 @@ export default async function CatalogPage(props: CatalogPageProps) {
   const hasFilters = activeCount > 0;
 
   return (
-      <div className="mx-auto max-w-7xl px-3 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
       <header className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-faint">
             Catálogo
           </p>
-          <h1 className="mt-2 font-serif text-3xl text-white sm:text-4xl lg:text-5xl">
+          <h1 className="mt-2 font-serif text-2xl text-white sm:text-3xl lg:text-5xl">
             Perfumes
           </h1>
-          <p className="mt-2 text-sm text-muted sm:mt-3">
+          <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">
             {perfumes.length}{" "}
             {perfumes.length === 1 ? "perfume encontrado" : "perfumes encontrados"}
           </p>
@@ -213,7 +213,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
             {hasFilters && (
               <Link
                 href="/perfumes"
-                className="h-10 shrink-0 rounded-full border border-line px-5 text-sm text-muted transition-colors hover:border-white/40 hover:text-white"
+                className="h-10 shrink-0 rounded-full border border-line px-4 text-xs text-muted transition-colors hover:border-white/40 hover:text-white sm:px-5 sm:text-sm"
               >
                 Limpiar filtros ({activeCount})
               </Link>
@@ -224,58 +224,30 @@ export default async function CatalogPage(props: CatalogPageProps) {
       </header>
 
       {filters.q && (
-        <div className="mt-6 flex items-center gap-3 rounded-2xl border border-line bg-surface px-5 py-4">
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:mt-6 sm:px-5 sm:py-4">
           <SearchIcon className="h-4 w-4 text-faint" />
-          <p className="flex-1 text-sm text-muted">
+          <p className="flex-1 text-xs text-muted sm:text-sm">
             Resultados para{" "}
-            <span className="font-semibold text-white">“{filters.q}”</span>
+            <span className="font-semibold text-white">&ldquo;{filters.q}&rdquo;</span>
           </p>
           <Link
             href="/perfumes"
-            className="text-sm text-faint transition-colors hover:text-white"
+            className="text-xs text-faint transition-colors hover:text-white sm:text-sm"
           >
             Quitar búsqueda
           </Link>
         </div>
       )}
 
-        <div className="mt-6 grid gap-6 sm:mt-10 sm:gap-10 lg:grid-cols-[240px_1fr]">
+      <div className="mt-5 grid gap-5 sm:mt-8 sm:gap-8 lg:grid-cols-[240px_1fr] lg:mt-10 lg:gap-10">
         <aside className="hidden lg:block">
-          <FilterGroup
-            label="Marca"
-            options={brandOptions}
-            allowClear
-          />
-          <FilterGroup
-            label="Tamaño"
-            options={sizeOptions}
-            allowClear
-          />
-          <FilterGroup
-            label="Precio"
-            options={priceOptions}
-            allowClear
-          />
-          <FilterGroup
-            label="Tipo"
-            options={genderOptions}
-            allowClear
-          />
-          <FilterGroup
-            label="Aroma"
-            options={aromaOptions}
-            allowClear
-          />
-          <FilterGroup
-            label="Estación"
-            options={seasonOptions}
-            allowClear
-          />
-          <FilterGroup
-            label="Ocasión"
-            options={occasionOptions}
-            allowClear
-          />
+          <FilterGroup label="Marca" options={brandOptions} allowClear />
+          <FilterGroup label="Tamaño" options={sizeOptions} allowClear />
+          <FilterGroup label="Precio" options={priceOptions} allowClear />
+          <FilterGroup label="Tipo" options={genderOptions} allowClear />
+          <FilterGroup label="Aroma" options={aromaOptions} allowClear />
+          <FilterGroup label="Estación" options={seasonOptions} allowClear />
+          <FilterGroup label="Ocasión" options={occasionOptions} allowClear />
           {extraGroups.map((group) => (
             <FilterGroup key={group.label} label={group.label} options={group.options} />
           ))}
@@ -295,7 +267,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               <Link
                 key={option.value + option.label}
                 href={option.href}
-                className={`shrink-0 rounded-full border px-3 py-1 text-xs transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
                   option.active
                     ? "border-white bg-white font-medium text-black"
                     : "border-line bg-surface text-muted hover:text-white"
@@ -307,23 +279,23 @@ export default async function CatalogPage(props: CatalogPageProps) {
           </div>
 
           {perfumes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface px-6 py-24 text-center">
-              <p className="font-serif text-2xl text-white">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface px-4 py-16 text-center sm:px-6 sm:py-24">
+              <p className="font-serif text-xl text-white sm:text-2xl">
                 No encontramos perfumes
               </p>
-              <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted">
+              <p className="mt-2 max-w-sm text-xs leading-relaxed text-muted sm:mt-3 sm:text-sm">
                 Probá quitar alguno de los filtros aplicados o buscá otra
                 combinación.
               </p>
               <Link
                 href="/perfumes"
-                className="mt-6 inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200"
+                className="mt-5 inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-6"
               >
                 Ver todo el catálogo
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 lg:gap-6">
               {perfumes.map((perfume) => (
                 <ProductCard key={perfume.id} perfume={perfume} />
               ))}

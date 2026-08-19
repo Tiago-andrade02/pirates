@@ -16,7 +16,7 @@ const LINKS = [
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto grid h-14 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
         <nav className="hidden items-center gap-1 md:flex">
           {LINKS.map((link) => (
             <Link
@@ -33,7 +33,7 @@ export function Navbar() {
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-12 w-auto object-contain"
+            className="h-10 w-auto object-contain sm:h-12"
           />
         </Link>
 

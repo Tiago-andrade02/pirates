@@ -34,7 +34,7 @@ export function SortSelect({
     <select
       value={current}
       onChange={(e) => onChange(e.target.value)}
-      className="h-10 rounded-full border border-line bg-surface px-4 text-sm text-white outline-none transition-colors focus:border-white/40"
+      className="h-10 shrink-0 rounded-full border border-line bg-surface px-3 text-xs text-white outline-none transition-colors focus:border-white/40 sm:px-4 sm:text-sm"
       aria-label="Ordenar productos"
     >
       {OPTIONS.map((option) => (

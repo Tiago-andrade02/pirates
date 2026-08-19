@@ -60,11 +60,11 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:gap-2 sm:p-4">
-        <p className="text-[11px] uppercase tracking-widest text-faint sm:text-xs">
+      <div className="flex flex-1 flex-col gap-1 p-2.5 sm:gap-2 sm:p-4">
+        <p className="text-[10px] uppercase tracking-widest text-faint sm:text-xs">
           {perfume.brand.name}
         </p>
-        <h3 className="font-serif text-base leading-tight text-white sm:text-lg">
+        <h3 className="font-serif text-sm leading-snug text-white sm:text-lg">
           {perfume.name}
         </h3>
         <div className="hidden items-center gap-1.5 text-xs text-muted sm:flex">
@@ -74,32 +74,32 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
           </span>
           <span>({perfume.reviewCount} reseñas)</span>
         </div>
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-1.5 sm:pt-2">
           {outOfStock ? (
-            <p className="text-sm font-semibold text-red-400">Sin stock</p>
+            <p className="text-xs font-semibold text-red-400 sm:text-sm">Sin stock</p>
           ) : (
             <>
               <div className="flex items-end justify-between">
                 <div>
                   {price50 !== null ? (
                     <>
-                      <p className="text-[11px] text-faint">Desde 50 ml</p>
-                      <p className="text-sm font-semibold text-white sm:text-base">
+                      <p className="text-[10px] text-faint sm:text-[11px]">Desde 50 ml</p>
+                      <p className="text-xs font-semibold text-white sm:text-base">
                         {formatARS(price50)}
                       </p>
                     </>
                   ) : price !== null ? (
-                    <p className="text-sm font-semibold text-white sm:text-base">
+                    <p className="text-xs font-semibold text-white sm:text-base">
                       {formatARS(price)}
                     </p>
                   ) : (
-                    <p className="text-sm text-faint">Consultar</p>
+                    <p className="text-xs text-faint sm:text-sm">Consultar</p>
                   )}
                 </div>
               </div>
               {displayPrice !== null && (
-                <div className="mt-1 space-y-0.5 sm:mt-1.5">
-                  <p className="text-xs font-medium text-emerald-400">
+                <div className="mt-0.5 space-y-0 sm:mt-1.5">
+                  <p className="text-[10px] font-medium text-emerald-400 sm:text-xs">
                     Transferencia: {transferPrice !== null ? formatARS(transferPrice) : "—"}
                   </p>
                   <p className="hidden text-xs text-muted sm:block">

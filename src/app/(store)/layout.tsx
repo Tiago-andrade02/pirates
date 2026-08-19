@@ -6,10 +6,10 @@ import { Footer } from "@/components/Footer";
 export default function StoreLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="bg-white text-center text-[11px] font-medium uppercase tracking-widest text-black">
+      <div className="bg-white text-center text-[10px] font-medium uppercase tracking-widest text-black sm:text-[11px]">
         <Link
           href="/perfumes"
-          className="block px-4 py-2 transition-colors hover:bg-neutral-100"
+          className="block px-3 py-1.5 transition-colors hover:bg-neutral-100 sm:px-4 sm:py-2"
         >
           Envío gratis en compras superiores a $80.000
         </Link>
