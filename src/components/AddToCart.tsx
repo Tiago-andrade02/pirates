@@ -68,7 +68,7 @@ export function AddToCart({
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-surface p-5">
+    <div className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
       <div>
         <p className="text-xs uppercase tracking-widest text-faint">
           Presentación
@@ -86,7 +86,7 @@ export function AddToCart({
                   setSize(option.key);
                   setQty(1);
                 }}
-                className={`rounded-xl border px-3 py-3 text-left transition-colors ${
+                className={`rounded-xl border px-3 py-2.5 text-left transition-colors sm:py-3 ${
                   active
                     ? "border-white bg-white text-black"
                     : "border-line bg-surface-2 text-white hover:border-white/40"
@@ -113,28 +113,28 @@ export function AddToCart({
           <p className="text-xs uppercase tracking-widest text-faint">
             Métodos de pago
           </p>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-faint">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-2">
+            <div className="flex items-center gap-3 sm:block">
+              <p className="text-[11px] uppercase tracking-wide text-faint sm:mb-1">
                 Precio lista
               </p>
-              <p className="mt-1 text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-white">
                 {formatARS(price)}
               </p>
             </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-faint">
+            <div className="flex items-center gap-3 sm:block">
+              <p className="text-[11px] uppercase tracking-wide text-faint sm:mb-1">
                 Transferencia -10%
               </p>
-              <p className="mt-1 text-sm font-semibold text-emerald-400">
+              <p className="text-sm font-semibold text-emerald-400">
                 {transferPrice !== null ? formatARS(transferPrice) : "—"}
               </p>
             </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-faint">
+            <div className="flex items-center gap-3 sm:block">
+              <p className="text-[11px] uppercase tracking-wide text-faint sm:mb-1">
                 3 cuotas sin interés
               </p>
-              <p className="mt-1 text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-white">
                 {installment !== null ? `${formatARS(installment)} c/u` : "—"}
               </p>
             </div>
@@ -142,12 +142,12 @@ export function AddToCart({
         </div>
       )}
 
-      <div className="mt-5 flex items-center justify-between gap-4">
+      <div className="mt-4 flex items-center justify-between gap-3 sm:mt-5 sm:gap-4">
         <div className="flex items-center rounded-full border border-line bg-surface-2">
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="flex h-11 w-11 items-center justify-center text-lg text-muted transition-colors hover:text-white"
+            className="flex h-10 w-10 items-center justify-center text-lg text-muted transition-colors hover:text-white sm:h-11 sm:w-11"
             aria-label="Disminuir cantidad"
           >
             −
@@ -159,7 +159,7 @@ export function AddToCart({
             type="button"
             onClick={() => setQty((q) => (outOfStock ? q : Math.min(stock, q + 1)))}
             disabled={outOfStock || qty >= stock}
-            className="flex h-11 w-11 items-center justify-center text-lg text-muted transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex h-10 w-10 items-center justify-center text-lg text-muted transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
             aria-label="Aumentar cantidad"
           >
             +
@@ -170,7 +170,7 @@ export function AddToCart({
           type="button"
           onClick={handleAdd}
           disabled={outOfStock}
-          className={`h-11 flex-1 rounded-full text-sm font-semibold transition-all ${
+          className={`h-10 flex-1 rounded-full text-sm font-semibold transition-all sm:h-11 ${
             outOfStock
               ? "cursor-not-allowed bg-surface-3 text-faint"
               : added

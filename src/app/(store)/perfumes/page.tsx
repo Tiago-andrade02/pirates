@@ -282,9 +282,9 @@ export default async function CatalogPage(props: CatalogPageProps) {
         </aside>
 
         <div>
-          <div className="mb-6 flex gap-2 overflow-x-auto pb-2 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mb-4 flex gap-1.5 overflow-x-auto pb-2 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
-              ...brandOptions,
+              ...brandOptions.slice(0, 6),
               ...sizeOptions,
               ...priceOptions,
               ...genderOptions,
@@ -295,7 +295,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               <Link
                 key={option.value + option.label}
                 href={option.href}
-                className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
                   option.active
                     ? "border-white bg-white font-medium text-black"
                     : "border-line bg-surface text-muted hover:text-white"

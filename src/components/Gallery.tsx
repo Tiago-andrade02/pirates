@@ -7,8 +7,8 @@ export function Gallery({ slug, name }: { slug: string; name: string }) {
   const [active, setActive] = useState(1);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative aspect-square overflow-hidden rounded-3xl border border-line bg-gradient-to-b from-surface-2 to-background">
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="relative aspect-square overflow-hidden rounded-2xl border border-line bg-gradient-to-b from-surface-2 to-background sm:rounded-3xl">
         <ProductImage
           image={slug}
           alt={`${name} — foto ${active}`}
@@ -16,7 +16,7 @@ export function Gallery({ slug, name }: { slug: string; name: string }) {
           variant={active}
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         {[1, 2].map((variant) => (
           <button
             key={variant}
