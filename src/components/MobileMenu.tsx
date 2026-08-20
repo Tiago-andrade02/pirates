@@ -71,7 +71,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
             aria-modal="true"
           >
             <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/70"
               onClick={onClose}
             />
 
