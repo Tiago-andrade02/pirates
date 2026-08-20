@@ -76,17 +76,17 @@ function SectionHeading({
   href?: string;
 }) {
   return (
-    <div className="flex items-end justify-between gap-4">
-      <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-faint">{kicker}</p>
-        <h2 className="mt-2 font-serif text-2xl text-white sm:text-3xl lg:text-4xl">
+    <div className="flex items-end justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-faint sm:text-xs">{kicker}</p>
+        <h2 className="mt-1.5 font-serif text-[1.5rem] leading-tight text-white sm:mt-2 sm:text-3xl lg:text-4xl">
           {title}
         </h2>
       </div>
       {href && (
         <Link
           href={href}
-          className="group hidden items-center gap-2 text-sm text-muted transition-colors hover:text-white sm:flex"
+          className="group hidden shrink-0 items-center gap-2 text-sm text-muted transition-colors hover:text-white sm:flex"
         >
           Ver todos
           <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -104,7 +104,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center overflow-hidden bg-black">
+      <section className="relative flex min-h-[calc(100svh-3.5rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem)]">
         <img
           src="/logo.png"
           alt=""
@@ -113,18 +113,18 @@ export default async function HomePage() {
         />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-16 sm:px-6 sm:py-24 lg:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-14 sm:px-6 sm:py-24 lg:px-8">
           <div className="max-w-3xl">
             <p
-              className="hero-fade-up text-[10px] font-medium uppercase tracking-[0.3em] text-muted sm:text-xs"
+              className="hero-fade-up text-[11px] font-medium uppercase tracking-[0.3em] text-muted sm:text-xs"
               style={{ animationDelay: "0ms" }}
             >
               Perfumería árabe &amp; importada
             </p>
 
             <h1
-              className="hero-fade-up mt-4 font-serif text-4xl font-medium leading-[1.08] text-white sm:mt-6 sm:text-6xl xl:text-7xl"
-              style={{ animationDelay: "120ms" }}
+              className="hero-fade-up mt-3 font-serif font-medium leading-[1.08] text-white sm:mt-6"
+              style={{ animationDelay: "120ms", fontSize: "clamp(2.25rem, 6vw, 4.5rem)" }}
             >
               FRAGANCIAS
               <br />
@@ -134,7 +134,7 @@ export default async function HomePage() {
             </h1>
 
             <p
-              className="hero-fade-up mt-5 max-w-xl text-base leading-relaxed text-muted sm:mt-7 sm:text-lg"
+              className="hero-fade-up mt-4 max-w-xl text-sm leading-relaxed text-muted sm:mt-7 sm:text-lg"
               style={{ animationDelay: "240ms" }}
             >
               &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
@@ -143,7 +143,7 @@ export default async function HomePage() {
             </p>
 
             <div
-              className="hero-fade-up mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
+              className="hero-fade-up mt-7 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
               style={{ animationDelay: "360ms" }}
             >
               <Link
@@ -173,17 +173,17 @@ export default async function HomePage() {
 
       {/* BENEFICIOS */}
       <section className="border-y border-line bg-surface">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 py-10 sm:grid-cols-2 sm:gap-6 sm:px-6 sm:py-12 lg:grid-cols-4 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 py-8 sm:grid-cols-2 sm:gap-6 sm:px-6 sm:py-12 lg:grid-cols-4 lg:px-8">
           {BENEFITS.map((benefit) => (
-            <div key={benefit.title} className="flex items-start gap-3 sm:gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-background text-white sm:h-12 sm:w-12">
+            <div key={benefit.title} className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-background text-white sm:h-11 sm:w-11">
                 <benefit.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white">
+              <div className="min-w-0">
+                <h3 className="text-[13px] font-semibold text-white sm:text-sm">
                   {benefit.title}
                 </h3>
-                <p className="mt-1 text-xs leading-relaxed text-muted sm:text-sm">
+                <p className="mt-0.5 text-xs leading-relaxed text-muted sm:mt-1 sm:text-sm">
                   {benefit.description}
                 </p>
               </div>
@@ -193,13 +193,13 @@ export default async function HomePage() {
       </section>
 
       {/* MÁS VENDIDOS */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
         <SectionHeading
           kicker="Los favoritos"
           title="Más vendidos"
           href="/perfumes?destacados=1"
         />
-        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-10 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {bestSellers.map((perfume) => (
             <ProductCard key={perfume.id} perfume={perfume} />
           ))}
@@ -208,13 +208,13 @@ export default async function HomePage() {
 
       {/* NOVEDADES */}
       <section className="border-y border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
           <SectionHeading
             kicker="Recién llegados"
             title="Novedades"
             href="/perfumes?novedad=1"
           />
-          <div className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-10 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4 lg:gap-6">
             {newArrivals.map((perfume) => (
               <ProductCard key={perfume.id} perfume={perfume} />
             ))}
@@ -223,23 +223,23 @@ export default async function HomePage() {
       </section>
 
       {/* MARCAS */}
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
         <SectionHeading
           kicker="Casas que importamos"
           title="Marcas"
           href="/marcas"
         />
-        <div className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-4 lg:grid-cols-7 lg:gap-6">
+        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-4 lg:grid-cols-7 lg:gap-6">
           {brands.map((brand) => (
             <Link
               key={brand.id}
               href={`/perfumes?marca=${brand.slug}`}
-              className="group flex aspect-[3/4] flex-col items-center justify-center gap-2 rounded-2xl border border-line bg-surface p-3 text-center transition-all hover:border-white/30 hover:bg-surface-2 sm:gap-3 sm:p-4"
+              className="group flex aspect-[3/4] flex-col items-center justify-center gap-1.5 rounded-xl border border-line bg-surface p-3 text-center transition-all hover:border-white/30 hover:bg-surface-2 sm:gap-2 sm:rounded-2xl sm:p-4"
             >
-              <span className="font-serif text-base leading-tight text-white transition-colors group-hover:text-white sm:text-xl">
+              <span className="font-serif text-sm leading-tight text-white transition-colors group-hover:text-white sm:text-lg lg:text-xl">
                 {brand.name}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-faint sm:text-[11px]">
+              <span className="text-[9px] uppercase tracking-widest text-faint sm:text-[10px] lg:text-[11px]">
                 {brand.country}
               </span>
             </Link>
@@ -249,19 +249,19 @@ export default async function HomePage() {
 
       {/* OPINIONES */}
       <section className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
           <SectionHeading kicker="Testimonios" title="Opiniones de clientes" />
-          <div className="mt-6 grid gap-3 sm:mt-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          <div className="mt-5 grid gap-3 sm:mt-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             {TESTIMONIALS.map((t) => (
               <figure
                 key={t.name}
                 className="flex flex-col rounded-2xl border border-line bg-background p-4 sm:p-6"
               >
                 <Stars value={t.rating} />
-                <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-muted sm:mt-4">
+                <blockquote className="mt-2.5 flex-1 text-[13px] leading-relaxed text-muted sm:mt-3 sm:text-sm">
                   &ldquo;{t.text}&rdquo;
                 </blockquote>
-                <figcaption className="mt-4 sm:mt-6">
+                <figcaption className="mt-3 sm:mt-5">
                   <p className="text-sm font-semibold text-white">{t.name}</p>
                   <p className="text-xs text-faint">
                     {t.city} · Compró {t.product}
@@ -276,34 +276,34 @@ export default async function HomePage() {
       {/* NOSOTROS */}
       <section
         id="nosotros"
-        className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
+        className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8"
       >
-        <div className="grid items-center gap-8 sm:gap-12 lg:grid-cols-2">
+        <div className="grid items-start gap-8 sm:gap-12 lg:grid-cols-2">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-faint">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-faint sm:text-xs">
               Sobre PIRATES
             </p>
-            <h2 className="mt-3 font-serif text-2xl text-white sm:text-3xl lg:text-4xl">
+            <h2 className="mt-2 font-serif text-[1.5rem] leading-tight text-white sm:mt-3 sm:text-3xl lg:text-4xl">
               Más que una fragancia.
             </h2>
-            <p className="mt-4 text-sm leading-relaxed text-muted sm:mt-5 sm:text-base">
+            <p className="mt-3 text-sm leading-relaxed text-muted sm:mt-4 sm:text-base">
               En PIRATES creemos que un buen perfume no solo se siente: se
               recuerda.
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-muted sm:mt-4 sm:text-base">
+            <p className="mt-2.5 text-sm leading-relaxed text-muted sm:mt-4 sm:text-base">
               Seleccionamos perfumes árabes e importados de alta calidad,
               buscando ofrecer fragancias con excelente presencia,
               personalidad y una experiencia que esté a la altura de quienes
               las eligen.
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-muted sm:mt-4 sm:text-base">
+            <p className="mt-2.5 text-sm leading-relaxed text-muted sm:mt-4 sm:text-base">
               Nuestra propuesta es simple: ofrecer perfumes que sorprendan por
               su calidad, su aroma y su presencia, para que encuentres una
               fragancia que realmente te represente.
             </p>
             <Link
               href="/perfumes"
-              className="group mt-6 inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-8 sm:h-12 sm:px-7"
+              className="group mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-7 sm:h-12 sm:px-7"
             >
               Empezar a explorar
               <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -312,20 +312,20 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="rounded-2xl border border-line bg-surface p-4 sm:p-6">
-              <p className="font-serif text-3xl text-white sm:text-4xl">9+</p>
-              <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">Casas importadas</p>
+              <p className="font-serif text-[1.75rem] leading-none text-white sm:text-4xl">9+</p>
+              <p className="mt-2 text-xs text-muted sm:text-sm">Casas importadas</p>
             </div>
             <div className="rounded-2xl border border-line bg-surface p-4 sm:p-6">
-              <p className="font-serif text-3xl text-white sm:text-4xl">40+</p>
-              <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">Fragancias en catálogo</p>
+              <p className="font-serif text-[1.75rem] leading-none text-white sm:text-4xl">40+</p>
+              <p className="mt-2 text-xs text-muted sm:text-sm">Fragancias en catálogo</p>
             </div>
             <div className="rounded-2xl border border-line bg-surface p-4 sm:p-6">
-              <p className="font-serif text-3xl text-white sm:text-4xl">24 hs</p>
-              <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">Despacho de pedidos</p>
+              <p className="font-serif text-[1.75rem] leading-none text-white sm:text-4xl">24 hs</p>
+              <p className="mt-2 text-xs text-muted sm:text-sm">Despacho de pedidos</p>
             </div>
             <div className="rounded-2xl border border-line bg-surface p-4 sm:p-6">
-              <p className="font-serif text-3xl text-white sm:text-4xl">24/7</p>
-              <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">Atención por WhatsApp</p>
+              <p className="font-serif text-[1.75rem] leading-none text-white sm:text-4xl">24/7</p>
+              <p className="mt-2 text-xs text-muted sm:text-sm">Atención por WhatsApp</p>
             </div>
           </div>
         </div>

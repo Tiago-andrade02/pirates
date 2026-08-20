@@ -22,7 +22,7 @@ export function MobileMenu() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white md:hidden"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white md:hidden"
         aria-label="Abrir menú"
       >
         <MenuIcon className="h-5 w-5" />
@@ -34,28 +34,28 @@ export function MobileMenu() {
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 right-0 flex w-[85%] max-w-sm flex-col border-l border-line bg-background px-6 py-6">
+          <div className="absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col border-l border-line bg-background px-5 py-5">
             <div className="flex items-center justify-between">
               <img
                 src="/logo.png"
                 alt="PIRATES"
-                className="h-9 w-auto object-contain"
+                className="h-8 w-auto object-contain"
               />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
                 aria-label="Cerrar menú"
               >
                 <CloseIcon className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5">
               <SearchBox />
             </div>
 
-            <nav className="mt-8 flex flex-col gap-1">
+            <nav className="mt-6 flex flex-col gap-0.5">
               {LINKS.map((link) => (
                 <Link
                   key={link.href}
@@ -67,6 +67,17 @@ export function MobileMenu() {
                 </Link>
               ))}
             </nav>
+
+            <div className="mt-auto border-t border-line pt-4">
+              <a
+                href="https://wa.me/5491172919482"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-white"
+              >
+                WhatsApp: +54 9 11 7291-9482
+              </a>
+            </div>
           </div>
         </div>
       )}

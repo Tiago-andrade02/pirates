@@ -62,7 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-background font-sans text-foreground">
+      <body className="min-h-full bg-background font-sans text-foreground [word-wrap:break-word]">
         <CartProvider>{children}</CartProvider>
       </body>
     </html>

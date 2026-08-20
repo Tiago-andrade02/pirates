@@ -191,31 +191,31 @@ export default async function CatalogPage(props: CatalogPageProps) {
   const hasFilters = activeCount > 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 sm:py-10 lg:px-8">
-      <header className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-10 lg:px-8">
+      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-5">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-faint">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-faint sm:text-xs">
             Catálogo
           </p>
-          <h1 className="mt-2 font-serif text-2xl text-white sm:text-3xl lg:text-5xl">
+          <h1 className="mt-1.5 font-serif text-[1.5rem] text-white sm:mt-2 sm:text-3xl lg:text-5xl">
             Perfumes
           </h1>
-          <p className="mt-1.5 text-xs text-muted sm:mt-2 sm:text-sm">
+          <p className="mt-1 text-xs text-muted sm:mt-2 sm:text-sm">
             {perfumes.length}{" "}
             {perfumes.length === 1 ? "perfume encontrado" : "perfumes encontrados"}
           </p>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           <div className="w-full sm:w-72">
             <SearchBox />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {hasFilters && (
               <Link
                 href="/perfumes"
-                className="h-10 shrink-0 rounded-full border border-line px-4 text-xs text-muted transition-colors hover:border-white/40 hover:text-white sm:px-5 sm:text-sm"
+                className="h-10 shrink-0 rounded-full border border-line px-4 text-xs text-muted transition-colors hover:border-white/40 hover:text-white"
               >
-                Limpiar filtros ({activeCount})
+                Limpiar ({activeCount})
               </Link>
             )}
             <SortSelect baseParams={baseParams} current={filters.order ?? ""} />
@@ -224,22 +224,22 @@ export default async function CatalogPage(props: CatalogPageProps) {
       </header>
 
       {filters.q && (
-        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:mt-6 sm:px-5 sm:py-4">
-          <SearchIcon className="h-4 w-4 text-faint" />
-          <p className="flex-1 text-xs text-muted sm:text-sm">
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-line bg-surface px-3.5 py-2.5 sm:mt-5 sm:rounded-2xl sm:px-5 sm:py-3.5">
+          <SearchIcon className="h-4 w-4 shrink-0 text-faint" />
+          <p className="min-w-0 flex-1 text-xs text-muted sm:text-sm">
             Resultados para{" "}
             <span className="font-semibold text-white">&ldquo;{filters.q}&rdquo;</span>
           </p>
           <Link
             href="/perfumes"
-            className="text-xs text-faint transition-colors hover:text-white sm:text-sm"
+            className="shrink-0 text-xs text-faint transition-colors hover:text-white sm:text-sm"
           >
-            Quitar búsqueda
+            Quitar
           </Link>
         </div>
       )}
 
-      <div className="mt-5 grid gap-5 sm:mt-8 sm:gap-8 lg:grid-cols-[240px_1fr] lg:mt-10 lg:gap-10">
+      <div className="mt-4 grid gap-4 sm:mt-7 sm:gap-6 lg:grid-cols-[240px_1fr] lg:mt-10 lg:gap-10">
         <aside className="hidden lg:block">
           <FilterGroup label="Marca" options={brandOptions} allowClear />
           <FilterGroup label="Tamaño" options={sizeOptions} allowClear />
@@ -254,7 +254,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
         </aside>
 
         <div>
-          <div className="mb-4 flex gap-1.5 overflow-x-auto pb-2 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mb-3 flex gap-1.5 overflow-x-auto pb-2 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               ...brandOptions.slice(0, 6),
               ...sizeOptions,
@@ -267,7 +267,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               <Link
                 key={option.value + option.label}
                 href={option.href}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
                   option.active
                     ? "border-white bg-white font-medium text-black"
                     : "border-line bg-surface text-muted hover:text-white"
@@ -279,7 +279,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
           </div>
 
           {perfumes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface px-4 py-16 text-center sm:px-6 sm:py-24">
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface px-4 py-14 text-center sm:px-6 sm:py-24">
               <p className="font-serif text-xl text-white sm:text-2xl">
                 No encontramos perfumes
               </p>
@@ -295,7 +295,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 lg:gap-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-6">
               {perfumes.map((perfume) => (
                 <ProductCard key={perfume.id} perfume={perfume} />
               ))}

@@ -90,7 +90,7 @@ export function NavSearch() {
         onClick={() => setOpen((o) => !o)}
         aria-label="Buscar"
         aria-expanded={open}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
       >
         <SearchIcon className="h-5 w-5" />
       </button>

@@ -9,7 +9,7 @@ export function CartBadge() {
   return (
     <Link
       href="/carrito"
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
       aria-label="Carrito de compras"
     >
       <CartIcon className="h-5 w-5" />

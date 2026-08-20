@@ -16,7 +16,7 @@ const LINKS = [
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="mx-auto grid h-14 max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:h-16 sm:gap-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8">
         <nav className="hidden items-center gap-1 md:flex">
           {LINKS.map((link) => (
             <Link
@@ -29,21 +29,21 @@ export function Navbar() {
           ))}
         </nav>
 
-        <Link href="/" className="justify-self-center">
+        <Link href="/" className="shrink-0">
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-10 w-auto object-contain sm:h-12"
+            className="h-9 w-auto object-contain sm:h-11"
           />
         </Link>
 
-        <div className="flex items-center justify-end gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
           <a
             href="https://wa.me/5491172919482"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp"
-            className="hidden h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:text-gold sm:inline-flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-gold sm:inline-flex"
           >
             <WhatsAppIcon className="h-5 w-5" />
           </a>
