@@ -66,12 +66,13 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
         <h3 className="line-clamp-2 font-serif text-[13px] leading-snug text-white sm:text-base lg:text-lg">
           {perfume.name}
         </h3>
-        <div className="hidden items-center gap-1.5 text-xs text-muted sm:flex">
+        <div className="flex items-center gap-1 text-[10px] text-muted sm:gap-1.5 sm:text-xs">
           <span className="flex items-center gap-0.5 text-white">
-            <StarIcon className="h-3.5 w-3.5 text-white" />
+            <StarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             <span className="font-semibold">{perfume.rating.toFixed(1)}</span>
           </span>
-          <span>({perfume.reviewCount} reseñas)</span>
+          <span className="hidden sm:inline">({perfume.reviewCount} reseñas)</span>
+          <span className="sm:hidden">({perfume.reviewCount})</span>
         </div>
         <div className="mt-auto pt-1 sm:pt-2">
           {outOfStock ? (
@@ -101,7 +102,7 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
                   <p className="truncate text-[9px] font-medium text-emerald-400 sm:text-[11px]">
                     Transf: {transferPrice !== null ? formatARS(transferPrice) : "—"}
                   </p>
-                  <p className="hidden text-xs text-muted sm:block">
+                  <p className="text-[9px] text-muted sm:text-xs">
                     3 cuotas sin interés
                   </p>
                 </div>

@@ -1,13 +1,9 @@
-Comprehensive mobile-first responsive redesign
+Fix visual issues: hero overflow, off-center logo, hidden mobile info, broken links
 
-- globals.css: overflow-x hidden, word-wrap break-word, touch-action manipulation, safe-area support
-- Navbar: flex layout, h-14 mobile/h-16 desktop, h-11 w-11 touch targets
-- MobileMenu: h-11 touch targets, w-[80%] panel, proper sizing
-- Homepage: clamp() hero titles, stacked buttons mobile, benefits/brands grid responsive
-- ProductCard: rounded-xl mobile, compact badges, line-clamp-2, compact transfer price
-- Catalog: px-4 py-5 mobile, horizontal filter chips, 2-col grid with gap-3
-- Product detail: breadcrumb truncate, compact badges/title, 2-col info cards, pyramid cards
-- Cart: compact items, h-8 qty buttons, responsive summary
-- Checkout: responsive form sections and sidebar
-- Gallery: responsive gaps, rounded-xl mobile
-- AddToCart: compact payment methods, responsive text sizes
+- Remove overflow-x:hidden from html (was breaking sticky positioning)
+- Fix hero min-h to account for promo banner offset
+- Center logo on mobile navbar with flex-1 spacer
+- Show ratings and cuotas on mobile product cards (were hidden)
+- Increase promo banner touch target for mobile
+- Add slide-in animation to mobile menu
+- Fix dead "Botón de arrepentimiento" link → /devoluciones

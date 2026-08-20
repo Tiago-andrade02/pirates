@@ -104,7 +104,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative flex min-h-[calc(100svh-3.5rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem)]">
+      <section className="relative flex min-h-[calc(100svh-3.5rem-2rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem-2.5rem)]">
         <img
           src="/logo.png"
           alt=""

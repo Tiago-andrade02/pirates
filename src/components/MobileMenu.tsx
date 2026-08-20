@@ -31,10 +31,10 @@ export function MobileMenu() {
       {open && (
         <div className="fixed inset-0 z-50 md:hidden">
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="animate-fade-in absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col border-l border-line bg-background px-5 py-5">
+          <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col border-l border-line bg-background px-5 py-5">
             <div className="flex items-center justify-between">
               <img
                 src="/logo.png"

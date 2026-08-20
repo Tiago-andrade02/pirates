@@ -178,12 +178,12 @@ export function Footer() {
             >
               Defensa del Consumidor
             </a>
-            <a
-              href="#"
+            <Link
+              href="/devoluciones"
               className="transition-colors hover:text-white"
             >
               Botón de arrepentimiento
-            </a>
+            </Link>
             <Link
               href="/admin"
               className="rounded-full border border-line px-2.5 py-0.5 transition-colors hover:border-gold/40 hover:text-gold sm:px-3 sm:py-1"
