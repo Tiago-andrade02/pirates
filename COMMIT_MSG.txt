@@ -1,9 +1,5 @@
-Fix visual issues: hero overflow, off-center logo, hidden mobile info, broken links
+Fix navbar logo centering, white mobile menu, and perfumes page performance
 
-- Remove overflow-x:hidden from html (was breaking sticky positioning)
-- Fix hero min-h to account for promo banner offset
-- Center logo on mobile navbar with flex-1 spacer
-- Show ratings and cuotas on mobile product cards (were hidden)
-- Increase promo banner touch target for mobile
-- Add slide-in animation to mobile menu
-- Fix dead "Botón de arrepentimiento" link → /devoluciones
+- Navbar: use absolute centering on mobile, static on desktop for proper logo placement
+- MobileMenu: white background with dark text/links, proper hover states
+- images.ts: cache fs.existsSync results to avoid repeated filesystem calls per render

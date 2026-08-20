@@ -34,7 +34,7 @@ export function MobileMenu() {
             className="animate-fade-in absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col border-l border-line bg-background px-5 py-5">
+          <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col border-l border-line bg-white px-5 py-5">
             <div className="flex items-center justify-between">
               <img
                 src="/logo.png"
@@ -44,7 +44,7 @@ export function MobileMenu() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-black"
                 aria-label="Cerrar menú"
               >
                 <CloseIcon className="h-5 w-5" />
@@ -61,19 +61,19 @@ export function MobileMenu() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-3 text-base text-muted transition-colors hover:bg-surface-2 hover:text-white"
+                  className="rounded-lg px-3 py-3 text-base text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-black"
                 >
                   {link.label}
                 </Link>
               ))}
             </nav>
 
-            <div className="mt-auto border-t border-line pt-4">
+            <div className="mt-auto border-t border-neutral-200 pt-4">
               <a
                 href="https://wa.me/5491172919482"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-white"
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-black"
               >
                 WhatsApp: +54 9 11 7291-9482
               </a>
