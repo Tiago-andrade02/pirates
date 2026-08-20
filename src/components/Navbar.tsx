@@ -36,7 +36,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-7xl items-center px-4 sm:h-16 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-14 max-w-7xl items-center px-4 sm:h-16 sm:px-6 lg:px-8">
         <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
 
         <nav className="ml-2 hidden items-center gap-1 md:ml-0 md:flex">
@@ -51,11 +51,14 @@ export function Navbar() {
           ))}
         </nav>
 
-        <Link href="/" className="shrink-0 md:ml-6">
+        <Link
+          href="/"
+          className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:ml-6"
+        >
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-3.5 w-auto max-w-[60px] object-contain sm:h-4 sm:max-w-[70px]"
+            className="h-8 w-auto object-contain sm:h-9 md:h-10"
           />
         </Link>
 
