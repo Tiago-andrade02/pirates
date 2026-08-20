@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { SearchIcon, CloseIcon } from "./icons";
 import { ProductImage } from "./ProductImage";
@@ -30,10 +31,15 @@ export function NavSearch({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -192,8 +198,8 @@ export function NavSearch({
         )}
       </button>
 
-      {mobileOpen && (
-        <div className="fixed inset-x-0 top-14 z-50 animate-slide-down border-b border-line bg-background/95 px-4 py-3 backdrop-blur-md sm:top-16 md:hidden">
+      {mobileOpen && mounted && createPortal(
+        <div className="fixed inset-x-0 top-14 z-[9998] animate-slide-down border-b border-line bg-background/95 px-4 py-3 backdrop-blur-md sm:top-16 md:hidden">
           <form onSubmit={onSubmit} className="relative" role="search">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <input
@@ -220,7 +226,8 @@ export function NavSearch({
             </button>
           </form>
           {dropdown}
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
