@@ -211,7 +211,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
             {hasFilters && (
               <Link
                 href="/perfumes"
-                className="h-11 shrink-0 rounded-full border border-line px-4 text-xs text-muted transition-colors hover:border-white/40 hover:text-white"
+                className="mi-btn h-11 shrink-0 rounded-full border border-line px-4 text-xs text-muted hover:border-white/40 hover:text-white"
               >
                 Limpiar ({activeCount})
               </Link>
@@ -274,7 +274,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               </p>
               <Link
                 href="/perfumes"
-                className="mt-5 inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-6"
+                className="mi-btn mi-shine mt-5 inline-flex h-11 items-center rounded-full bg-white px-6 text-sm font-semibold text-black sm:mt-6"
               >
                 Ver todo el catálogo
               </Link>

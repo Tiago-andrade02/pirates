@@ -35,7 +35,7 @@ export function FilterDrawer({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-xs font-medium text-white transition-colors hover:border-white/40 sm:text-sm lg:hidden"
+        className="mi-btn mi-shine inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-xs font-medium text-white sm:text-sm lg:hidden"
       >
         <FilterIcon className="h-4 w-4" />
         FILTRAR
@@ -58,7 +58,7 @@ export function FilterDrawer({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
+                className="mi-btn inline-flex h-11 w-11 items-center justify-center rounded-full text-muted hover:text-white"
                 aria-label="Cerrar filtros"
               >
                 <CloseIcon className="h-5 w-5" />
@@ -87,7 +87,7 @@ export function FilterDrawer({
                 <Link
                   href="/perfumes"
                   onClick={() => setOpen(false)}
-                  className="flex h-11 items-center justify-center rounded-full border border-line text-sm text-muted transition-colors hover:border-white/40 hover:text-white"
+                  className="mi-btn flex h-11 items-center justify-center rounded-full border border-line text-sm text-muted hover:border-white/40 hover:text-white"
                 >
                   Limpiar filtros ({activeCount})
                 </Link>
@@ -95,7 +95,7 @@ export function FilterDrawer({
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="flex h-11 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-black transition-colors hover:bg-neutral-200"
+                  className="mi-btn mi-shine flex h-11 w-full items-center justify-center rounded-full bg-white text-sm font-semibold text-black"
                 >
                   Aplicar
                 </button>

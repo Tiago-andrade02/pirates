@@ -86,9 +86,9 @@ export function AddToCart({
                   setSize(option.key);
                   setQty(1);
                 }}
-                className={`rounded-lg border px-2 py-2 text-left transition-colors sm:rounded-xl sm:px-3 sm:py-2.5 ${
+                className={`mi-size rounded-lg border px-2 py-2 text-left sm:rounded-xl sm:px-3 sm:py-2.5 ${
                   active
-                    ? "border-white bg-white text-black"
+                    ? "border-white bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.08)]"
                     : "border-line bg-surface-2 text-white hover:border-white/40"
                 } ${optionPrice === null ? "cursor-not-allowed opacity-40" : ""}`}
               >
@@ -147,7 +147,7 @@ export function AddToCart({
           <button
             type="button"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="flex h-11 w-11 items-center justify-center text-lg text-muted transition-colors hover:text-white"
+            className="mi-qty flex h-11 w-11 items-center justify-center text-lg text-muted hover:text-white"
             aria-label="Disminuir cantidad"
           >
             −
@@ -159,7 +159,7 @@ export function AddToCart({
             type="button"
             onClick={() => setQty((q) => (outOfStock ? q : Math.min(stock, q + 1)))}
             disabled={outOfStock || qty >= stock}
-            className="flex h-11 w-11 items-center justify-center text-lg text-muted transition-colors hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="mi-qty flex h-11 w-11 items-center justify-center text-lg text-muted hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
             aria-label="Aumentar cantidad"
           >
             +
@@ -170,7 +170,7 @@ export function AddToCart({
           type="button"
           onClick={handleAdd}
           disabled={outOfStock}
-          className={`h-11 flex-1 rounded-full text-sm font-semibold transition-all ${
+          className={`mi-btn mi-shine h-11 flex-1 rounded-full text-sm font-semibold ${
             outOfStock
               ? "cursor-not-allowed bg-surface-3 text-faint"
               : added
@@ -179,7 +179,7 @@ export function AddToCart({
           }`}
         >
           {added
-            ? "Agregado ✓"
+            ? "✓ Agregado"
             : outOfStock
               ? "Sin stock"
               : "Agregar al carrito"}

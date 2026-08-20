@@ -149,14 +149,14 @@ export default async function HomePage() {
             >
               <Link
                 href="/perfumes"
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:h-13 sm:px-8"
+                className="mi-btn mi-shine group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-semibold text-black sm:h-13 sm:px-8"
               >
                 EXPLORAR CATÁLOGO
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/#nosotros"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/25 px-7 text-sm font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/5 sm:h-13 sm:px-8"
+                className="mi-btn inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/25 px-7 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-13 sm:px-8"
               >
                 CONOCÉ PIRATES
               </Link>
@@ -296,7 +296,7 @@ export default async function HomePage() {
             </p>
             <Link
               href="/perfumes"
-              className="group mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 sm:mt-7 sm:h-12 sm:px-7"
+              className="mi-btn mi-shine group mt-5 inline-flex h-11 items-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-black sm:mt-7 sm:h-12 sm:px-7"
             >
               Empezar a explorar
               <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />

@@ -38,7 +38,7 @@ export function FilterGroup({
             key={option.value}
             href={option.href}
             aria-current={option.active ? "true" : undefined}
-            className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+            className={`mi-chip rounded-full border px-3.5 py-1.5 text-sm ${
               option.active
                 ? "border-white bg-white font-medium text-black"
                 : "border-line bg-surface text-muted hover:border-white/40 hover:text-white"

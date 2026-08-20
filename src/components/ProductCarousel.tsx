@@ -31,10 +31,10 @@ export function ProductCarousel({
         <div className="flex shrink-0 items-center gap-3">
           <Link
             href={href}
-            className="group hidden items-center gap-2 text-sm text-muted transition-colors hover:text-white sm:flex"
+            className="group hidden items-center gap-2 text-sm text-muted hover:text-white sm:flex"
           >
             Ver todos
-            <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRightIcon className="mi-btn h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
       </div>
@@ -52,7 +52,7 @@ export function ProductCarousel({
 
       <Link
         href={href}
-        className="mt-4 flex h-11 items-center justify-center rounded-full border border-line px-4 text-sm text-muted transition-colors hover:border-white/40 hover:text-white sm:hidden"
+        className="mi-btn mt-4 flex h-11 items-center justify-center rounded-full border border-line px-4 text-sm text-muted hover:border-white/40 hover:text-white sm:hidden"
       >
         Ver todos
         <ArrowRightIcon className="ml-2 h-4 w-4" />

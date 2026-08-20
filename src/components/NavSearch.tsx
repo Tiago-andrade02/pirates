@@ -120,7 +120,7 @@ export function NavSearch({
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onResultClick(r.slug)}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
+                className="mi-btn flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-2"
               >
                 <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line bg-background">
                   <ProductImage
@@ -171,7 +171,7 @@ export function NavSearch({
               }
             }}
             placeholder="Buscar perfumes o marcas..."
-            className="w-[180px] rounded-full border border-line bg-surface py-2 pl-9 pr-3 text-sm text-white outline-none transition-all placeholder:text-faint focus:border-white/40 focus:w-[260px] lg:w-[220px] lg:focus:w-[280px]"
+            className="mi-search w-[180px] rounded-full border border-line bg-surface py-2 pl-9 pr-3 text-sm text-white outline-none placeholder:text-faint focus:border-white/40 focus:w-[260px] lg:w-[220px] lg:focus:w-[280px]"
             aria-label="Buscar perfumes o marcas"
           />
         </form>
@@ -183,7 +183,7 @@ export function NavSearch({
         onClick={mobileOpen ? closeMobile : onMobileOpen}
         aria-label="Buscar"
         aria-expanded={mobileOpen}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white md:hidden"
+        className="mi-btn inline-flex h-11 w-11 items-center justify-center rounded-full text-muted md:hidden"
       >
         {mobileOpen ? (
           <CloseIcon className="h-5 w-5" />
@@ -207,7 +207,7 @@ export function NavSearch({
                 if (e.key === "Escape") closeMobile();
               }}
               placeholder="Buscar perfumes o marcas..."
-              className="w-full rounded-full border border-line bg-surface py-2.5 pl-9 pr-10 text-sm text-white outline-none transition-colors placeholder:text-faint focus:border-white/40"
+              className="mi-search w-full rounded-full border border-line bg-surface py-2.5 pl-9 pr-10 text-sm text-white outline-none placeholder:text-faint focus:border-white/40"
               aria-label="Buscar perfumes o marcas"
             />
             <button

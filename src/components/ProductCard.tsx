@@ -18,7 +18,7 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
 
   return (
     <div
-      className={`group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-all hover:border-white/25 hover:bg-surface-2 sm:rounded-2xl ${
+      className={`mi-card group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface sm:rounded-2xl ${
         outOfStock ? "opacity-70" : ""
       }`}
     >
@@ -29,7 +29,7 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
             alt={perfume.name}
             fill
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-            className={`object-contain transition-transform duration-500 group-hover:scale-105 ${
+            className={`object-contain transition-transform duration-500 group-hover:scale-[1.03] ${
               outOfStock ? "grayscale" : ""
             }`}
           />

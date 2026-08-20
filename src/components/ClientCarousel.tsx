@@ -39,7 +39,7 @@ export function ClientCarousel({ children }: ClientCarouselProps) {
       <button
         type="button"
         onClick={() => scroll("left")}
-        className="absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-background/90 text-muted backdrop-blur-sm transition-colors hover:border-white/40 hover:text-white lg:flex"
+        className="mi-arrow absolute left-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-background/90 text-muted backdrop-blur-sm hover:border-white/40 hover:text-white lg:flex"
         aria-label="Desplazar a la izquierda"
       >
         <ChevronLeftIcon className="h-5 w-5" />
@@ -47,7 +47,7 @@ export function ClientCarousel({ children }: ClientCarouselProps) {
       <button
         type="button"
         onClick={() => scroll("right")}
-        className="absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-background/90 text-muted backdrop-blur-sm transition-colors hover:border-white/40 hover:text-white lg:flex"
+        className="mi-arrow absolute right-2 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-background/90 text-muted backdrop-blur-sm hover:border-white/40 hover:text-white lg:flex"
         aria-label="Desplazar a la derecha"
       >
         <ChevronRightIcon className="h-5 w-5" />
