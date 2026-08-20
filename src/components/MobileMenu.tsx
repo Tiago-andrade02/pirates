@@ -39,7 +39,7 @@ export function MobileMenu() {
               <img
                 src="/logo.png"
                 alt="PIRATES"
-                className="h-8 w-auto object-contain"
+                className="h-6 w-auto object-contain"
               />
               <button
                 type="button"

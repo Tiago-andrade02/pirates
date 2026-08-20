@@ -33,7 +33,7 @@ export function Navbar() {
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-9 w-auto object-contain sm:h-11"
+            className="h-7 w-auto object-contain sm:h-9"
           />
         </Link>
 
