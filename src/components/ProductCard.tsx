@@ -111,6 +111,12 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
               )}
             </>
           )}
+          <Link
+            href={`/perfumes/${perfume.slug}`}
+            className="mi-btn mt-2 block w-full rounded-lg bg-white py-1.5 text-center text-[11px] font-semibold uppercase tracking-wider text-black transition-colors hover:bg-gold hover:text-black sm:py-2 sm:text-xs"
+          >
+            Ver perfume
+          </Link>
         </div>
       </div>
     </div>
