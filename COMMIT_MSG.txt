@@ -1,11 +1,12 @@
-Add product carousels and mobile filter drawer
+Premium mobile redesign: ProductCard add-to-cart, object-contain, carousel 80% peek
 
-- New ProductCarousel component with horizontal scroll-snap for mobile
-- New ClientCarousel client component for scroll behavior (keeps ProductCard server-side)
-- Homepage: "Mas vendidos" and "Novedades" now use carousels instead of grids
-- Homepage reordered: Hero > Mas vendidos > Novedades > Benefits > Brands > Testimonials > About
-- Fetch 10 products per section for carousel
-- New FilterDrawer component: FILTRAR button opens slide-in drawer on mobile
-- Catalog page: removed horizontal filter chips, replaced with FILTRAR button + drawer
-- New icons: FilterIcon, ChevronLeftIcon, ChevronRightIcon
-- CSS: scrollbar-none utility, slide-up animation
+- ProductCard: now client component with "AGREGAR" button using cart context
+- ProductCard: object-contain instead of object-cover for non-deformed images
+- ProductCard: larger bold price, compact badges, consistent height
+- ProductCard: e.preventDefault on add button so card navigation still works
+- ProductCard: added feedback "Agregado" on add-to-cart
+- images.ts: removed fs.existsSync dependency (was breaking client component)
+- Carousel: 78% width on mobile (1 card + 22% peek of next)
+- Catalog page: refined spacing, larger title, tighter product grid gaps
+- Footer: h-9 touch targets on links, h-11 on social icons, tighter spacing
+- All builds clean, no errors

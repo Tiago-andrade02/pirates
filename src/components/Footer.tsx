@@ -30,19 +30,19 @@ export function Footer() {
   return (
     <footer id="contacto" className="w-full bg-[#0a0a0a]">
       {/* Parte 1 — Columnas */}
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-        <div className="grid gap-8 sm:gap-10 md:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="grid gap-7 sm:gap-10 md:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
           {/* Columna 1 — Categorías */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-white sm:text-sm">
+            <h3 className="text-[11px] font-semibold uppercase tracking-widest text-white sm:text-sm">
               Categorías
             </h3>
-            <ul className="mt-3 space-y-2 sm:mt-4 sm:space-y-2.5">
+            <ul className="mt-3 space-y-1 sm:mt-4 sm:space-y-2">
               {CATEGORIES.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-xs text-muted transition-colors hover:text-white sm:text-sm"
+                    className="inline-flex h-9 items-center text-xs text-muted transition-colors hover:text-white sm:h-auto sm:text-sm"
                   >
                     {item.label}
                   </Link>
@@ -53,65 +53,67 @@ export function Footer() {
 
           {/* Columna 2 — Contacto */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-white sm:text-sm">
+            <h3 className="text-[11px] font-semibold uppercase tracking-widest text-white sm:text-sm">
               Contactanos
             </h3>
-            <ul className="mt-3 space-y-2.5 text-xs text-muted sm:mt-4 sm:space-y-3 sm:text-sm">
-              <li className="flex items-center gap-2">
-                <WhatsAppIcon className="h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
+            <ul className="mt-3 space-y-1 text-xs text-muted sm:mt-4 sm:space-y-2.5 sm:text-sm">
+              <li>
                 <a
                   href="https://wa.me/5491172919482"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-colors hover:text-white"
+                  className="inline-flex h-9 items-center gap-2 transition-colors hover:text-white"
                 >
+                  <WhatsAppIcon className="h-4 w-4 shrink-0 text-faint" />
                   +54 9 11 7291-9482
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <PhoneIcon className="h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
+              <li>
                 <a
                   href="tel:+5491172919482"
-                  className="transition-colors hover:text-white"
+                  className="inline-flex h-9 items-center gap-2 transition-colors hover:text-white"
                 >
+                  <PhoneIcon className="h-4 w-4 shrink-0 text-faint" />
                   +54 9 11 7291-9482
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <MailIcon className="h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
+              <li>
                 <a
                   href="mailto:pirates.arg@hotmail.com"
-                  className="transition-colors hover:text-white"
+                  className="inline-flex h-9 items-center gap-2 transition-colors hover:text-white"
                 >
+                  <MailIcon className="h-4 w-4 shrink-0 text-faint" />
                   pirates.arg@hotmail.com
                 </a>
               </li>
-              <li className="flex items-start gap-2">
-                <MapPinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
-                <span>Buenos Aires, Argentina</span>
+              <li>
+                <span className="inline-flex h-9 items-center gap-2">
+                  <MapPinIcon className="h-4 w-4 shrink-0 text-faint" />
+                  Buenos Aires, Argentina
+                </span>
               </li>
             </ul>
           </div>
 
           {/* Redes sociales */}
-          <div className="flex items-start gap-2.5 sm:gap-3 lg:justify-end">
+          <div className="flex items-start gap-3 sm:gap-3 lg:justify-end">
             <a
               href="https://instagram.com/pirates.arg"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Instagram"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-white/40 hover:text-white sm:h-10 sm:w-10"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-white/40 hover:text-white sm:h-10 sm:w-10"
             >
-              <InstagramIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <InstagramIcon className="h-5 w-5" />
             </a>
             <a
               href="https://www.tiktok.com/@pirates.arg"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="TikTok"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-white/40 hover:text-white sm:h-10 sm:w-10"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-white/40 hover:text-white sm:h-10 sm:w-10"
             >
-              <TikTokIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+              <TikTokIcon className="h-5 w-5" />
             </a>
           </div>
         </div>
@@ -121,8 +123,8 @@ export function Footer() {
       <div className="border-t border-line" />
 
       {/* Parte 2 — Medios de pago y envío */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-        <div className="grid gap-8 sm:gap-10 md:grid-cols-2">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="grid gap-6 sm:gap-8 md:grid-cols-2">
           {/* Medios de pago */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-widest text-white sm:text-sm">

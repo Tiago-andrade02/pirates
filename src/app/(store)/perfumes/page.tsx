@@ -192,16 +192,13 @@ export default async function CatalogPage(props: CatalogPageProps) {
   const hasFilters = activeCount > 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-10 lg:px-8">
-      <header className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-5">
+    <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
+      <header className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-faint sm:text-xs">
-            Catálogo
-          </p>
-          <h1 className="mt-1.5 font-serif text-[1.5rem] text-white sm:mt-2 sm:text-3xl lg:text-5xl">
+          <h1 className="font-serif text-2xl text-white sm:text-3xl lg:text-5xl">
             Perfumes
           </h1>
-          <p className="mt-1 text-xs text-muted sm:mt-2 sm:text-sm">
+          <p className="mt-1 text-xs text-muted sm:mt-1.5 sm:text-sm">
             {perfumes.length}{" "}
             {perfumes.length === 1 ? "perfume encontrado" : "perfumes encontrados"}
           </p>
@@ -251,7 +248,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
         </div>
       )}
 
-      <div className="mt-4 grid gap-4 sm:mt-7 sm:gap-6 lg:grid-cols-[240px_1fr] lg:mt-10 lg:gap-10">
+      <div className="mt-3 grid gap-4 sm:mt-5 sm:gap-6 lg:grid-cols-[240px_1fr] lg:mt-8 lg:gap-10">
         <aside className="hidden lg:block">
           <FilterGroup label="Marca" options={brandOptions} allowClear />
           <FilterGroup label="Tamaño" options={sizeOptions} allowClear />
@@ -283,7 +280,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 lg:gap-5">
               {perfumes.map((perfume) => (
                 <ProductCard key={perfume.id} perfume={perfume} />
               ))}
