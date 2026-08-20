@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 
 const OPTIONS = [
-  { value: "", label: "Destacados" },
-  { value: "rating", label: "Mejor puntuados" },
+  { value: "", label: "Recomendados" },
+  { value: "ventas", label: "Más vendidos" },
+  { value: "novedad", label: "Novedades" },
+  { value: "rating", label: "Mejor valorados" },
   { value: "precio-asc", label: "Precio: menor a mayor" },
   { value: "precio-desc", label: "Precio: mayor a menor" },
-  { value: "nombre", label: "Nombre A-Z" },
 ];
 
 export function SortSelect({

@@ -15,6 +15,7 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
   const displayPrice = price50 ?? price;
   const transferPrice = displayPrice !== null ? Math.round(displayPrice * 0.9) : null;
   const outOfStock = perfume.stock <= 0;
+  const hasReviews = perfume.reviewCount > 0;
 
   return (
     <div
@@ -68,14 +69,20 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
           <h3 className="mt-0.5 line-clamp-2 font-serif text-[13px] leading-snug text-white sm:text-sm lg:text-base">
             {perfume.name}
           </h3>
-          <div className="mt-1 flex items-center gap-1 text-[10px] text-muted sm:gap-1.5 sm:text-xs">
-            <span className="flex items-center gap-0.5 text-white">
-              <StarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              <span className="font-semibold">{perfume.rating.toFixed(1)}</span>
-            </span>
-            <span className="hidden sm:inline">({perfume.reviewCount} reseñas)</span>
-            <span className="sm:hidden">({perfume.reviewCount})</span>
-          </div>
+          {hasReviews ? (
+            <div className="mt-1 flex items-center gap-1 text-[10px] text-muted sm:gap-1.5 sm:text-xs">
+              <span className="flex items-center gap-0.5 text-white">
+                <StarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                <span className="font-semibold">{perfume.rating.toFixed(1)}</span>
+              </span>
+              <span className="hidden sm:inline">({perfume.reviewCount} reseñas)</span>
+              <span className="sm:hidden">({perfume.reviewCount})</span>
+            </div>
+          ) : (
+            <div className="mt-1 flex items-center gap-1 text-[10px] text-faint sm:text-xs">
+              <span>Sin reseñas</span>
+            </div>
+          )}
         </Link>
 
         <div className="mt-auto pt-2">

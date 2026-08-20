@@ -324,11 +324,13 @@ export async function getCatalog(filters: CatalogFilters): Promise<Perfume[]> {
     params.push(like, like, like);
   }
 
-  let order = "p.rating DESC, p.review_count DESC";
+  let order = "p.best_seller DESC, p.rating DESC, p.review_count DESC";
   if (filters.order === "precio-asc") order = "COALESCE(p.price_50, p.price_100, p.price_30) ASC";
   if (filters.order === "precio-desc") order = "COALESCE(p.price_50, p.price_100, p.price_30) DESC";
   if (filters.order === "rating") order = "p.rating DESC, p.review_count DESC";
   if (filters.order === "nombre") order = "p.name ASC";
+  if (filters.order === "ventas") order = "p.best_seller DESC, COALESCE(p.top_rank, 999) ASC";
+  if (filters.order === "novedad") order = "p.is_new DESC, p.id DESC";
 
   const sql = `${SELECT_PERFUME} ${
     where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""
