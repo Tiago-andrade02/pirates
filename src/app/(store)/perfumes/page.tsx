@@ -280,7 +280,7 @@ export default async function CatalogPage(props: CatalogPageProps) {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 items-stretch gap-2.5 sm:gap-3 lg:grid-cols-3 lg:gap-5">
+            <div className="grid grid-cols-2 items-stretch gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
               {perfumes.map((perfume) => (
                 <ProductCard key={perfume.id} perfume={perfume} />
               ))}
