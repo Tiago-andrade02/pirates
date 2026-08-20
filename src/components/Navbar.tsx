@@ -55,7 +55,7 @@ export function Navbar() {
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-6 w-auto object-contain sm:h-7"
+            className="h-5 w-auto object-contain sm:h-6"
           />
         </Link>
 
