@@ -31,11 +31,11 @@ export function Navbar() {
           ))}
         </nav>
 
-        <Link href="/" className="mx-auto md:mx-0 md:ml-6">
+        <Link href="/" className="shrink-0 md:ml-6">
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-7 w-auto object-contain sm:h-9"
+            className="h-6 w-auto object-contain sm:h-7"
           />
         </Link>
 
