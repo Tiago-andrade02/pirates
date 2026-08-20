@@ -105,16 +105,16 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative flex min-h-[calc(100svh-3.5rem-2rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem-2.5rem)]">
+      <section className="relative flex min-h-[calc(100svh-3.5rem-8rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem-2.5rem)]">
         <img
           src="/logo.png"
           alt=""
           aria-hidden
-          className="hero-fade pointer-events-none absolute left-1/2 top-1/2 w-[85%] max-w-6xl -translate-x-1/2 -translate-y-1/2 select-none object-contain opacity-[0.04] grayscale sm:left-[62%]"
+          className="hero-fade pointer-events-none absolute right-[-5%] bottom-[5%] w-[45%] select-none object-contain opacity-[0.18] grayscale sm:left-1/2 sm:right-auto sm:bottom-auto sm:top-1/2 sm:w-[85%] sm:-translate-x-1/2 sm:-translate-y-1/2 max-w-6xl"
         />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-14 sm:px-6 sm:py-24 lg:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 sm:py-24 lg:px-8">
           <div className="max-w-3xl">
             <p
               className="hero-fade-up text-[11px] font-medium uppercase tracking-[0.3em] text-muted sm:text-xs"
@@ -125,7 +125,7 @@ export default async function HomePage() {
 
             <h1
               className="hero-fade-up mt-3 font-serif font-medium leading-[1.08] text-white sm:mt-6"
-              style={{ animationDelay: "120ms", fontSize: "clamp(2.25rem, 6vw, 4.5rem)" }}
+              style={{ animationDelay: "120ms", fontSize: "clamp(2rem, 7vw, 4.5rem)" }}
             >
               FRAGANCIAS
               <br />
@@ -149,14 +149,14 @@ export default async function HomePage() {
             >
               <Link
                 href="/perfumes"
-                className="mi-btn mi-shine group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-semibold text-black sm:h-13 sm:px-8"
+                className="mi-btn mi-shine group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-semibold text-black sm:w-auto sm:h-13 sm:px-8"
               >
                 EXPLORAR CATÁLOGO
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/#nosotros"
-                className="mi-btn inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/25 px-7 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-13 sm:px-8"
+                className="mi-btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/25 px-7 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:w-auto sm:h-13 sm:px-8"
               >
                 CONOCÉ PIRATES
               </Link>
