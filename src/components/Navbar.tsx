@@ -58,7 +58,7 @@ export function Navbar() {
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-8 w-auto object-contain sm:h-8 md:h-8"
+            className="h-8 w-auto object-contain"
           />
         </Link>
 
@@ -68,7 +68,7 @@ export function Navbar() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="WhatsApp"
-            className="mi-btn hidden h-11 w-11 items-center justify-center rounded-full text-muted hover:text-gold sm:inline-flex"
+            className="hidden h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-gold sm:inline-flex"
           >
             <WhatsAppIcon className="h-5 w-5" />
           </a>

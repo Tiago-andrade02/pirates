@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon, MenuIcon, WhatsAppIcon, CartIcon } from "./icons";
 
@@ -21,8 +21,6 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
-  const savedScrollY = useRef(0);
-
   const handleEscape = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -33,21 +31,12 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
   useEffect(() => {
     if (!open) return;
 
-    savedScrollY.current = window.scrollY;
-
     document.addEventListener("keydown", handleEscape);
-    document.documentElement.style.overflow = "hidden";
-    document.documentElement.style.position = "fixed";
-    document.documentElement.style.inset = "0";
-    document.documentElement.style.top = `-${savedScrollY.current}px`;
+    document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
-      document.documentElement.style.overflow = "";
-      document.documentElement.style.position = "";
-      document.documentElement.style.inset = "";
-      document.documentElement.style.top = "";
-      window.scrollTo(0, savedScrollY.current);
+      document.body.style.overflow = "";
     };
   }, [open, handleEscape]);
 
@@ -56,7 +45,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
       <button
         type="button"
         onClick={open ? onClose : onOpen}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted md:hidden"
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-white md:hidden"
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={open}
       >
@@ -85,8 +74,12 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={onClose}
             />
-            <div className="animate-slide-in-right absolute inset-y-0 right-0 flex h-full w-[85%] max-w-sm flex-col border-l border-line bg-background shadow-2xl shadow-black/50">
-              <div className="flex h-14 items-center justify-end border-b border-line px-4">
+
+            <div className="animate-slide-in-right absolute inset-y-0 right-0 flex h-full w-[85%] max-w-sm flex-col bg-background shadow-2xl shadow-black/50">
+              <div className="flex h-14 items-center justify-between border-b border-line px-4">
+                <span className="font-serif text-lg font-medium text-white tracking-wider">
+                  PIRATES
+                </span>
                 <button
                   type="button"
                   onClick={onClose}
