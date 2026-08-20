@@ -67,7 +67,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
             className="animate-fade-in absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
-          <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[85%] max-w-sm flex-col border-l border-line bg-background shadow-2xl shadow-black/50">
+          <div className="animate-slide-in-right absolute inset-y-0 right-0 flex h-full w-[85%] max-w-sm flex-col border-l border-line bg-background shadow-2xl shadow-black/50">
             <div className="flex h-14 items-center justify-end border-b border-line px-4 sm:h-16">
               <button
                 type="button"
@@ -79,7 +79,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
               </button>
             </div>
 
-            <nav className="flex-1 overflow-y-auto px-3 py-3">
+            <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
               {LINKS.map((link) => (
                 <Link
                   key={link.href}
