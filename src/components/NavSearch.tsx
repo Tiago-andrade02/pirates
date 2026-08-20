@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { SearchIcon } from "./icons";
+import { SearchIcon, CloseIcon } from "./icons";
 import { ProductImage } from "./ProductImage";
 import { formatARS } from "@/lib/format";
 
@@ -14,20 +14,26 @@ interface SearchResult {
   price: number | null;
 }
 
-export function NavSearch() {
+interface NavSearchProps {
+  mobileOpen: boolean;
+  onMobileOpen: () => void;
+  onMobileClose: () => void;
+}
+
+export function NavSearch({
+  mobileOpen,
+  onMobileOpen,
+  onMobileClose,
+}: NavSearchProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const desktopInputRef = useRef<HTMLInputElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
 
   useEffect(() => {
     return () => {
@@ -35,10 +41,17 @@ export function NavSearch() {
     };
   }, []);
 
+  useEffect(() => {
+    if (mobileOpen) {
+      const id = setTimeout(() => mobileInputRef.current?.focus(), 120);
+      return () => clearTimeout(id);
+    }
+  }, [mobileOpen]);
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
-    setValue(value);
-    const q = value.trim();
+    const val = e.target.value;
+    setValue(val);
+    const q = val.trim();
     if (searchTimer.current) clearTimeout(searchTimer.current);
     if (q.length < 2) {
       setResults([]);
@@ -59,16 +72,23 @@ export function NavSearch() {
     }, 250);
   }
 
-  function close() {
-    setOpen(false);
+  function closeMobile() {
     setValue("");
     setResults([]);
+    setLoading(false);
+    setFocused(false);
+    onMobileClose();
   }
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     const q = value.trim();
-    close();
+    const isMobile = mobileOpen;
+    setValue("");
+    setResults([]);
+    setLoading(false);
+    setFocused(false);
+    if (isMobile) onMobileClose();
     router.push(q ? `/perfumes?q=${encodeURIComponent(q)}` : "/perfumes");
   }
 
@@ -76,93 +96,132 @@ export function NavSearch() {
     blurTimer.current = setTimeout(() => setFocused(false), 150);
   }
 
-  function onResultClick() {
+  function onResultClick(slug: string) {
     if (blurTimer.current) clearTimeout(blurTimer.current);
-    close();
+    closeMobile();
+    router.push(`/perfumes/${slug}`);
   }
 
-  const showDropdown = open && focused && value.trim().length >= 2;
+  const showDropdown = focused && value.trim().length >= 2;
+
+  const dropdown = showDropdown ? (
+    <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-line bg-background/95 shadow-2xl shadow-black/50 backdrop-blur-md">
+      {loading ? (
+        <p className="px-4 py-3 text-xs text-faint">Buscando…</p>
+      ) : results.length === 0 ? (
+        <p className="px-4 py-3 text-xs text-faint">
+          No se encontraron perfumes para &ldquo;{value.trim()}&rdquo;.
+        </p>
+      ) : (
+        <ul className="max-h-80 overflow-y-auto py-1">
+          {results.map((r) => (
+            <li key={r.slug}>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => onResultClick(r.slug)}
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
+              >
+                <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line bg-background">
+                  <ProductImage
+                    image={r.image}
+                    alt={r.name}
+                    className="h-full w-full object-contain"
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-white">
+                    {r.name}
+                  </span>
+                  <span className="block text-xs text-faint">
+                    {r.brand_name}
+                  </span>
+                </span>
+                {r.price != null && (
+                  <span className="shrink-0 text-xs font-medium text-gold">
+                    {formatARS(r.price)}
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  ) : null;
 
   return (
-    <div className="relative">
+    <>
+      <div className="relative hidden md:block">
+        <form onSubmit={onSubmit} role="search">
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+          <input
+            ref={desktopInputRef}
+            type="search"
+            value={value}
+            onChange={handleChange}
+            onFocus={() => setFocused(true)}
+            onBlur={onBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                setValue("");
+                setResults([]);
+                setFocused(false);
+                desktopInputRef.current?.blur();
+              }
+            }}
+            placeholder="Buscar perfumes o marcas..."
+            className="w-[180px] rounded-full border border-line bg-surface py-2 pl-9 pr-3 text-sm text-white outline-none transition-all placeholder:text-faint focus:border-white/40 focus:w-[260px] lg:w-[220px] lg:focus:w-[280px]"
+            aria-label="Buscar perfumes o marcas"
+          />
+        </form>
+        {dropdown}
+      </div>
+
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={mobileOpen ? closeMobile : onMobileOpen}
         aria-label="Buscar"
-        aria-expanded={open}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white"
+        aria-expanded={mobileOpen}
+        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white md:hidden"
       >
-        <SearchIcon className="h-5 w-5" />
+        {mobileOpen ? (
+          <CloseIcon className="h-5 w-5" />
+        ) : (
+          <SearchIcon className="h-5 w-5" />
+        )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[min(calc(100vw-2rem),24rem)] sm:w-96">
-          <form
-            onSubmit={onSubmit}
-            className="relative overflow-hidden rounded-2xl border border-line bg-background/95 shadow-2xl shadow-black/50 backdrop-blur-md"
-          >
-            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+      {mobileOpen && (
+        <div className="fixed inset-x-0 top-14 z-50 animate-slide-down border-b border-line bg-background/95 px-4 py-3 backdrop-blur-md sm:top-16 md:hidden">
+          <form onSubmit={onSubmit} className="relative" role="search">
+            <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <input
-              ref={inputRef}
+              ref={mobileInputRef}
               type="search"
               value={value}
               onChange={handleChange}
               onFocus={() => setFocused(true)}
               onBlur={onBlur}
               onKeyDown={(e) => {
-                if (e.key === "Escape") close();
+                if (e.key === "Escape") closeMobile();
               }}
-              placeholder="Buscar perfumes, marcas..."
-              className="w-full bg-transparent py-3.5 pl-11 pr-4 text-sm text-white outline-none placeholder:text-faint"
+              placeholder="Buscar perfumes o marcas..."
+              className="w-full rounded-full border border-line bg-surface py-2.5 pl-9 pr-10 text-sm text-white outline-none transition-colors placeholder:text-faint focus:border-white/40"
+              aria-label="Buscar perfumes o marcas"
             />
+            <button
+              type="button"
+              onClick={closeMobile}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-faint hover:text-white"
+              aria-label="Cerrar búsqueda"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
           </form>
-
-          {showDropdown && (
-            <div className="mt-2 overflow-hidden rounded-2xl border border-line bg-background/95 shadow-2xl shadow-black/50 backdrop-blur-md">
-              {loading ? (
-                <p className="px-4 py-3 text-xs text-faint">Buscando…</p>
-              ) : results.length === 0 ? (
-                <p className="px-4 py-3 text-xs text-faint">
-                  No se encontraron perfumes para “{value.trim()}”.
-                </p>
-              ) : (
-                <ul className="max-h-80 overflow-y-auto py-1">
-                  {results.map((r) => (
-                    <li key={r.slug}>
-                      <button
-                        type="button"
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => {
-                          onResultClick();
-                          router.push(`/perfumes/${r.slug}`);
-                        }}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
-                      >
-                        <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line bg-background">
-                          <ProductImage
-                            image={r.image}
-                            alt={r.name}
-                            className="h-full w-full object-cover"
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm text-white">{r.name}</span>
-                          <span className="block text-xs text-faint">{r.brand_name}</span>
-                        </span>
-                        {r.price != null && (
-                          <span className="shrink-0 text-xs font-medium text-gold">
-                            {formatARS(r.price)}
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+          {dropdown}
         </div>
       )}
-    </div>
+    </>
   );
 }

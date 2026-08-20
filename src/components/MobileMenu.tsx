@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { CloseIcon, MenuIcon } from "./icons";
-import { SearchBox } from "./SearchBox";
 
 const LINKS = [
   { href: "/", label: "Inicio" },
@@ -14,14 +12,18 @@ const LINKS = [
   { href: "/#contacto", label: "Contacto" },
 ];
 
-export function MobileMenu() {
-  const [open, setOpen] = useState(false);
+interface MobileMenuProps {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+}
 
+export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={onOpen}
         className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface-2 hover:text-white md:hidden"
         aria-label="Abrir menú"
       >
@@ -32,7 +34,7 @@ export function MobileMenu() {
         <div className="fixed inset-0 z-50 md:hidden">
           <div
             className="animate-fade-in absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
+            onClick={onClose}
           />
           <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col border-l border-line bg-white px-5 py-5">
             <div className="flex items-center justify-between">
@@ -43,7 +45,7 @@ export function MobileMenu() {
               />
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={onClose}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-black"
                 aria-label="Cerrar menú"
               >
@@ -51,16 +53,12 @@ export function MobileMenu() {
               </button>
             </div>
 
-            <div className="mt-5">
-              <SearchBox />
-            </div>
-
             <nav className="mt-6 flex flex-col gap-0.5">
               {LINKS.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  onClick={() => setOpen(false)}
+                  onClick={onClose}
                   className="rounded-lg px-3 py-3 text-base text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-black"
                 >
                   {link.label}
