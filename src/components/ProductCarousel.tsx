@@ -43,7 +43,7 @@ export function ProductCarousel({
         {products.map((perfume) => (
           <div
             key={perfume.id}
-            className="w-[78%] min-w-[260px] shrink-0 snap-start sm:w-[45%] sm:min-w-[220px] lg:w-[23%] lg:min-w-[240px]"
+            className="h-full w-[78%] min-w-[260px] shrink-0 snap-start sm:w-[45%] sm:min-w-[220px] lg:w-[23%] lg:min-w-[240px]"
           >
             <ProductCard perfume={perfume} />
           </div>

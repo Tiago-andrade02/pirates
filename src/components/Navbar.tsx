@@ -16,8 +16,10 @@ const LINKS = [
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16 sm:px-6 lg:px-8">
-        <nav className="hidden items-center gap-1 md:flex">
+      <div className="mx-auto flex h-14 max-w-7xl items-center px-4 sm:h-16 sm:px-6 lg:px-8">
+        <MobileMenu />
+
+        <nav className="ml-2 hidden items-center gap-1 md:ml-0 md:flex">
           {LINKS.map((link) => (
             <Link
               key={link.href}
@@ -29,7 +31,7 @@ export function Navbar() {
           ))}
         </nav>
 
-        <Link href="/" className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
+        <Link href="/" className="mx-auto md:mx-0 md:ml-6">
           <img
             src="/nav-logo.png"
             alt="PIRATES"
@@ -37,7 +39,7 @@ export function Navbar() {
           />
         </Link>
 
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
           <a
             href="https://wa.me/5491172919482"
             target="_blank"
@@ -49,7 +51,6 @@ export function Navbar() {
           </a>
           <NavSearch />
           <CartBadge />
-          <MobileMenu />
         </div>
       </div>
     </header>

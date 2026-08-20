@@ -27,7 +27,7 @@ export function ClientCarousel({ children }: ClientCarouselProps) {
     <div className="relative">
       <div
         ref={scrollRef}
-        className="scrollbar-none flex gap-3 overflow-x-auto scroll-smooth px-4 pb-2 sm:px-0 lg:gap-4"
+        className="scrollbar-none flex gap-3 items-stretch overflow-x-auto scroll-smooth px-4 pb-2 sm:px-0 lg:gap-4"
         style={{
           scrollSnapType: "x mandatory",
           WebkitOverflowScrolling: "touch",
