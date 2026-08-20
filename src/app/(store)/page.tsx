@@ -105,12 +105,12 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative flex min-h-[calc(100svh-3.5rem-8rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem-2.5rem)]">
+      <section className="relative flex min-h-[calc(100svh-3.5rem-2rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem-2.5rem)]">
         <img
           src="/logo.png"
           alt=""
           aria-hidden
-          className="hero-fade pointer-events-none absolute left-[50%] top-1/2 w-[80%] -translate-y-1/2 select-none object-contain opacity-[0.06] grayscale sm:left-1/2 sm:w-[85%] sm:-translate-x-1/2 max-w-6xl"
+          className="hero-fade pointer-events-none absolute left-1/2 top-1/2 h-[55%] w-auto -translate-x-1/2 -translate-y-1/2 select-none opacity-[0.08] grayscale max-w-none sm:h-auto sm:w-[85%] sm:max-w-6xl"
         />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
