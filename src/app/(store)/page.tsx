@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getBestSellers, getNewArrivals, getBrands } from "@/lib/data";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductCarousel } from "@/components/ProductCarousel";
 import { Stars } from "@/components/Stars";
 import {
   ArrowRightIcon,
@@ -97,8 +98,8 @@ function SectionHeading({
 }
 
 export default async function HomePage() {
-  const bestSellers = await getBestSellers(4);
-  const newArrivals = await getNewArrivals(4);
+  const bestSellers = await getBestSellers(10);
+  const newArrivals = await getNewArrivals(10);
   const brands = await getBrands();
 
   return (
@@ -171,6 +172,28 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* MÁS VENDIDOS - Carousel */}
+      <section className="mx-auto max-w-7xl py-10 sm:py-20">
+        <ProductCarousel
+          kicker="Los favoritos"
+          title="Más vendidos"
+          href="/perfumes?destacados=1"
+          products={bestSellers}
+        />
+      </section>
+
+      {/* NOVEDADES - Carousel */}
+      <section className="border-y border-line bg-surface">
+        <div className="mx-auto max-w-7xl py-10 sm:py-20">
+          <ProductCarousel
+            kicker="Recién llegados"
+            title="Novedades"
+            href="/perfumes?novedad=1"
+            products={newArrivals}
+          />
+        </div>
+      </section>
+
       {/* BENEFICIOS */}
       <section className="border-y border-line bg-surface">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-4 py-8 sm:grid-cols-2 sm:gap-6 sm:px-6 sm:py-12 lg:grid-cols-4 lg:px-8">
@@ -189,36 +212,6 @@ export default async function HomePage() {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* MÁS VENDIDOS */}
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
-        <SectionHeading
-          kicker="Los favoritos"
-          title="Más vendidos"
-          href="/perfumes?destacados=1"
-        />
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4 lg:gap-6">
-          {bestSellers.map((perfume) => (
-            <ProductCard key={perfume.id} perfume={perfume} />
-          ))}
-        </div>
-      </section>
-
-      {/* NOVEDADES */}
-      <section className="border-y border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-20 lg:px-8">
-          <SectionHeading
-            kicker="Recién llegados"
-            title="Novedades"
-            href="/perfumes?novedad=1"
-          />
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 lg:grid-cols-4 lg:gap-6">
-            {newArrivals.map((perfume) => (
-              <ProductCard key={perfume.id} perfume={perfume} />
-            ))}
-          </div>
         </div>
       </section>
 

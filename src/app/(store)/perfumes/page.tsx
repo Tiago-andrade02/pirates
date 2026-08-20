@@ -13,6 +13,7 @@ import {
 import type { CatalogFilters } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 import { FilterGroup } from "@/components/FilterGroup";
+import { FilterDrawer } from "@/components/FilterDrawer";
 import { SearchBox } from "@/components/SearchBox";
 import { SortSelect } from "@/components/SortSelect";
 import { SearchIcon } from "@/components/icons";
@@ -213,11 +214,22 @@ export default async function CatalogPage(props: CatalogPageProps) {
             {hasFilters && (
               <Link
                 href="/perfumes"
-                className="h-10 shrink-0 rounded-full border border-line px-4 text-xs text-muted transition-colors hover:border-white/40 hover:text-white"
+                className="h-11 shrink-0 rounded-full border border-line px-4 text-xs text-muted transition-colors hover:border-white/40 hover:text-white"
               >
                 Limpiar ({activeCount})
               </Link>
             )}
+            <FilterDrawer
+              brandOptions={brandOptions}
+              sizeOptions={sizeOptions}
+              priceOptions={priceOptions}
+              genderOptions={genderOptions}
+              aromaOptions={aromaOptions}
+              seasonOptions={seasonOptions}
+              occasionOptions={occasionOptions}
+              extraGroups={extraGroups}
+              activeCount={activeCount}
+            />
             <SortSelect baseParams={baseParams} current={filters.order ?? ""} />
           </div>
         </div>
@@ -254,30 +266,6 @@ export default async function CatalogPage(props: CatalogPageProps) {
         </aside>
 
         <div>
-          <div className="mb-3 flex gap-1.5 overflow-x-auto pb-2 lg:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {[
-              ...brandOptions.slice(0, 6),
-              ...sizeOptions,
-              ...priceOptions,
-              ...genderOptions,
-              ...aromaOptions,
-              ...seasonOptions,
-              ...occasionOptions,
-            ].map((option) => (
-              <Link
-                key={option.value + option.label}
-                href={option.href}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-xs transition-colors ${
-                  option.active
-                    ? "border-white bg-white font-medium text-black"
-                    : "border-line bg-surface text-muted hover:text-white"
-                }`}
-              >
-                {option.label}
-              </Link>
-            ))}
-          </div>
-
           {perfumes.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-line bg-surface px-4 py-14 text-center sm:px-6 sm:py-24">
               <p className="font-serif text-xl text-white sm:text-2xl">

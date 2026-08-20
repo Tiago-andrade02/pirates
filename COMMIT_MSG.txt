@@ -1,5 +1,11 @@
-Fix navbar logo centering, white mobile menu, and perfumes page performance
+Add product carousels and mobile filter drawer
 
-- Navbar: use absolute centering on mobile, static on desktop for proper logo placement
-- MobileMenu: white background with dark text/links, proper hover states
-- images.ts: cache fs.existsSync results to avoid repeated filesystem calls per render
+- New ProductCarousel component with horizontal scroll-snap for mobile
+- New ClientCarousel client component for scroll behavior (keeps ProductCard server-side)
+- Homepage: "Mas vendidos" and "Novedades" now use carousels instead of grids
+- Homepage reordered: Hero > Mas vendidos > Novedades > Benefits > Brands > Testimonials > About
+- Fetch 10 products per section for carousel
+- New FilterDrawer component: FILTRAR button opens slide-in drawer on mobile
+- Catalog page: removed horizontal filter chips, replaced with FILTRAR button + drawer
+- New icons: FilterIcon, ChevronLeftIcon, ChevronRightIcon
+- CSS: scrollbar-none utility, slide-up animation
