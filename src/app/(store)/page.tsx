@@ -110,11 +110,11 @@ export default async function HomePage() {
           src="/logo.png"
           alt=""
           aria-hidden
-          className="hero-fade pointer-events-none absolute right-[-15%] bottom-[5%] w-[75%] select-none opacity-[0.08] grayscale max-w-none sm:right-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[85%] sm:h-auto sm:max-w-6xl"
+          className="hero-fade pointer-events-none absolute right-[-20%] bottom-[-5%] w-[50%] select-none opacity-[0.05] grayscale max-w-none sm:right-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[85%] sm:h-auto sm:max-w-6xl"
         />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-10 sm:px-6 sm:py-24 lg:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-10 pb-6 sm:px-6 sm:py-24 lg:px-8">
           <div className="max-w-3xl">
             <p
               className="hero-fade-up text-[11px] font-medium uppercase tracking-[0.3em] text-muted sm:text-xs"
