@@ -105,17 +105,20 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative flex min-h-[calc(100svh-3.5rem-4rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem-2.5rem)]">
+      <section className="relative flex min-h-[calc(100svh-3.5rem-4rem)] items-center justify-center overflow-hidden bg-black sm:min-h-[calc(100svh-4rem-2.5rem)] lg:min-h-[calc(100svh-4rem-3rem)]">
         <img
           src="/logo.png"
           alt=""
           aria-hidden
-          className="hero-fade pointer-events-none absolute right-[-20%] bottom-[-5%] w-[50%] select-none opacity-[0.05] grayscale max-w-none sm:right-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-[85%] sm:h-auto sm:max-w-6xl"
+          className="hero-fade pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 select-none grayscale max-w-none
+            w-[70%] opacity-[0.04]
+            sm:w-[80%] sm:opacity-[0.05]
+            lg:w-[60%] lg:opacity-[0.07]"
         />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-10 pb-6 sm:px-6 sm:py-24 lg:px-8">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl lg:max-w-[55%]">
             <p
               className="hero-fade-up text-[11px] font-medium uppercase tracking-[0.3em] text-muted sm:text-xs"
               style={{ animationDelay: "0ms" }}
@@ -163,7 +166,7 @@ export default async function HomePage() {
             </div>
 
             <p
-              className="hero-fade-up mt-8 hidden text-center text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block"
+              className="hero-fade-up mt-8 hidden text-center text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block lg:text-left"
               style={{ animationDelay: "480ms" }}
             >
               Alta calidad · Envío gratis desde $80.000 · Atención personalizada
