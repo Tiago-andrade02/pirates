@@ -6,15 +6,7 @@ import { CartBadge } from "./cart/CartBadge";
 import { MobileMenu } from "./MobileMenu";
 import { NavSearch } from "./NavSearch";
 import { WhatsAppIcon } from "./icons";
-
-const LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/perfumes", label: "Perfumes" },
-  { href: "/marcas", label: "Marcas" },
-  { href: "/perfumes?novedad=1", label: "Novedades" },
-  { href: "/#nosotros", label: "Nosotros" },
-  { href: "/#contacto", label: "Contacto" },
-];
+import { NAV_LINKS } from "@/lib/nav-links";
 
 export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,7 +32,7 @@ export function Navbar() {
         <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
 
         <nav className="ml-2 hidden items-center gap-1 md:ml-0 md:flex">
-          {LINKS.map((link) => (
+          {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}

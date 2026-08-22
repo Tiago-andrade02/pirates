@@ -4,15 +4,7 @@ import Link from "next/link";
 import { useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon, MenuIcon, WhatsAppIcon, CartIcon } from "./icons";
-
-const LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/perfumes", label: "Perfumes" },
-  { href: "/marcas", label: "Marcas" },
-  { href: "/perfumes?novedad=1", label: "Novedades" },
-  { href: "/#nosotros", label: "Nosotros" },
-  { href: "/#contacto", label: "Contacto" },
-];
+import { NAV_LINKS } from "@/lib/nav-links";
 
 interface MobileMenuProps {
   open: boolean;
@@ -91,7 +83,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
               </div>
 
               <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
-                {LINKS.map((link) => (
+                {NAV_LINKS.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
