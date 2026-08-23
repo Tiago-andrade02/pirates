@@ -46,7 +46,7 @@ export function Navbar() {
 
         <Link
           href="/"
-          className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:ml-6"
+          className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0"
         >
           <img
             src="/nav-logo.png"

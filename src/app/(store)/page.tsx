@@ -115,74 +115,59 @@ export default async function HomePage() {
           className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none lg:hidden"
         />
 
-        <div className="relative mx-auto px-5 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:px-0 lg:py-0">
-          <div className="mx-auto grid items-center lg:grid-cols-[minmax(0,1fr)_minmax(300px,420px)] lg:gap-[clamp(50px,8vw,140px)] lg:pt-[70px] lg:pb-[90px]" style={{ maxWidth: "min(100% - 80px, 1400px)" }}>
+        <div className="hero-fade-up relative mx-auto max-w-[1400px] px-5 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:px-10 lg:pt-[80px] lg:pb-[100px]">
+          <p
+            className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
+            style={{ animationDelay: "0ms" }}
+          >
+            Perfumería árabe &amp; importada
+          </p>
 
-            <div className="hero-fade-up">
-              <p
-                className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
-                style={{ animationDelay: "0ms" }}
-              >
-                Perfumería árabe &amp; importada
-              </p>
+          <h1
+            className="hero-title mt-4 font-serif font-medium text-white sm:mt-6"
+            style={{ animationDelay: "120ms" }}
+          >
+            FRAGANCIAS
+            <br />
+            QUE DEJAN
+            <br />
+            <span className="italic">HUELLA.</span>
+          </h1>
 
-              <h1
-                className="hero-title mt-4 font-serif font-medium text-white sm:mt-6"
-                style={{ animationDelay: "120ms" }}
-              >
-                FRAGANCIAS
-                <br />
-                QUE DEJAN
-                <br />
-                <span className="italic">HUELLA.</span>
-              </h1>
+          <p
+            className="mt-5 max-w-[700px] text-base leading-relaxed text-muted sm:mt-7 sm:text-lg lg:text-xl"
+            style={{ animationDelay: "240ms" }}
+          >
+            &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
+            para quienes buscan presencia, personalidad y un aroma que los
+            represente.&rdquo;
+          </p>
 
-              <p
-                className="mt-5 max-w-[700px] text-base leading-relaxed text-muted sm:mt-7 sm:text-lg lg:text-xl"
-                style={{ animationDelay: "240ms" }}
-              >
-                &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
-                para quienes buscan presencia, personalidad y un aroma que los
-                represente.&rdquo;
-              </p>
-
-              <div
-                className="mt-8 flex flex-col gap-4 sm:mt-10 sm:flex-row sm:items-center sm:gap-4"
-                style={{ animationDelay: "360ms" }}
-              >
-                <Link
-                  href="/perfumes"
-                  className="mi-btn mi-shine group inline-flex h-[60px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-14 sm:w-auto sm:px-10"
-                >
-                  EXPLORAR CATÁLOGO
-                  <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/#nosotros"
-                  className="mi-btn inline-flex h-[60px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-14 sm:w-auto sm:px-10"
-                >
-                  CONOCÉ PIRATES
-                </Link>
-              </div>
-
-              <p
-                className="mt-8 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block lg:text-left"
-                style={{ animationDelay: "480ms" }}
-              >
-                Alta calidad · Envío gratis desde $80.000 · Atención personalizada
-              </p>
-            </div>
-
-            <div className="hidden items-center justify-center lg:flex">
-              <img
-                src="/logo.png"
-                alt="PIRATES"
-                aria-hidden
-                className="hero-fade pointer-events-none select-none grayscale opacity-[0.08]"
-                style={{ width: "clamp(280px, 25vw, 420px)" }}
-              />
-            </div>
+          <div
+            className="mt-8 flex flex-col gap-4 sm:mt-10 sm:flex-row sm:items-center sm:gap-4"
+            style={{ animationDelay: "360ms" }}
+          >
+            <Link
+              href="/perfumes"
+              className="mi-btn mi-shine group inline-flex h-[60px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-14 sm:w-auto sm:px-10"
+            >
+              EXPLORAR CATÁLOGO
+              <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/#nosotros"
+              className="mi-btn inline-flex h-[60px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-14 sm:w-auto sm:px-10"
+            >
+              CONOCÉ PIRATES
+            </Link>
           </div>
+
+          <p
+            className="mt-8 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block lg:text-left"
+            style={{ animationDelay: "480ms" }}
+          >
+            Alta calidad · Envío gratis desde $80.000 · Atención personalizada
+          </p>
         </div>
       </section>
 
