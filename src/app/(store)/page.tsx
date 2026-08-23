@@ -115,9 +115,9 @@ export default async function HomePage() {
           className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none lg:hidden"
         />
 
-        <div className="hero-fade-up relative mx-auto max-w-[1400px] px-[clamp(16px,5vw,80px)] pt-10 pb-12 sm:pt-14 sm:pb-16 lg:grid lg:grid-cols-[1fr_1fr] lg:items-center lg:gap-[clamp(40px,6vw,120px)] lg:px-[clamp(24px,5vw,80px)] lg:pt-[clamp(60px,8vh,120px)] lg:pb-[clamp(60px,8vh,120px)]">
+        <div className="relative mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:grid lg:min-h-[80svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-8 lg:px-10 lg:py-0">
 
-          <div className="text-center lg:text-left">
+          <div className="hero-fade-up text-center lg:text-left">
             <p
               className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
               style={{ animationDelay: "0ms" }}
@@ -172,13 +172,13 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="hidden lg:flex lg:items-center lg:justify-center">
+          <div className="mt-10 flex justify-center lg:mt-0 lg:justify-end">
             <img
               src="/logo.png"
               alt="PIRATES"
               aria-hidden
               className="hero-fade pointer-events-none select-none grayscale opacity-[0.08]"
-              style={{ width: "clamp(240px, 22vw, 400px)" }}
+              style={{ width: "clamp(220px, 30vw, 480px)" }}
             />
           </div>
         </div>

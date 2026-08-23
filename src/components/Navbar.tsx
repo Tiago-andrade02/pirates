@@ -28,34 +28,34 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="mx-auto grid h-[64px] max-w-[1400px] grid-cols-[auto_1fr_auto] items-center px-4 sm:h-[68px] sm:px-6 lg:h-[72px] lg:px-10">
+      <div className="relative mx-auto flex h-[68px] max-w-[1400px] items-center px-4 sm:h-[72px] sm:px-6 lg:px-10">
 
-        <div className="md:hidden">
-          <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
-        </div>
+        <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
 
-        <div className="flex items-center justify-center px-2 md:justify-start md:px-0">
-          <Link href="/" className="shrink-0 md:mr-6 lg:mr-8">
-            <img
-              src="/nav-logo.png"
-              alt="PIRATES"
-              className="h-[32px] w-auto object-contain lg:h-[36px]"
-            />
-          </Link>
-          <nav className="hidden items-center gap-1 md:flex">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="mi-nav-link rounded-full px-4 py-2 text-sm text-muted hover:text-white"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
+        <nav className="hidden items-center gap-1 md:flex">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="mi-nav-link rounded-full px-4 py-2 text-sm text-muted hover:text-white"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        <Link
+          href="/"
+          className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 md:ml-6"
+        >
+          <img
+            src="/nav-logo.png"
+            alt="PIRATES"
+            className="h-[36px] w-auto object-contain md:h-[38px]"
+          />
+        </Link>
+
+        <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
           <a
             href="https://wa.me/5491172919482"
             target="_blank"
