@@ -112,10 +112,10 @@ export default async function HomePage() {
           src="/logo.png"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none lg:hidden"
+          className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none hidden lg:block"
         />
 
-        <div className="relative mx-auto max-w-[1400px] px-5 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:grid lg:min-h-[80svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-8 lg:px-10 lg:py-0">
+        <div className="relative mx-auto max-w-[1400px] px-5 pt-10 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:grid lg:min-h-[80svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-8 lg:px-10 lg:py-0">
 
           <div className="hero-fade-up text-center lg:text-left">
             <p
