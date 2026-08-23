@@ -115,7 +115,7 @@ export default async function HomePage() {
           className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none lg:hidden"
         />
 
-        <div className="relative mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:grid lg:min-h-[80svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-8 lg:px-10 lg:py-0">
+        <div className="relative mx-auto max-w-[1400px] px-5 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:grid lg:min-h-[80svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-8 lg:px-10 lg:py-0">
 
           <div className="hero-fade-up text-center lg:text-left">
             <p
@@ -126,7 +126,7 @@ export default async function HomePage() {
             </p>
 
             <h1
-              className="hero-title mx-auto mt-4 font-serif font-medium text-white sm:mt-6 lg:mx-0"
+              className="hero-title mx-auto mt-3 font-serif font-medium text-white sm:mt-5 lg:mx-0 lg:mt-4"
               style={{ animationDelay: "120ms" }}
             >
               FRAGANCIAS
@@ -137,7 +137,7 @@ export default async function HomePage() {
             </h1>
 
             <p
-              className="mx-auto mt-5 max-w-[500px] text-base leading-relaxed text-muted sm:mt-7 sm:text-lg lg:mx-0 lg:max-w-[520px] lg:text-xl"
+              className="mx-auto mt-4 max-w-[500px] text-base leading-relaxed text-muted sm:mt-6 sm:text-lg lg:mx-0 lg:mt-5 lg:max-w-[520px] lg:text-xl"
               style={{ animationDelay: "240ms" }}
             >
               &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
@@ -146,39 +146,39 @@ export default async function HomePage() {
             </p>
 
             <div
-              className="mx-auto mt-8 flex max-w-[420px] flex-col gap-4 sm:mt-10 sm:flex-row sm:items-center sm:justify-center lg:mx-0 lg:max-w-none lg:justify-start sm:gap-4"
+              className="mx-auto mt-6 flex max-w-[420px] flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start"
               style={{ animationDelay: "360ms" }}
             >
               <Link
                 href="/perfumes"
-                className="mi-btn mi-shine group inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-14 sm:w-auto sm:px-10"
+                className="mi-btn mi-shine group inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-14 sm:w-auto sm:px-10"
               >
                 EXPLORAR CATÁLOGO
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/#nosotros"
-                className="mi-btn inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-14 sm:w-auto sm:px-10"
+                className="mi-btn inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-14 sm:w-auto sm:px-10"
               >
                 CONOCÉ PIRATES
               </Link>
             </div>
 
             <p
-              className="mx-auto mt-8 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block lg:mx-0"
+              className="mx-auto mt-6 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-8 sm:block lg:mx-0 lg:mt-10"
               style={{ animationDelay: "480ms" }}
             >
               Alta calidad · Envío gratis desde $80.000 · Atención personalizada
             </p>
           </div>
 
-          <div className="mt-10 flex justify-center lg:mt-0 lg:justify-end">
+          <div className="mt-8 flex justify-center lg:mt-0 lg:justify-end">
             <img
               src="/logo.png"
               alt="PIRATES"
               aria-hidden
               className="hero-fade pointer-events-none select-none grayscale opacity-[0.08]"
-              style={{ width: "clamp(220px, 30vw, 480px)" }}
+              style={{ width: "clamp(200px, 28vw, 480px)" }}
             />
           </div>
         </div>
