@@ -105,24 +105,16 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative overflow-hidden bg-black">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
-
-        <div className="relative mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:min-h-[80svh] lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:px-10 lg:py-0">
+      <section className="bg-black">
+        <div className="mx-auto max-w-[1400px] px-5 pt-14 pb-12 sm:px-6 sm:pt-16 sm:pb-16 lg:grid lg:min-h-[75svh] lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10 lg:py-0">
 
           {/* Text */}
-          <div className="hero-fade-up text-center lg:text-left">
-            <p
-              className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
-              style={{ animationDelay: "0ms" }}
-            >
+          <div className="text-center lg:text-left">
+            <p className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm">
               Perfumería árabe &amp; importada
             </p>
 
-            <h1
-              className="hero-title mx-auto mt-4 font-serif font-medium text-white sm:mt-6 lg:mx-0 lg:mt-5"
-              style={{ animationDelay: "120ms" }}
-            >
+            <h1 className="hero-title mt-5 font-serif font-medium text-white sm:mt-7 lg:mt-6">
               FRAGANCIAS
               <br />
               QUE DEJAN
@@ -130,19 +122,13 @@ export default async function HomePage() {
               <span className="italic">HUELLA.</span>
             </h1>
 
-            <p
-              className="mx-auto mt-5 max-w-[500px] text-base leading-relaxed text-muted sm:mt-6 sm:text-lg lg:mx-0 lg:mt-6 lg:max-w-[520px] lg:text-xl"
-              style={{ animationDelay: "240ms" }}
-            >
+            <p className="mx-auto mt-5 max-w-[500px] text-base leading-relaxed text-muted sm:mt-6 sm:text-lg lg:mx-0 lg:mt-6 lg:max-w-[520px] lg:text-xl">
               &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
               para quienes buscan presencia, personalidad y un aroma que los
               represente.&rdquo;
             </p>
 
-            <div
-              className="mx-auto mt-7 flex max-w-[420px] flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start"
-              style={{ animationDelay: "360ms" }}
-            >
+            <div className="mx-auto mt-7 flex max-w-[420px] flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start">
               <Link
                 href="/perfumes"
                 className="mi-btn mi-shine group inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-14 sm:w-auto sm:px-10"
@@ -158,21 +144,18 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <p
-              className="mx-auto mt-7 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-8 sm:block lg:mx-0 lg:mt-10"
-              style={{ animationDelay: "480ms" }}
-            >
+            <p className="mx-auto mt-7 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-8 sm:block lg:mx-0 lg:mt-10">
               Alta calidad · Envío gratis desde $80.000 · Atención personalizada
             </p>
           </div>
 
-          {/* Logo — single, no duplicate, no absolute */}
-          <div className="mt-10 lg:mt-0">
+          {/* Logo — desktop only, right column */}
+          <div className="hidden lg:flex lg:justify-center lg:pt-8">
             <img
               src="/logo.png"
               alt="PIRATES"
               aria-hidden
-              className="pointer-events-none mx-auto block w-[min(65vw,480px)] select-none grayscale opacity-[0.08]"
+              className="pointer-events-none w-[min(100%,480px)] select-none grayscale opacity-[0.08]"
             />
           </div>
         </div>

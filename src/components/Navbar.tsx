@@ -27,7 +27,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="mx-auto h-[56px] max-w-[1400px] px-4 sm:h-[60px] sm:px-6 md:h-[64px] md:px-8 lg:h-[68px] lg:px-10">
+      <div className="mx-auto h-[64px] max-w-[1400px] px-4 sm:h-[68px] sm:px-6 md:h-[68px] md:px-8 lg:h-[72px] lg:px-10">
         <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center md:grid-cols-[auto_1fr_auto]">
 
           {/* ── Left zone ── */}
@@ -40,7 +40,7 @@ export function Navbar() {
               <img
                 src="/nav-logo.png"
                 alt="PIRATES"
-                className="h-[30px] w-auto object-contain lg:h-[34px]"
+                className="h-[28px] w-auto object-contain lg:h-[32px]"
               />
             </Link>
           </div>
@@ -53,7 +53,7 @@ export function Navbar() {
             <img
               src="/nav-logo.png"
               alt="PIRATES"
-              className="h-[26px] w-auto max-w-[80px] object-contain"
+              className="h-[22px] w-auto object-contain"
             />
           </Link>
 
