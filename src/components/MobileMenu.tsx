@@ -58,7 +58,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
       {open &&
         createPortal(
           <div
-            className="fixed inset-0 z-[9999] md:hidden"
+            className="fixed inset-0 z-50 md:hidden"
             role="dialog"
             aria-modal="true"
           >

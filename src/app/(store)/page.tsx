@@ -108,15 +108,9 @@ export default async function HomePage() {
       <section className="relative overflow-hidden bg-black">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
-        <img
-          src="/logo.png"
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none hidden lg:block"
-        />
+        <div className="relative mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:min-h-[80svh] lg:grid lg:grid-cols-2 lg:items-center lg:gap-12 lg:px-10 lg:py-0">
 
-        <div className="relative mx-auto max-w-[1400px] px-5 pt-10 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:grid lg:min-h-[80svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:items-center lg:gap-8 lg:px-10 lg:py-0">
-
+          {/* Text */}
           <div className="hero-fade-up text-center lg:text-left">
             <p
               className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
@@ -126,7 +120,7 @@ export default async function HomePage() {
             </p>
 
             <h1
-              className="hero-title mx-auto mt-3 font-serif font-medium text-white sm:mt-5 lg:mx-0 lg:mt-4"
+              className="hero-title mx-auto mt-4 font-serif font-medium text-white sm:mt-6 lg:mx-0 lg:mt-5"
               style={{ animationDelay: "120ms" }}
             >
               FRAGANCIAS
@@ -137,7 +131,7 @@ export default async function HomePage() {
             </h1>
 
             <p
-              className="mx-auto mt-4 max-w-[500px] text-base leading-relaxed text-muted sm:mt-6 sm:text-lg lg:mx-0 lg:mt-5 lg:max-w-[520px] lg:text-xl"
+              className="mx-auto mt-5 max-w-[500px] text-base leading-relaxed text-muted sm:mt-6 sm:text-lg lg:mx-0 lg:mt-6 lg:max-w-[520px] lg:text-xl"
               style={{ animationDelay: "240ms" }}
             >
               &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
@@ -146,7 +140,7 @@ export default async function HomePage() {
             </p>
 
             <div
-              className="mx-auto mt-6 flex max-w-[420px] flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start"
+              className="mx-auto mt-7 flex max-w-[420px] flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start"
               style={{ animationDelay: "360ms" }}
             >
               <Link
@@ -165,20 +159,20 @@ export default async function HomePage() {
             </div>
 
             <p
-              className="mx-auto mt-6 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-8 sm:block lg:mx-0 lg:mt-10"
+              className="mx-auto mt-7 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-8 sm:block lg:mx-0 lg:mt-10"
               style={{ animationDelay: "480ms" }}
             >
               Alta calidad · Envío gratis desde $80.000 · Atención personalizada
             </p>
           </div>
 
-          <div className="mt-8 flex justify-center lg:mt-0 lg:justify-end">
+          {/* Logo — single, no duplicate, no absolute */}
+          <div className="mt-10 lg:mt-0">
             <img
               src="/logo.png"
               alt="PIRATES"
               aria-hidden
-              className="hero-fade pointer-events-none select-none grayscale opacity-[0.08]"
-              style={{ width: "clamp(200px, 28vw, 480px)" }}
+              className="pointer-events-none mx-auto block w-[min(65vw,480px)] select-none grayscale opacity-[0.08]"
             />
           </div>
         </div>

@@ -6,3 +6,5 @@ export const NAV_LINKS = [
   { href: "/#nosotros", label: "Nosotros" },
   { href: "/#contacto", label: "Contacto" },
 ];
+
+export const NAV_LINKS_DESKTOP = NAV_LINKS.slice(0, 4);
