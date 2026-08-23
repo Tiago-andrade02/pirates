@@ -28,10 +28,20 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="mx-auto grid h-[72px] max-w-[1400px] grid-cols-[auto_1fr_auto] items-center px-4 sm:h-16 sm:px-6 lg:h-[72px] lg:px-8">
+      <div className="mx-auto grid h-[64px] max-w-[1400px] grid-cols-[auto_1fr_auto] items-center px-4 sm:h-[68px] sm:px-6 lg:h-[72px] lg:px-10">
 
-        <div className="flex items-center gap-1">
+        <div className="md:hidden">
           <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
+        </div>
+
+        <div className="flex items-center justify-center px-2 md:justify-start md:px-0">
+          <Link href="/" className="shrink-0 md:mr-6 lg:mr-8">
+            <img
+              src="/nav-logo.png"
+              alt="PIRATES"
+              className="h-[32px] w-auto object-contain lg:h-[36px]"
+            />
+          </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {NAV_LINKS.map((link) => (
               <Link
@@ -44,17 +54,6 @@ export function Navbar() {
             ))}
           </nav>
         </div>
-
-        <Link
-          href="/"
-          className="flex justify-center"
-        >
-          <img
-            src="/nav-logo.png"
-            alt="PIRATES"
-            className="h-[28px] w-auto object-contain lg:h-[30px] lg:max-w-[120px]"
-          />
-        </Link>
 
         <div className="flex items-center gap-0.5 sm:gap-1">
           <a
