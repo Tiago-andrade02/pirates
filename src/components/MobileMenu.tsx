@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { CloseIcon, MenuIcon, WhatsAppIcon, CartIcon } from "./icons";
+import { MenuIcon, CloseIcon, CartIcon, WhatsAppIcon } from "./icons";
 import { NAV_LINKS } from "@/lib/nav-links";
 
 interface MobileMenuProps {
@@ -22,10 +22,8 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
 
   useEffect(() => {
     if (!open) return;
-
     document.addEventListener("keydown", handleEscape);
     document.body.style.overflow = "hidden";
-
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
@@ -37,7 +35,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
       <button
         type="button"
         onClick={open ? onClose : onOpen}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:text-white md:hidden"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:text-white md:hidden"
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={open}
       >
@@ -57,44 +55,34 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
 
       {open &&
         createPortal(
-          <div
-            className="fixed inset-0 z-50 md:hidden"
-            role="dialog"
-            aria-modal="true"
-          >
-            <div
-              className="absolute inset-0 bg-black/70"
-              onClick={onClose}
-            />
-
-            <div className="animate-slide-in-right absolute inset-y-0 right-0 flex h-full w-[85%] max-w-sm flex-col bg-background shadow-2xl shadow-black/50">
-              <div className="flex h-12 items-center justify-between border-b border-line px-4">
-                <span className="font-serif text-lg font-medium text-white tracking-wider">
+          <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
+            <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+            <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col bg-background shadow-2xl">
+              <div className="flex h-14 items-center justify-between border-b border-line px-4">
+                <span className="font-serif text-lg font-medium tracking-wider text-white">
                   PIRATES
                 </span>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-white"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-white"
                   aria-label="Cerrar menú"
                 >
                   <CloseIcon className="h-5 w-5" />
                 </button>
               </div>
-
-              <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
+              <nav className="flex-1 overflow-y-auto px-3 py-3">
                 {NAV_LINKS.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={onClose}
-                    className="block rounded-lg px-4 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-surface hover:text-gold"
+                    className="block rounded-lg px-4 py-3 text-base font-medium text-foreground transition-colors hover:bg-surface hover:text-gold"
                   >
                     {link.label}
                   </Link>
                 ))}
               </nav>
-
               <div className="border-t border-line px-3 py-4 space-y-1">
                 <Link
                   href="/carrito"
