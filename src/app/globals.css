@@ -240,18 +240,6 @@ input[type="number"]::-webkit-inner-spin-button {
    EXISTING ANIMATIONS
    ═══════════════════════════════════════════ */
 
-@keyframes hero-fade-up {
-  from { opacity: 0; transform: translateY(26px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes hero-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.hero-fade-up { animation: hero-fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
-.hero-fade { animation: hero-fade 1.4s ease-out both; }
-
 .hero-title {
   font-size: clamp(2.5rem, 12vw, 4.5rem);
   line-height: 0.95;

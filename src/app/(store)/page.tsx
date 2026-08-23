@@ -105,7 +105,7 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="bg-black">
+      <section className="bg-background">
         <div className="mx-auto max-w-[1400px] px-5 pt-14 pb-14 sm:px-6 sm:pt-16 sm:pb-20 lg:grid lg:min-h-[80svh] lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10 lg:py-0">
           <div className="text-center lg:text-left">
             <p className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm">
