@@ -189,7 +189,7 @@ export function NavSearch({
         onClick={mobileOpen ? closeMobile : onMobileOpen}
         aria-label="Buscar"
         aria-expanded={mobileOpen}
-        className="mi-btn inline-flex h-11 w-11 items-center justify-center rounded-full text-muted md:hidden"
+        className="mi-btn inline-flex h-9 w-9 items-center justify-center rounded-full text-muted md:hidden"
       >
         {mobileOpen ? (
           <CloseIcon className="h-5 w-5" />
@@ -199,7 +199,7 @@ export function NavSearch({
       </button>
 
       {mobileOpen && mounted && createPortal(
-        <div className="fixed inset-x-0 top-[64px] z-50 animate-slide-down border-b border-line bg-background px-4 py-3 backdrop-blur-md sm:top-[68px] md:hidden">
+        <div className="fixed inset-x-0 top-[52px] z-50 animate-slide-down border-b border-line bg-background px-4 py-3 backdrop-blur-md sm:top-[56px] md:hidden">
           <form onSubmit={onSubmit} className="relative" role="search">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <input

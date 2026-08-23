@@ -27,33 +27,28 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background">
-      <div className="mx-auto h-[64px] max-w-[1400px] px-4 sm:h-[68px] sm:px-6 md:h-[68px] md:px-8 lg:h-[72px] lg:px-10">
-        {/* Mobile: [1fr auto 1fr] → ☰ | LOGO | 🔍🛒
-            Desktop: [auto 1fr auto] → LOGO | links | 🔍🛒 */}
-        <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center md:grid-cols-[auto_1fr_auto]">
+      <div className="mx-auto h-[52px] max-w-[1400px] px-3 sm:h-[56px] sm:px-5 md:h-[56px] md:px-6 lg:h-[60px] lg:px-8">
+        <div className="grid h-full grid-cols-[auto_1fr_auto] items-center">
 
-          {/* Col 1: hamburger (mobile) | logo (desktop) */}
-          <div className="flex items-center">
+          {/* Col 1: hamburger + logo (mobile) | hamburger + logo (desktop) */}
+          <div className="flex items-center gap-2.5">
             <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
-            <Link href="/" className="hidden items-center md:flex md:ml-4 lg:ml-6">
-              <img src="/nav-logo.png" alt="PIRATES" className="h-[28px] w-auto object-contain lg:h-[32px]" />
+            <Link href="/" className="flex items-center">
+              <img src="/nav-logo.png" alt="PIRATES" className="h-[14px] w-auto object-contain sm:h-[16px] md:h-[22px] lg:h-[26px]" />
             </Link>
           </div>
 
-          {/* Col 2: logo (mobile, centered by grid) | nav links (desktop, centered by flex) */}
-          <Link href="/" className="flex items-center justify-self-center md:hidden">
-            <img src="/nav-logo.png" alt="PIRATES" className="h-[22px] w-auto object-contain" />
-          </Link>
-          <nav className="hidden items-center justify-center gap-1 md:flex">
+          {/* Col 2: nav links (desktop only, centered) */}
+          <nav className="hidden items-center justify-center gap-0.5 md:flex lg:gap-1">
             {NAV_LINKS_DESKTOP.map((link) => (
-              <Link key={link.href} href={link.href} className="mi-nav-link rounded-full px-3 py-2 text-sm text-muted hover:text-white lg:px-4">
+              <Link key={link.href} href={link.href} className="mi-nav-link rounded-full px-2.5 py-1.5 text-[13px] text-muted hover:text-white lg:px-3 lg:py-2 lg:text-sm">
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          {/* Col 3: search + cart (both breakpoints) */}
-          <div className="flex items-center justify-end gap-0.5 sm:gap-1">
+          {/* Col 3: search + cart */}
+          <div className="flex items-center justify-end gap-0 sm:gap-0.5">
             <NavSearch mobileOpen={searchOpen} onMobileOpen={openSearch} onMobileClose={closeSearch} />
             <CartBadge />
           </div>

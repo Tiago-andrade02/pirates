@@ -37,7 +37,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
       <button
         type="button"
         onClick={open ? onClose : onOpen}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted transition-colors hover:text-white md:hidden"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:text-white md:hidden"
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={open}
       >
@@ -68,7 +68,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
             />
 
             <div className="animate-slide-in-right absolute inset-y-0 right-0 flex h-full w-[85%] max-w-sm flex-col bg-background shadow-2xl shadow-black/50">
-              <div className="flex h-14 items-center justify-between border-b border-line px-4">
+              <div className="flex h-12 items-center justify-between border-b border-line px-4">
                 <span className="font-serif text-lg font-medium text-white tracking-wider">
                   PIRATES
                 </span>

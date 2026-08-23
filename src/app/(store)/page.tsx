@@ -106,34 +106,34 @@ export default async function HomePage() {
     <>
       {/* HERO */}
       <section className="bg-background">
-        <div className="mx-auto max-w-[1400px] px-5 pt-14 pb-14 sm:px-6 sm:pt-16 sm:pb-20 lg:grid lg:min-h-[80svh] lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-10 lg:py-0">
+        <div className="mx-auto max-w-[1400px] px-5 pt-10 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:grid lg:min-h-[70svh] lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-10 lg:px-10 lg:py-0">
           <div className="text-center lg:text-left">
-            <p className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm">
+            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted sm:text-xs">
               Perfumería árabe &amp; importada
             </p>
-            <h1 className="hero-title mt-5 font-serif font-medium text-white sm:mt-7">
+            <h1 className="hero-title mt-4 font-serif font-medium text-white sm:mt-5">
               FRAGANCIAS<br />QUE DEJAN<br /><span className="italic">HUELLA.</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-[500px] text-base leading-relaxed text-muted sm:mt-6 sm:text-lg lg:mx-0 lg:mt-6 lg:max-w-[520px] lg:text-xl">
+            <p className="mx-auto mt-4 max-w-[420px] text-sm leading-relaxed text-muted sm:mt-5 sm:text-base lg:mx-0 lg:mt-5 lg:max-w-[440px] lg:text-lg">
               &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
               para quienes buscan presencia, personalidad y un aroma que los
               represente.&rdquo;
             </p>
-            <div className="mx-auto mt-7 flex max-w-[420px] flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start">
-              <Link href="/perfumes" className="mi-btn mi-shine group inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-14 sm:w-auto sm:px-10">
+            <div className="mx-auto mt-6 flex max-w-[380px] flex-col gap-2.5 sm:mt-7 sm:flex-row sm:items-center sm:justify-center sm:gap-3 lg:mx-0 lg:mt-7 lg:max-w-none lg:justify-start">
+              <Link href="/perfumes" className="mi-btn mi-shine group inline-flex h-[46px] w-full items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-semibold text-black sm:h-11 sm:w-auto sm:px-9">
                 EXPLORAR CATÁLOGO
-                <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link href="/#nosotros" className="mi-btn inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-14 sm:w-auto sm:px-10">
+              <Link href="/#nosotros" className="mi-btn inline-flex h-[46px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-7 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-11 sm:w-auto sm:px-9">
                 CONOCÉ PIRATES
               </Link>
             </div>
-            <p className="mx-auto mt-7 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-8 sm:block lg:mx-0 lg:mt-10">
+            <p className="mx-auto mt-6 hidden text-[10px] uppercase tracking-[0.2em] text-faint sm:mt-7 sm:block lg:mx-0 lg:mt-8">
               Alta calidad · Envío gratis desde $80.000 · Atención personalizada
             </p>
           </div>
-          <div className="hidden lg:flex lg:justify-center">
-            <img src="/logo.png" alt="PIRATES" aria-hidden className="pointer-events-none w-[min(100%,480px)] select-none grayscale opacity-[0.06]" />
+          <div className="hidden lg:flex lg:justify-end lg:pr-4">
+            <img src="/logo.png" alt="PIRATES" aria-hidden className="pointer-events-none w-[min(100%,360px)] select-none opacity-[0.04]" />
           </div>
         </div>
       </section>
