@@ -105,29 +105,20 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative flex items-center justify-center overflow-hidden bg-black py-10 sm:py-16 lg:min-h-[85svh] lg:justify-start lg:py-0">
-        <img
-          src="/logo.png"
-          alt=""
-          aria-hidden
-          className="hero-fade pointer-events-none absolute select-none grayscale max-w-none
-            right-[-15%] top-[12%] w-[55%] opacity-[0.05]
-            lg:right-[-5%] lg:top-1/2 lg:-translate-y-1/2 lg:w-[45%] lg:opacity-[0.08]"
-        />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
+      <section className="overflow-hidden bg-black">
+        <div className="mx-auto grid max-w-[1400px] items-center px-5 py-12 sm:py-16 md:px-6 lg:min-h-[85svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:gap-8 lg:px-8 lg:py-0">
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-6 lg:px-8">
-          <div className="max-w-3xl lg:max-w-[55%]">
+          <div className="hero-fade-up">
             <p
-              className="hero-fade-up text-[11px] font-medium uppercase tracking-[0.3em] text-muted sm:text-xs"
+              className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
               style={{ animationDelay: "0ms" }}
             >
               Perfumería árabe &amp; importada
             </p>
 
             <h1
-              className="hero-fade-up mt-3 font-serif font-medium leading-[1.08] text-white sm:mt-6"
-              style={{ animationDelay: "120ms", fontSize: "clamp(2rem, 7vw, 4.5rem)" }}
+              className="mt-4 font-serif font-medium leading-[0.95] text-white sm:mt-6"
+              style={{ animationDelay: "120ms", fontSize: "clamp(3rem, 14vw, 7rem)" }}
             >
               FRAGANCIAS
               <br />
@@ -137,7 +128,7 @@ export default async function HomePage() {
             </h1>
 
             <p
-              className="hero-fade-up mt-4 max-w-xl text-sm leading-relaxed text-muted sm:mt-7 sm:text-lg"
+              className="mt-5 max-w-[700px] text-base leading-relaxed text-muted sm:mt-7 sm:text-lg lg:text-xl"
               style={{ animationDelay: "240ms" }}
             >
               &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
@@ -146,31 +137,48 @@ export default async function HomePage() {
             </p>
 
             <div
-              className="hero-fade-up mt-7 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4"
+              className="mt-8 flex flex-col gap-4 sm:mt-10 sm:flex-row sm:items-center sm:gap-4"
               style={{ animationDelay: "360ms" }}
             >
               <Link
                 href="/perfumes"
-                className="mi-btn mi-shine group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-7 text-sm font-semibold text-black sm:w-auto sm:h-13 sm:px-8"
+                className="mi-btn mi-shine group inline-flex h-[60px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-14 sm:w-auto sm:px-10"
               >
                 EXPLORAR CATÁLOGO
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/#nosotros"
-                className="mi-btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/25 px-7 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:w-auto sm:h-13 sm:px-8"
+                className="mi-btn inline-flex h-[60px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white hover:border-white/50 hover:bg-white/5 sm:h-14 sm:w-auto sm:px-10"
               >
                 CONOCÉ PIRATES
               </Link>
             </div>
 
             <p
-              className="hero-fade-up mt-8 hidden text-center text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block lg:text-left"
+              className="mt-8 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block lg:text-left"
               style={{ animationDelay: "480ms" }}
             >
               Alta calidad · Envío gratis desde $80.000 · Atención personalizada
             </p>
           </div>
+
+          <div className="mt-10 flex justify-center lg:mt-0 lg:justify-end">
+            <img
+              src="/logo.png"
+              alt="PIRATES"
+              aria-hidden
+              className="hero-fade pointer-events-none select-none grayscale
+                w-[65vw] max-w-[280px]
+                sm:max-w-[320px]
+                lg:w-auto lg:max-w-none"
+              style={{
+                width: "clamp(220px, 30vw, 480px)",
+                animationDelay: "200ms",
+              }}
+            />
+          </div>
+
         </div>
       </section>
 

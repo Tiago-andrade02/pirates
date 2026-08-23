@@ -28,10 +28,11 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background/80 backdrop-blur-md">
-      <div className="relative mx-auto flex h-14 max-w-7xl items-center px-4 sm:h-16 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-[72px] max-w-[1400px] items-center px-4 sm:h-16 sm:px-6 lg:h-[72px] lg:px-8">
+
         <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
 
-        <nav className="ml-2 hidden items-center gap-1 md:ml-0 md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -50,7 +51,7 @@ export function Navbar() {
           <img
             src="/nav-logo.png"
             alt="PIRATES"
-            className="h-8 w-auto object-contain"
+            className="h-[38px] w-auto object-contain lg:h-[46px]"
           />
         </Link>
 

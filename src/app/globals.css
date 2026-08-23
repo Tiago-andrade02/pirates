@@ -26,6 +26,12 @@
   --gold: #d4af37;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
@@ -39,6 +45,11 @@ body {
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   word-wrap: break-word;
+}
+
+img, video, svg {
+  max-width: 100%;
+  height: auto;
 }
 
 a, button, input, select, textarea {
