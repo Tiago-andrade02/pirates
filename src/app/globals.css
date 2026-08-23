@@ -244,6 +244,12 @@ input[type="number"]::-webkit-inner-spin-button {
   font-size: clamp(2.5rem, 12vw, 4.5rem);
   line-height: 0.95;
 }
+@media (min-width: 640px) {
+  .hero-title {
+    font-size: clamp(2.75rem, 10vw, 4rem);
+    line-height: 0.92;
+  }
+}
 @media (min-width: 1024px) {
   .hero-title {
     font-size: clamp(58px, 5vw, 76px);
