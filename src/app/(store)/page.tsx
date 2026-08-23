@@ -105,9 +105,17 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="overflow-hidden bg-black">
-        <div className="mx-auto grid max-w-[1400px] items-center px-5 py-12 sm:py-16 md:px-6 lg:min-h-[85svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)] lg:gap-8 lg:px-8 lg:py-0">
+      <section className="relative overflow-hidden bg-black">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_60%)]" />
 
+        <img
+          src="/logo.png"
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none lg:hidden"
+        />
+
+        <div className="relative mx-auto grid max-w-[1400px] items-center px-5 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:min-h-[85svh] lg:grid-cols-[minmax(0,1.1fr)_minmax(300px,0.9fr)] lg:gap-10 lg:px-8 lg:py-0">
           <div className="hero-fade-up">
             <p
               className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
@@ -118,7 +126,7 @@ export default async function HomePage() {
 
             <h1
               className="mt-4 font-serif font-medium leading-[0.95] text-white sm:mt-6"
-              style={{ animationDelay: "120ms", fontSize: "clamp(3rem, 14vw, 7rem)" }}
+              style={{ animationDelay: "120ms", fontSize: "clamp(2.5rem, 12vw, 4.5rem)" }}
             >
               FRAGANCIAS
               <br />
@@ -163,22 +171,15 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="mt-10 flex justify-center lg:mt-0 lg:justify-end">
+          <div className="hidden items-center justify-end lg:flex">
             <img
               src="/logo.png"
               alt="PIRATES"
               aria-hidden
-              className="hero-fade pointer-events-none select-none grayscale
-                w-[65vw] max-w-[280px]
-                sm:max-w-[320px]
-                lg:w-auto lg:max-w-none"
-              style={{
-                width: "clamp(220px, 30vw, 480px)",
-                animationDelay: "200ms",
-              }}
+              className="hero-fade pointer-events-none select-none grayscale opacity-[0.08]"
+              style={{ width: "clamp(280px, 30vw, 480px)" }}
             />
           </div>
-
         </div>
       </section>
 
