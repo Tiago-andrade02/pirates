@@ -177,7 +177,7 @@ export function NavSearch({
               }
             }}
             placeholder="Buscar perfumes o marcas..."
-            className="mi-search w-[180px] rounded-full border border-line bg-surface py-2 pl-9 pr-3 text-sm text-white outline-none placeholder:text-faint focus:border-white/40 focus:w-[260px] lg:w-[220px] lg:focus:w-[280px]"
+            className="mi-search w-[160px] rounded-full border border-line bg-surface py-2 pl-9 pr-3 text-sm text-white outline-none placeholder:text-faint focus:border-white/40 focus:w-[260px] lg:w-[200px] lg:focus:w-[260px]"
             aria-label="Buscar perfumes o marcas"
           />
         </form>
