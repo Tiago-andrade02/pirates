@@ -115,7 +115,7 @@ export default async function HomePage() {
           className="pointer-events-none absolute right-[-10%] top-[8%] w-[55%] select-none grayscale opacity-[0.05] max-w-none lg:hidden"
         />
 
-        <div className="hero-fade-up relative mx-auto max-w-[1400px] px-5 pt-8 pb-10 sm:px-6 sm:pt-12 sm:pb-14 lg:px-10 lg:pt-[80px] lg:pb-[100px]">
+        <div className="hero-fade-up relative mx-auto max-w-[1400px] px-5 pt-8 pb-10 text-center sm:px-6 sm:pt-12 sm:pb-14 lg:px-10 lg:pt-[80px] lg:pb-[100px]">
           <p
             className="text-xs font-medium uppercase tracking-[0.3em] text-muted sm:text-sm"
             style={{ animationDelay: "0ms" }}
@@ -124,7 +124,7 @@ export default async function HomePage() {
           </p>
 
           <h1
-            className="hero-title mt-4 font-serif font-medium text-white sm:mt-6"
+            className="hero-title mx-auto mt-4 max-w-[800px] font-serif font-medium text-white sm:mt-6"
             style={{ animationDelay: "120ms" }}
           >
             FRAGANCIAS
@@ -135,7 +135,7 @@ export default async function HomePage() {
           </h1>
 
           <p
-            className="mt-5 max-w-[700px] text-base leading-relaxed text-muted sm:mt-7 sm:text-lg lg:text-xl"
+            className="mx-auto mt-5 max-w-[600px] text-base leading-relaxed text-muted sm:mt-7 sm:text-lg lg:text-xl"
             style={{ animationDelay: "240ms" }}
           >
             &ldquo;Descubrí una selección de fragancias de alta calidad, elegidas
@@ -144,7 +144,7 @@ export default async function HomePage() {
           </p>
 
           <div
-            className="mt-8 flex flex-col gap-4 sm:mt-10 sm:flex-row sm:items-center sm:gap-4"
+            className="mx-auto mt-8 flex max-w-[500px] flex-col gap-4 sm:mt-10 sm:flex-row sm:items-center sm:justify-center sm:gap-4"
             style={{ animationDelay: "360ms" }}
           >
             <Link
@@ -163,7 +163,7 @@ export default async function HomePage() {
           </div>
 
           <p
-            className="mt-8 hidden text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block lg:text-left"
+            className="mx-auto mt-8 hidden max-w-[500px] text-[11px] uppercase tracking-[0.25em] text-faint sm:mt-10 sm:block"
             style={{ animationDelay: "480ms" }}
           >
             Alta calidad · Envío gratis desde $80.000 · Atención personalizada
