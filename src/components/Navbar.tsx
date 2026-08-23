@@ -28,9 +28,11 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background">
       <div className="mx-auto h-[64px] max-w-[1400px] px-4 sm:h-[68px] sm:px-6 md:h-[68px] md:px-8 lg:h-[72px] lg:px-10">
+        {/* Mobile: [1fr auto 1fr] → ☰ | LOGO | 🔍🛒
+            Desktop: [auto 1fr auto] → LOGO | links | 🔍🛒 */}
         <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center md:grid-cols-[auto_1fr_auto]">
 
-          {/* ── Col 1 ── */}
+          {/* Col 1: hamburger (mobile) | logo (desktop) */}
           <div className="flex items-center">
             <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
             <Link href="/" className="hidden items-center md:flex md:ml-4 lg:ml-6">
@@ -38,7 +40,7 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* ── Col 2: mobile = logo, desktop = nav links ── */}
+          {/* Col 2: logo (mobile, centered by grid) | nav links (desktop, centered by flex) */}
           <Link href="/" className="flex items-center justify-self-center md:hidden">
             <img src="/nav-logo.png" alt="PIRATES" className="h-[22px] w-auto object-contain" />
           </Link>
@@ -50,7 +52,7 @@ export function Navbar() {
             ))}
           </nav>
 
-          {/* ── Col 3 ── */}
+          {/* Col 3: search + cart (both breakpoints) */}
           <div className="flex items-center justify-end gap-0.5 sm:gap-1">
             <NavSearch mobileOpen={searchOpen} onMobileOpen={openSearch} onMobileClose={closeSearch} />
             <CartBadge />
