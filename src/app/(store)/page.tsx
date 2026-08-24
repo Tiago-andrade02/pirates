@@ -106,52 +106,58 @@ export default async function HomePage() {
     <>
       {/* ── HERO ── */}
       <section className="bg-background">
-        <div className="mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:grid lg:min-h-[clamp(600px,78vh,850px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-12 lg:px-[clamp(24px,5vw,80px)] lg:py-0">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-10 px-5 py-12 sm:px-6 sm:py-16 lg:min-h-[calc(100vh-64px)] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-[clamp(32px,6vw,96px)] lg:py-12">
 
-          {/* Left: text column */}
-          <div className="flex flex-col items-center gap-5 text-center sm:gap-6 lg:items-start lg:text-left">
-            <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted sm:text-xs">
-              Perfumería árabe &amp; importada
+          {/* CONTENIDO */}
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+
+            <p className="mb-5 text-[10px] font-medium uppercase tracking-[0.25em] text-muted sm:text-xs">
+              PERFUMERÍA ÁRABE &amp; IMPORTADA
             </p>
 
             <h1 className="hero-title font-serif font-medium text-white">
-              FRAGANCIAS<br />
-              QUE DEJAN<br />
+              FRAGANCIAS
+              <br />
+              QUE DEJAN
+              <br />
               <span className="italic">HUELLA.</span>
             </h1>
 
-            <p className="max-w-[520px] text-sm leading-relaxed text-muted sm:text-base lg:text-lg">
-              Descubrí una selección de fragancias de alta calidad, elegidas
-              para quienes buscan presencia, personalidad y un aroma que los
-              represente.
+            <p className="mt-6 max-w-[540px] text-sm leading-relaxed text-muted sm:text-base lg:text-lg">
+              Descubrí una selección de fragancias de alta calidad,
+              elegidas para quienes buscan presencia, personalidad y un
+              aroma que los represente.
             </p>
 
-            <div className="flex w-full max-w-[420px] flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 lg:max-w-none lg:justify-start">
+            <div className="mt-8 flex w-full max-w-[420px] flex-col gap-3 sm:flex-row sm:justify-center lg:max-w-none lg:justify-start">
+
               <Link
                 href="/perfumes"
-                className="mi-btn mi-shine group inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:w-auto sm:px-10"
+                className="mi-btn mi-shine inline-flex h-[52px] items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:w-auto"
               >
                 EXPLORAR CATÁLOGO
-                <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <ArrowRightIcon className="h-4 w-4" />
               </Link>
+
               <Link
                 href="/#nosotros"
-                className="mi-btn inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/5 sm:w-auto sm:px-10"
+                className="mi-btn inline-flex h-[52px] items-center justify-center rounded-full border border-white/25 px-8 text-sm font-semibold text-white hover:bg-white/5 sm:w-auto"
               >
                 CONOCÉ PIRATES
               </Link>
+
             </div>
           </div>
 
-          {/* Right: logo (desktop only) */}
-          <div className="hidden lg:flex lg:items-center lg:justify-center">
+          {/* IMAGEN */}
+          <div className="hidden items-center justify-center lg:flex">
             <img
               src="/logo.png"
-              alt=""
-              aria-hidden="true"
-              className="pointer-events-none h-auto w-[min(100%,520px)] select-none opacity-[0.05]"
+              alt="PIRATES"
+              className="h-auto w-full max-w-[520px] object-contain opacity-80"
             />
           </div>
+
         </div>
       </section>
 
