@@ -154,7 +154,7 @@ export default async function HomePage() {
             <img
               src="/logo.png"
               alt="PIRATES"
-              className="h-auto w-full max-w-[520px] object-contain mix-blend-screen opacity-80"
+              className="h-auto w-full max-w-[520px] object-contain opacity-80"
             />
           </div>
 

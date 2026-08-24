@@ -207,11 +207,11 @@ export default async function CatalogPage(props: CatalogPageProps) {
           <div className="w-full sm:w-72">
             <SearchBox />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {hasFilters && (
               <Link
                 href="/perfumes"
-                className="mi-btn h-11 shrink-0 rounded-full border border-line px-4 text-xs text-muted hover:border-white/40 hover:text-white"
+                className="mi-btn h-11 rounded-full border border-line px-4 text-xs text-muted hover:border-white/40 hover:text-white"
               >
                 Limpiar ({activeCount})
               </Link>

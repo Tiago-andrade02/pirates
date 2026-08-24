@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CloseIcon, FilterIcon } from "./icons";
 import { FilterGroup, type FilterOption } from "./FilterGroup";
@@ -29,6 +29,13 @@ export function FilterDrawer({
   activeCount,
 }: FilterDrawerProps) {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
 
   return (
     <>
