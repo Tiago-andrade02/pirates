@@ -106,27 +106,27 @@ export default async function HomePage() {
     <>
       {/* ── HERO ── */}
       <section className="bg-background">
-        <div className="mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:min-h-[clamp(600px,78vh,850px)] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-12 lg:px-[clamp(24px,5vw,80px)] lg:py-0">
+        <div className="mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:grid lg:min-h-[clamp(600px,78vh,850px)] lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-12 lg:px-[clamp(24px,5vw,80px)] lg:py-0">
 
           {/* Left: text column */}
-          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+          <div className="flex flex-col items-center gap-5 text-center sm:gap-6 lg:items-start lg:text-left">
             <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted sm:text-xs">
               Perfumería árabe &amp; importada
             </p>
 
-            <h1 className="hero-title mt-4 font-serif font-medium text-white sm:mt-5">
+            <h1 className="hero-title font-serif font-medium text-white">
               FRAGANCIAS<br />
               QUE DEJAN<br />
               <span className="italic">HUELLA.</span>
             </h1>
 
-            <p className="mt-5 max-w-[520px] text-sm leading-relaxed text-muted sm:mt-6 sm:text-base lg:mt-6 lg:text-lg">
+            <p className="max-w-[520px] text-sm leading-relaxed text-muted sm:text-base lg:text-lg">
               Descubrí una selección de fragancias de alta calidad, elegidas
               para quienes buscan presencia, personalidad y un aroma que los
               represente.
             </p>
 
-            <div className="mt-6 flex w-full max-w-[420px] flex-col gap-3 sm:mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 lg:mt-7 lg:max-w-none lg:justify-start">
+            <div className="flex w-full max-w-[420px] flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 lg:max-w-none lg:justify-start">
               <Link
                 href="/perfumes"
                 className="mi-btn mi-shine group inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:w-auto sm:px-10"
@@ -143,7 +143,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Right: logo image (desktop only) */}
+          {/* Right: logo (desktop only) */}
           <div className="hidden lg:flex lg:items-center lg:justify-center">
             <img
               src="/logo.png"

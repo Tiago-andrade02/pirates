@@ -27,51 +27,32 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background">
-      <div className="mx-auto h-[64px] max-w-[1400px] px-4 sm:h-[68px] sm:px-6 md:h-[68px] md:px-8 lg:h-[72px] lg:px-10">
-        <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center md:grid-cols-[auto_1fr_auto]">
+      <div className="mx-auto h-[56px] max-w-[1400px] px-4 sm:h-[60px] sm:px-6 lg:h-[64px] lg:px-10">
+        <div className="grid h-full grid-cols-[auto_1fr_auto] items-center gap-4 lg:gap-8">
 
-          {/* ── Col 1 ── */}
+          {/* Col 1: hamburger (mobile) | logo (desktop) */}
           <div className="flex items-center">
             <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
-            <Link href="/" className="ml-3 hidden items-center md:flex lg:ml-5">
-              <img
-                src="/nav-logo.png"
-                alt="PIRATES"
-                className="h-[24px] w-auto object-contain lg:h-[28px]"
-              />
+            <Link href="/" className="hidden items-center md:flex">
+              <img src="/nav-logo.png" alt="PIRATES" className="h-[22px] w-auto object-contain lg:h-[26px]" />
             </Link>
           </div>
 
-          {/* ── Col 2 ── */}
-          <Link
-            href="/"
-            className="flex items-center justify-self-center md:hidden"
-          >
-            <img
-              src="/nav-logo.png"
-              alt="PIRATES"
-              className="h-[18px] w-auto object-contain sm:h-[20px]"
-            />
+          {/* Col 2: logo (mobile) | nav links (desktop) */}
+          <Link href="/" className="flex items-center justify-self-center md:hidden">
+            <img src="/nav-logo.png" alt="PIRATES" className="h-[18px] w-auto object-contain" />
           </Link>
           <nav className="hidden items-center justify-center gap-1 md:flex lg:gap-2">
             {NAV_LINKS_DESKTOP.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="mi-nav-link rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-white lg:px-4"
-              >
+              <Link key={link.href} href={link.href} className="mi-nav-link rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-white lg:px-4">
                 {link.label}
               </Link>
             ))}
           </nav>
 
-          {/* ── Col 3 ── */}
+          {/* Col 3: search + cart */}
           <div className="flex items-center justify-end gap-1">
-            <NavSearch
-              mobileOpen={searchOpen}
-              onMobileOpen={openSearch}
-              onMobileClose={closeSearch}
-            />
+            <NavSearch mobileOpen={searchOpen} onMobileOpen={openSearch} onMobileClose={closeSearch} />
             <CartBadge />
           </div>
         </div>

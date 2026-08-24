@@ -9,7 +9,7 @@ export default function StoreLayout({ children }: { children: ReactNode }) {
       <div className="bg-white text-center text-[9px] font-medium uppercase tracking-widest text-black sm:text-[10px]">
         <Link
           href="/perfumes"
-          className="block px-3 py-2 transition-colors hover:bg-neutral-100 sm:px-4 sm:py-2.5"
+          className="block px-3 py-1.5 transition-colors hover:bg-neutral-100 sm:px-4 sm:py-2"
         >
           Envío gratis en compras superiores a $80.000
         </Link>
