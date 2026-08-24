@@ -106,50 +106,50 @@ export default async function HomePage() {
     <>
       {/* ── HERO ── */}
       <section className="bg-background">
-        <div className="mx-auto max-w-[1400px] px-5 pt-12 pb-14 sm:px-6 sm:pt-16 sm:pb-20 lg:grid lg:min-h-[80svh] lg:grid-cols-2 lg:items-center lg:gap-12 lg:px-10 lg:py-0">
+        <div className="mx-auto max-w-[1400px] px-5 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16 lg:min-h-[clamp(600px,78vh,850px)] lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-12 lg:px-[clamp(24px,5vw,80px)] lg:py-0">
 
-          {/* Left: text */}
-          <div className="text-center lg:text-left">
+          {/* Left: text column */}
+          <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
             <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-muted sm:text-xs">
               Perfumería árabe &amp; importada
             </p>
 
-            <h1 className="hero-title mt-5 font-serif font-medium text-white sm:mt-6">
+            <h1 className="hero-title mt-4 font-serif font-medium text-white sm:mt-5">
               FRAGANCIAS<br />
               QUE DEJAN<br />
               <span className="italic">HUELLA.</span>
             </h1>
 
-            <p className="mx-auto mt-5 max-w-[440px] text-sm leading-relaxed text-muted sm:mt-6 sm:text-base lg:mx-0 lg:mt-6 lg:max-w-[460px] lg:text-lg">
+            <p className="mt-5 max-w-[520px] text-sm leading-relaxed text-muted sm:mt-6 sm:text-base lg:mt-6 lg:text-lg">
               Descubrí una selección de fragancias de alta calidad, elegidas
               para quienes buscan presencia, personalidad y un aroma que los
               represente.
             </p>
 
-            <div className="mx-auto mt-7 flex max-w-[400px] flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:justify-center sm:gap-4 lg:mx-0 lg:mt-8 lg:max-w-none lg:justify-start">
+            <div className="mt-6 flex w-full max-w-[420px] flex-col gap-3 sm:mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 lg:mt-7 lg:max-w-none lg:justify-start">
               <Link
                 href="/perfumes"
-                className="mi-btn mi-shine group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:h-[52px] sm:w-auto sm:px-10"
+                className="mi-btn mi-shine group inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 text-sm font-semibold text-black sm:w-auto sm:px-10"
               >
                 EXPLORAR CATÁLOGO
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 href="/#nosotros"
-                className="mi-btn inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/5 sm:h-[52px] sm:w-auto sm:px-10"
+                className="mi-btn inline-flex h-[50px] w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 text-sm font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/5 sm:w-auto sm:px-10"
               >
                 CONOCÉ PIRATES
               </Link>
             </div>
           </div>
 
-          {/* Right: decorative logo (desktop only) */}
-          <div className="hidden lg:flex lg:justify-center">
+          {/* Right: logo image (desktop only) */}
+          <div className="hidden lg:flex lg:items-center lg:justify-center">
             <img
               src="/logo.png"
               alt=""
               aria-hidden="true"
-              className="pointer-events-none w-[min(100%,420px)] select-none opacity-[0.05]"
+              className="pointer-events-none h-auto w-[min(100%,520px)] select-none opacity-[0.05]"
             />
           </div>
         </div>

@@ -252,14 +252,14 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 @media (min-width: 1024px) {
   .hero-title {
-    font-size: clamp(44px, 4.5vw, 64px);
-    line-height: 0.9;
+    font-size: clamp(4rem, 7vw, 8rem);
+    line-height: 0.85;
     letter-spacing: -0.02em;
   }
 }
 @media (min-width: 1440px) {
   .hero-title {
-    font-size: clamp(56px, 5vw, 80px);
+    font-size: clamp(64px, 6vw, 96px);
   }
 }
 
