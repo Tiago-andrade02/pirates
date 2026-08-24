@@ -2,13 +2,24 @@ import type { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
-export default function StoreLayout({ children }: { children: ReactNode }) {
+export default function StoreLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
-    <>
+    <div className="min-h-screen">
       <Navbar />
-      <div className="h-[88px] sm:h-[92px] lg:h-[96px]" aria-hidden="true" />
-      <main className="flex-1">{children}</main>
+
+      {/* Espacio exacto ocupado por el navbar fixed */}
+      <div
+        className="h-[64px] sm:h-[68px] lg:h-[72px]"
+        aria-hidden="true"
+      />
+
+      <main>{children}</main>
+
       <Footer />
-    </>
+    </div>
   );
 }

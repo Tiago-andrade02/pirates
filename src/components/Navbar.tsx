@@ -26,7 +26,7 @@ export function Navbar() {
   const closeSearch = useCallback(() => setSearchOpen(false), []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[100] w-full">
+    <header className="fixed inset-x-0 top-0 z-[100] w-full border-b border-line bg-background/95 backdrop-blur-md">
       {/* Banner */}
       <div className="bg-white text-center text-[9px] font-medium uppercase tracking-widest text-black sm:text-[10px]">
         <Link
@@ -39,7 +39,7 @@ export function Navbar() {
 
       {/* Navbar */}
       <div className="border-b border-line bg-background/95 backdrop-blur-md">
-        <div className="mx-auto h-[56px] max-w-[1400px] px-4 sm:h-[60px] sm:px-6 lg:h-[64px] lg:px-10">
+        <div className="mx-auto h-[64px] max-w-[1400px] px-4 sm:h-[68px] sm:px-6 lg:h-[72px] lg:px-10">
           <div className="grid h-full grid-cols-[auto_1fr_auto] items-center gap-4 lg:gap-8">
 
             {/* Col 1: hamburger (mobile) | logo (desktop) */}

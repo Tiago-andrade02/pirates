@@ -106,7 +106,7 @@ export default async function HomePage() {
     <>
       {/* ── HERO ── */}
       <section className="bg-background">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-10 px-5 py-12 sm:px-6 sm:py-16 lg:min-h-[calc(100vh-64px)] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-[clamp(32px,6vw,96px)] lg:py-12">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 items-center gap-10 px-5 py-12 sm:px-6 sm:py-16 lg:min-h-[calc(100vh-72px)] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-[clamp(32px,6vw,96px)] lg:py-12">
 
           {/* CONTENIDO */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
