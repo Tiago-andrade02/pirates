@@ -7,4 +7,4 @@ export const NAV_LINKS = [
   { href: "/#contacto", label: "Contacto" },
 ];
 
-export const NAV_LINKS_DESKTOP = NAV_LINKS.slice(0, 4);
+export const NAV_LINKS_DESKTOP = NAV_LINKS.slice(0, 6);
