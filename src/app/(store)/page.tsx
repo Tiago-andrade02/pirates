@@ -150,11 +150,11 @@ export default async function HomePage() {
           </div>
 
           {/* IMAGEN */}
-          <div className="hidden items-center justify-center lg:flex">
+          <div className="hidden items-center justify-center bg-transparent lg:flex">
             <img
               src="/logo.png"
               alt="PIRATES"
-              className="h-auto w-full max-w-[520px] object-contain opacity-80"
+              className="block h-auto w-full max-w-[520px] bg-transparent object-contain opacity-80"
             />
           </div>
 
