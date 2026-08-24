@@ -55,7 +55,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
 
       {open &&
         createPortal(
-          <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 z-[110] md:hidden" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/70" onClick={onClose} />
             <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col bg-background shadow-2xl">
               <div className="flex h-14 items-center justify-between border-b border-line px-4">
