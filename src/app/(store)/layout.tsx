@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { PerfumeAssistant } from "@/components/PerfumeAssistant";
 
 export default function StoreLayout({
   children,
@@ -20,6 +22,9 @@ export default function StoreLayout({
       <main>{children}</main>
 
       <Footer />
+
+      <WhatsAppButton />
+      <PerfumeAssistant />
     </div>
   );
 }
