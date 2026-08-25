@@ -189,7 +189,7 @@ export function NavSearch({
         onClick={mobileOpen ? closeMobile : onMobileOpen}
         aria-label="Buscar"
         aria-expanded={mobileOpen}
-        className="mi-btn inline-flex h-9 w-9 items-center justify-center rounded-full text-muted lg:hidden"
+        className="mi-btn inline-flex h-10 w-10 items-center justify-center rounded-full text-muted lg:hidden"
       >
         {mobileOpen ? (
           <CloseIcon className="h-5 w-5" />
