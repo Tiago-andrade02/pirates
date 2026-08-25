@@ -35,7 +35,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
       <button
         type="button"
         onClick={open ? onClose : onOpen}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:text-white md:hidden"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-muted transition-colors hover:text-white lg:hidden"
         aria-label={open ? "Cerrar menú" : "Abrir menú"}
         aria-expanded={open}
       >
@@ -55,7 +55,7 @@ export function MobileMenu({ open, onOpen, onClose }: MobileMenuProps) {
 
       {open &&
         createPortal(
-          <div className="fixed inset-0 z-[110] md:hidden" role="dialog" aria-modal="true">
+          <div className="fixed inset-0 z-[110] lg:hidden" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/70" onClick={onClose} />
             <div className="animate-slide-in-right absolute inset-y-0 right-0 flex w-[80%] max-w-sm flex-col bg-background shadow-2xl">
               <div className="flex h-14 items-center justify-between border-b border-line px-4">

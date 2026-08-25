@@ -28,23 +28,23 @@ export function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-[9999] w-full border-b border-line bg-background">
       <div className="mx-auto h-[64px] max-w-[1400px] px-4 sm:h-[68px] sm:px-6 lg:h-[72px] lg:px-10">
-        <div className="grid h-full grid-cols-[auto_1fr_auto] items-center gap-4 lg:gap-8">
+        <div className="grid h-full grid-cols-[1fr_auto_1fr] items-center gap-4 lg:grid-cols-[auto_1fr_auto] lg:gap-8">
 
           {/* Col 1: hamburger (mobile) | logo (desktop) */}
-          <div className="flex items-center">
+          <div className="flex items-center justify-self-start">
             <MobileMenu open={menuOpen} onOpen={openMenu} onClose={closeMenu} />
-            <Link href="/" className="hidden items-center md:flex">
+            <Link href="/" className="hidden items-center lg:flex">
               <img src="/nav-logo.png" alt="PIRATES" className="h-auto w-[100px] object-contain xl:w-[115px]" />
             </Link>
           </div>
 
           {/* Col 2: logo (mobile) | nav links (desktop) */}
-          <Link href="/" className="flex items-center justify-self-center md:hidden">
+          <Link href="/" className="flex items-center justify-self-center lg:hidden">
             <img src="/nav-logo.png" alt="PIRATES" className="h-[18px] w-auto object-contain" />
           </Link>
-          <nav className="hidden items-center justify-center gap-1 md:flex lg:gap-2">
+          <nav className="hidden items-center justify-center gap-2 lg:flex">
             {NAV_LINKS_DESKTOP.map((link) => (
-              <Link key={link.href} href={link.href} className="mi-nav-link rounded-full px-3 py-2 text-sm text-muted transition-colors hover:text-white lg:px-4">
+              <Link key={link.href} href={link.href} className="mi-nav-link rounded-full px-4 py-2 text-sm text-muted transition-colors hover:text-white">
                 {link.label}
               </Link>
             ))}
