@@ -26,7 +26,7 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.SITE_URL ?? "https://pirates-perfumeria.vercel.app"),
+  metadataBase: new URL(process.env.SITE_URL ?? "https://piratesarg.com"),
   title: {
     default: "PIRATES · Perfumes Árabes e Importados",
     template: "%s · PIRATES",

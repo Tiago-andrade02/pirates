@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/admin", "/api", "/checkout"],
       },
     ],
-    sitemap: `${process.env.SITE_URL ?? "https://pirates-perfumeria.vercel.app"}/sitemap.xml`,
+    sitemap: `${process.env.SITE_URL ?? "https://piratesarg.com"}/sitemap.xml`,
   };
 }
