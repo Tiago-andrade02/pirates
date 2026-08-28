@@ -34,7 +34,8 @@ export function hasCredentials(): boolean {
   return Boolean(
     env("CORREO_ARGENTINO_API_USER") &&
       env("CORREO_ARGENTINO_API_PASSWORD") &&
-      env("CORREO_ARGENTINO_CUSTOMER_ID")
+      env("CORREO_ARGENTINO_CUSTOMER_ID") &&
+      env("CORREO_ARGENTINO_ORIGIN_POSTAL_CODE")
   );
 }
 
@@ -190,11 +191,14 @@ export const correoArgentinoProvider: ShippingProvider = {
         originAddress: {
           streetName: env("CORREO_ARGENTINO_SENDER_STREET") || null,
           streetNumber: env("CORREO_ARGENTINO_SENDER_STREET_NUMBER") || null,
-          floor: null,
-          apartment: null,
+          floor: env("CORREO_ARGENTINO_SENDER_FLOOR") || null,
+          apartment: env("CORREO_ARGENTINO_SENDER_APARTMENT") || null,
           city: env("CORREO_ARGENTINO_SENDER_CITY") || null,
           provinceCode: env("CORREO_ARGENTINO_SENDER_PROVINCE_CODE") || null,
-          postalCode: env("CORREO_ARGENTINO_ORIGIN_POSTAL_CODE") || null,
+          postalCode:
+            env("CORREO_ARGENTINO_SENDER_POSTAL_CODE") ||
+            env("CORREO_ARGENTINO_ORIGIN_POSTAL_CODE") ||
+            null,
         },
       },
       recipient: {
@@ -243,6 +247,7 @@ export const correoArgentinoProvider: ShippingProvider = {
   },
 
   async getTracking(shippingId: string): Promise<TrackingResult> {
+    const query = new URLSearchParams({ shippingId });
     const data = await api<
       {
         id?: string | null;
@@ -256,10 +261,7 @@ export const correoArgentinoProvider: ShippingProvider = {
           sign?: string;
         }[];
       }[]
-    >("/shipping/tracking", {
-      method: "GET",
-      body: JSON.stringify({ shippingId }),
-    });
+    >(`/shipping/tracking?${query.toString()}`, { method: "GET" });
 
     const first = Array.isArray(data) ? data[0] : undefined;
     if (!first || !Array.isArray(first.events)) {

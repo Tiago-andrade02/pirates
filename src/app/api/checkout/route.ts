@@ -186,13 +186,22 @@ export async function POST(request: Request) {
 
   let preference;
   try {
+    const items = orderItems.map((item) => ({
+      id: `${item.perfumeId}-${item.size}`,
+      title: `${item.name} ${item.size} ml`,
+      quantity: item.qty,
+      unit_price: item.price,
+    }));
+    if (shippingCost > 0) {
+      items.push({
+        id: "envio",
+        title: "Envío Correo Argentino",
+        quantity: 1,
+        unit_price: shippingCost,
+      });
+    }
     preference = await createPreference({
-      items: orderItems.map((item) => ({
-        id: `${item.perfumeId}-${item.size}`,
-        title: `${item.name} ${item.size} ml`,
-        quantity: item.qty,
-        unit_price: item.price,
-      })),
+      items,
       externalReference: code,
       payer: { name, phone, email: body.customer?.email },
       backUrls: {

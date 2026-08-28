@@ -31,7 +31,7 @@ export function CartView() {
     );
   }
 
-  const shipping = subtotal >= 80000 ? 0 : 6500;
+  const shipping = subtotal >= 80000 ? 0 : null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8 lg:py-10">
@@ -127,7 +127,7 @@ export function CartView() {
                 {shipping === 0 ? (
                   <span className="text-emerald-400">Gratis</span>
                 ) : (
-                  formatARS(shipping)
+                  <span className="text-muted">Se calcula en el checkout</span>
                 )}
               </dd>
             </div>
@@ -139,7 +139,8 @@ export function CartView() {
           <div className="mt-3 flex justify-between border-t border-line pt-3 sm:mt-4 sm:pt-4">
             <span className="text-sm font-semibold text-white">Total</span>
             <span className="font-serif text-lg text-white sm:text-xl">
-              {formatARS(subtotal + shipping)}
+              {formatARS(subtotal + (shipping ?? 0))}
+              {shipping !== 0 && <span className="ml-1 text-[10px] font-sans font-normal text-faint sm:text-xs">+ envío</span>}
             </span>
           </div>
 

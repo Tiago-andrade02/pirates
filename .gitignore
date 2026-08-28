@@ -54,3 +54,6 @@ devpid.txt
 auth
 auth-* 
 auth-*
+
+.vercel
+.env*
