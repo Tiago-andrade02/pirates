@@ -6,6 +6,10 @@ export function getAccessToken(): string {
   return process.env.MERCADO_PAGO_ACCESS_TOKEN ?? "";
 }
 
+export function getPublicKey(): string {
+  return process.env.MERCADO_PAGO_PUBLIC_KEY ?? "";
+}
+
 export function hasCredentials(): boolean {
   return getAccessToken().startsWith("TEST-") || getAccessToken().startsWith("APP_USR-");
 }

@@ -1,5 +1,9 @@
 import { getDb } from "@/lib/db";
-import { createPreference, hasCredentials } from "@/lib/mercadopago";
+import {
+  createPreference,
+  getPublicKey,
+  hasCredentials,
+} from "@/lib/mercadopago";
 import { computePackageForItems } from "@/lib/shipping/packages";
 import { getShippingProvider, applyFreeShipping } from "@/lib/shipping";
 import { provinceCodeFor, isValidPostalCode } from "@/lib/shipping/provinces";
@@ -265,6 +269,8 @@ export async function POST(request: Request) {
     total,
     subtotal,
     shipping: shippingCost,
+    preferenceId: preference.id,
+    publicKey: getPublicKey(),
     initPoint: preference.initPoint,
     sandboxInitPoint: preference.sandboxInitPoint,
   });

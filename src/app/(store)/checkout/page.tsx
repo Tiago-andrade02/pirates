@@ -9,6 +9,7 @@ import {
   ShippingForm,
   type ShippingSelection,
 } from "@/components/checkout/ShippingForm";
+import { PaymentBrick } from "@/components/checkout/PaymentBrick";
 
 const inputCls =
   "w-full rounded-lg border border-line bg-background px-3.5 py-3 text-sm text-white placeholder:text-faint outline-none transition-colors focus:border-white/40 sm:rounded-xl sm:px-4";
@@ -21,6 +22,11 @@ export default function CheckoutPage() {
   const [shipping, setShipping] = useState<ShippingSelection | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [payment, setPayment] = useState<{
+    preferenceId: string;
+    publicKey: string;
+    code: string;
+  } | null>(null);
 
   const shippingCost = shipping?.price ?? 0;
   const total = subtotal + shippingCost;
@@ -69,13 +75,32 @@ export default function CheckoutPage() {
           },
         }),
       });
-      const data = (await res.json()) as { initPoint?: string; error?: string };
-      if (!res.ok || !data.initPoint) {
+      const data = (await res.json()) as {
+        preferenceId?: string;
+        publicKey?: string;
+        code?: string;
+        initPoint?: string;
+        error?: string;
+      };
+      if (!res.ok || (!data.preferenceId && !data.initPoint)) {
         setError(data.error ?? "No se pudo iniciar el pago.");
         setLoading(false);
         return;
       }
-      window.location.href = data.initPoint;
+
+      // Si hay clave pública, renderizamos el pago embebido (Payment Brick).
+      // Si no, caemos al redirect clásico de Checkout Pro.
+      if (data.preferenceId && data.publicKey && data.code) {
+        setPayment({
+          preferenceId: data.preferenceId,
+          publicKey: data.publicKey,
+          code: data.code,
+        });
+        setLoading(false);
+        return;
+      }
+
+      window.location.href = data.initPoint ?? "";
     } catch {
       setError("Ocurrió un error inesperado. Intentalo de nuevo.");
       setLoading(false);
@@ -165,17 +190,36 @@ export default function CheckoutPage() {
             </p>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-semibold text-black transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Iniciando pago…" : "Ir a pagar"}
-            <CreditCardIcon className="h-4 w-4" />
-          </button>
-          <p className="text-center text-[11px] text-faint sm:text-xs">
-            Serás redirigido a Mercado Pago para completar el pago de forma segura.
-          </p>
+          {payment ? (
+            <section className="rounded-xl border border-line bg-surface p-3.5 sm:rounded-2xl sm:p-5">
+              <h2 className="font-serif text-base text-white sm:text-xl">Pago</h2>
+              <p className="mt-1 text-xs text-muted sm:text-sm">
+                Completá el pago de forma segura. Pedido:{" "}
+                <span className="font-semibold text-white">{payment.code}</span>
+              </p>
+              <div className="mt-4">
+                <PaymentBrick
+                  preferenceId={payment.preferenceId}
+                  publicKey={payment.publicKey}
+                  externalReference={payment.code}
+                />
+              </div>
+            </section>
+          ) : (
+            <>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-semibold text-black transition-colors hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Iniciando pago…" : "Ir a pagar"}
+                <CreditCardIcon className="h-4 w-4" />
+              </button>
+              <p className="text-center text-[11px] text-faint sm:text-xs">
+                Serás redirigido a Mercado Pago para completar el pago de forma segura.
+              </p>
+            </>
+          )}
         </form>
 
         <aside className="h-fit rounded-xl border border-line bg-surface p-3.5 sm:rounded-2xl sm:p-5 lg:sticky lg:top-24">
