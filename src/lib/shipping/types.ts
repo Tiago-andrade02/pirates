@@ -1,6 +1,6 @@
 import type { DeliveryType } from "@/lib/types";
 
-export type ShippingProviderId = "correo_argentino";
+export type ShippingProviderId = "correo_argentino" | "flat_rate";
 
 export interface PackageDimensions {
   weightGrams: number;

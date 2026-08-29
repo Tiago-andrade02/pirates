@@ -1,6 +1,5 @@
 import { computePackageForItems } from "@/lib/shipping/packages";
 import { getShippingProvider } from "@/lib/shipping";
-import { hasCredentials } from "@/lib/shipping/correo-argentino";
 import { isValidPostalCode, provinceCodeFor } from "@/lib/shipping/provinces";
 import type { DeliveryType } from "@/lib/types";
 
@@ -19,16 +18,6 @@ export async function POST(request: Request) {
     body = (await request.json()) as QuoteBody;
   } catch {
     return Response.json({ error: "Body inválido" }, { status: 400 });
-  }
-
-  if (!hasCredentials()) {
-    return Response.json(
-      {
-        error:
-          "El envío no está configurado todavía. Cargá las credenciales de Correo Argentino en .env.local.",
-      },
-      { status: 503 }
-    );
   }
 
   if (!Array.isArray(body.items) || body.items.length === 0) {
