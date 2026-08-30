@@ -63,6 +63,22 @@ export function PaymentBrick({
     let disposed = false;
     let brick: { unmount: () => void } | null = null;
 
+    // Red de seguridad: que el loading nunca quede colgado si el Brick
+    // espera una respuesta (onReady) que no llega.
+    const SAFETY_TIMEOUT_MS = 20000;
+    const safetyTimer = setTimeout(() => {
+      if (!disposed) {
+        setError(
+          "El medio de pago tardó demasiado en cargar. Recargá la página e intentá de nuevo."
+        );
+        setLoading(false);
+      }
+    }, SAFETY_TIMEOUT_MS);
+
+    const finish = () => {
+      if (!disposed) setLoading(false);
+    };
+
     (async () => {
       setLoading(true);
       setError(null);
@@ -77,13 +93,13 @@ export function PaymentBrick({
             amount,
           },
           callbacks: {
-            onReady: () => {
-              if (!disposed) setLoading(false);
-            },
+            onReady: finish,
             onError: (err: unknown) => {
+              if (disposed) return;
               const message =
                 err instanceof Error ? err.message : "Error al procesar el pago";
-              if (!disposed) setError(message);
+              setError(message);
+              setLoading(false);
             },
             onStatusChange: (status: { status?: string }) => {
               if (disposed) return;
@@ -102,16 +118,22 @@ export function PaymentBrick({
             },
           },
         });
+        // create() resolvió: el Brick ya está montado, ocultamos el spinner.
+        // onReady puede llegar después y es un respaldo.
+        finish();
       } catch (err) {
         if (!disposed) {
           setError(err instanceof Error ? err.message : "Error al cargar el pago");
           setLoading(false);
         }
+      } finally {
+        clearTimeout(safetyTimer);
       }
     })();
 
     return () => {
       disposed = true;
+      clearTimeout(safetyTimer);
       brick?.unmount();
     };
   }, [preferenceId, publicKey, externalReference, amount, clear, router]);
