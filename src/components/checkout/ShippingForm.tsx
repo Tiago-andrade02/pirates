@@ -137,10 +137,9 @@ export function ShippingForm({
   useEffect(() => {
     if (!provinceCode || !postalValid) return;
 
-    // Si solo cambió la modalidad seleccionada, no hace falta re-cotizar.
+    // Si solo cambió la modalidad o los campos de dirección, no hace falta re-cotizar.
     const key = `${province}|${postalCode.trim()}|${itemsKey}`;
     if (lastQuoteKey.current === key) return;
-    lastQuoteKey.current = key;
 
     const timer = setTimeout(async () => {
       setQuoting(true);
@@ -159,6 +158,7 @@ export function ShippingForm({
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "No se pudo cotizar el envío");
         const opts = (data.options as QuoteOption[]) ?? [];
+        lastQuoteKey.current = key;
         setOptions(opts);
         emitSelection(opts.find((o) => o.deliveryType === deliveryType) ?? null);
       } catch (err) {
