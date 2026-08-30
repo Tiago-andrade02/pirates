@@ -76,12 +76,14 @@ export function ShippingForm({
   const [loadingAgencies, setLoadingAgencies] = useState(false);
   const [nonce, setNonce] = useState(0);
   const lastQuoteKey = useRef("");
+  const selectedOptionRef = useRef<QuoteOption | null>(null);
 
   const itemsKey = items.map((i) => `${i.slug}-${i.size}-${i.qty}`).join("|");
   const provinceCode = PROVINCES.find((p) => p.name === province)?.code;
   const postalValid = isValidPostalCode(postalCode);
 
   function emitSelection(option: QuoteOption | null) {
+    selectedOptionRef.current = option;
     if (!option) {
       onChange(null);
       return;
@@ -176,25 +178,40 @@ export function ShippingForm({
     const next = e.target.value;
     setProvince(next);
     setOptions([]);
-    onChange(null);
+    emitSelection(null);
+    lastQuoteKey.current = "";
     if (deliveryType === "S") {
       void loadAgencies(next);
     }
   }
 
-  function handleFieldChange(
-    setter: (v: string) => void,
-    clearSelection = true
+  // El código postal cambia la cotización: se limpia y se re-cotiza.
+  function handlePostalCodeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const next = e.target.value;
+    setPostalCode(next);
+    setOptions([]);
+    emitSelection(null);
+    lastQuoteKey.current = "";
+    setNonce((n) => n + 1);
+  }
+
+  // Los campos de dirección no afectan el costo del envío: no se limpia la
+  // selección vigente, solo se re-emite con los datos de dirección actualizados.
+  function handleAddressFieldChange(
+    setter: (v: string) => void
   ) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       setter(e.target.value);
-      if (clearSelection) {
-        setOptions([]);
-        onChange(null);
-      }
       setNonce((n) => n + 1);
     };
   }
+
+  useEffect(() => {
+    if (selectedOptionRef.current) {
+      emitSelection(selectedOptionRef.current);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nonce]);
 
   function handleAgencyChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const code = e.target.value;
@@ -242,7 +259,7 @@ export function ShippingForm({
           <input
             required
             value={postalCode}
-            onChange={handleFieldChange(setPostalCode)}
+            onChange={handlePostalCodeChange}
             placeholder="Ej: 1704"
             className={inputCls}
           />
@@ -253,7 +270,7 @@ export function ShippingForm({
           <input
             required
             value={locality}
-            onChange={handleFieldChange(setLocality)}
+            onChange={handleAddressFieldChange(setLocality)}
             placeholder="Ej: Monte Grande"
             className={inputCls}
           />
@@ -266,7 +283,7 @@ export function ShippingForm({
               <input
                 required
                 value={street}
-                onChange={handleFieldChange(setStreet)}
+                onChange={handleAddressFieldChange(setStreet)}
                 placeholder="Ej: Av. Corrientes"
                 className={inputCls}
               />
@@ -277,7 +294,7 @@ export function ShippingForm({
                 required
                 inputMode="numeric"
                 value={number}
-                onChange={handleFieldChange(setNumber)}
+                onChange={handleAddressFieldChange(setNumber)}
                 placeholder="Ej: 1234"
                 className={inputCls}
               />
@@ -286,7 +303,7 @@ export function ShippingForm({
               <span className="mb-1.5 block text-xs text-muted">Piso (opcional)</span>
               <input
                 value={floor}
-                onChange={handleFieldChange(setFloor)}
+                onChange={handleAddressFieldChange(setFloor)}
                 placeholder="Ej: 3"
                 className={inputCls}
               />
@@ -295,7 +312,7 @@ export function ShippingForm({
               <span className="mb-1.5 block text-xs text-muted">Departamento (opcional)</span>
               <input
                 value={apartment}
-                onChange={handleFieldChange(setApartment)}
+                onChange={handleAddressFieldChange(setApartment)}
                 placeholder="Ej: D"
                 className={inputCls}
               />
