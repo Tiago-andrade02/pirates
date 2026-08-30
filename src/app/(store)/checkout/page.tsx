@@ -26,6 +26,7 @@ export default function CheckoutPage() {
     preferenceId: string;
     publicKey: string;
     code: string;
+    amount: number;
   } | null>(null);
 
   const shippingCost = shipping?.price ?? 0;
@@ -80,6 +81,7 @@ export default function CheckoutPage() {
         publicKey?: string;
         code?: string;
         initPoint?: string;
+        total?: number;
         error?: string;
       };
       if (!res.ok || (!data.preferenceId && !data.initPoint)) {
@@ -90,11 +92,21 @@ export default function CheckoutPage() {
 
       // Si hay clave pública, renderizamos el pago embebido (Payment Brick).
       // Si no, caemos al redirect clásico de Checkout Pro.
-      if (data.preferenceId && data.publicKey && data.code) {
+      // El Brick de Mercado Pago requiere que el monto total (productos + envío)
+      // se pase como un number válido en `initialization.amount`.
+      const amount = Number(data.total);
+      if (
+        data.preferenceId &&
+        data.publicKey &&
+        data.code &&
+        Number.isFinite(amount) &&
+        amount > 0
+      ) {
         setPayment({
           preferenceId: data.preferenceId,
           publicKey: data.publicKey,
           code: data.code,
+          amount,
         });
         setLoading(false);
         return;
@@ -202,6 +214,7 @@ export default function CheckoutPage() {
                   preferenceId={payment.preferenceId}
                   publicKey={payment.publicKey}
                   externalReference={payment.code}
+                  amount={payment.amount}
                 />
               </div>
             </section>

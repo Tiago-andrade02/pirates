@@ -25,6 +25,7 @@ interface PaymentBrickProps {
   preferenceId: string;
   publicKey: string;
   externalReference: string;
+  amount: number;
 }
 
 const SDK_URL = "https://sdk.mercadopago.com/js/v2?locale=es-AR";
@@ -49,6 +50,7 @@ export function PaymentBrick({
   preferenceId,
   publicKey,
   externalReference,
+  amount,
 }: PaymentBrickProps) {
   const containerId = "payment-brick-container";
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +72,10 @@ export function PaymentBrick({
 
         const mp = new window.MercadoPago(publicKey, { locale: "es-AR" });
         brick = await mp.bricks().create("payment", containerId, {
-          initialization: { preferenceId },
+          initialization: {
+            preferenceId,
+            amount,
+          },
           callbacks: {
             onReady: () => {
               if (!disposed) setLoading(false);
@@ -109,7 +114,7 @@ export function PaymentBrick({
       disposed = true;
       brick?.unmount();
     };
-  }, [preferenceId, publicKey, externalReference, clear, router]);
+  }, [preferenceId, publicKey, externalReference, amount, clear, router]);
 
   return (
     <div>
