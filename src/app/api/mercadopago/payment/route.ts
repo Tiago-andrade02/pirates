@@ -45,10 +45,24 @@ export async function POST(request: Request) {
     issuer_id: body.formData?.issuer_id,
   });
 
+  // Si algún dato mínimo falta o el pedido es inválido, lo registramos como
+  // diagnóstico (sin datos sensibles) para poder diagnosticar fallos reales.
+  const recordDiag = (result: string, err = "") =>
+    recordPaymentDiagnostic({
+      externalReference,
+      paymentTypeId,
+      paymentMethodId,
+      installments: String(body.formData?.installments ?? ""),
+      mpResult: result,
+      mpError: err,
+    });
+
   if (!externalReference) {
+    await recordDiag("error", "Falta la referencia externa del pedido");
     return Response.json({ error: "Falta la referencia externa del pedido" }, { status: 400 });
   }
   if (!token || !paymentMethodId) {
+    await recordDiag("error", "Faltan los datos de la tarjeta (token o medio de pago)");
     return Response.json(
       { error: "Faltan los datos de la tarjeta (token o medio de pago)" },
       { status: 400 }
@@ -62,11 +76,13 @@ export async function POST(request: Request) {
   });
   const order = orderResult.rows[0] as unknown as { total: number } | undefined;
   if (!order) {
+    await recordDiag("error", "Pedido no encontrado");
     return Response.json({ error: "Pedido no encontrado" }, { status: 404 });
   }
 
   const transactionAmount = Number(order.total);
   if (!Number.isFinite(transactionAmount) || transactionAmount <= 0) {
+    await recordDiag("error", "Monto del pedido inválido");
     return Response.json({ error: "Monto del pedido inválido" }, { status: 400 });
   }
 
