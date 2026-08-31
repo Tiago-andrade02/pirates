@@ -157,12 +157,20 @@ export async function createPayment(
   if (input.installments) body.installments = input.installments;
   if (input.issuerId) body.issuer_id = input.issuerId;
 
-  // LOG TEMPORAL (debugging): payload final enviado a POST /v1/payments,
-  // sin exponer el token (se enmascara).
+  // LOG TEMPORAL (debugging): payload final enviado a POST /v1/payments.
+  // No se exponen datos sensibles: el token se enmascara y el contenido de
+  // `payer` (email, identificación/DNI) se reemplaza por un marcador de presencia.
   {
     const safeBody: Record<string, unknown> = { ...body };
     if (typeof safeBody.payer === "object" && safeBody.payer !== null) {
-      safeBody.payer = { ...(safeBody.payer as Record<string, unknown>) };
+      const p = safeBody.payer as Record<string, unknown>;
+      safeBody.payer = {
+        hasEmail: typeof p.email === "string" && p.email.length > 0,
+        hasIdentification:
+          !!p.identification &&
+          typeof p.identification === "object" &&
+          Object.keys(p.identification as object).length > 0,
+      };
     }
     if (typeof safeBody.token === "string" && safeBody.token) {
       safeBody.token = `••••${(safeBody.token as string).slice(-4)}`;

@@ -35,13 +35,13 @@ export async function POST(request: Request) {
   const paymentTypeId = (body.paymentTypeId ?? "").trim();
 
   // LOG TEMPORAL (debugging): confirmar la estructura del formData del Brick.
+  // No se loguean datos sensibles (token, CVV, email del comprador).
   console.log("[mercadopago/payment] payload recibido:", {
     externalReference,
     paymentTypeId,
     payment_method_id: paymentMethodId,
     installments: body.formData?.installments,
     issuer_id: body.formData?.issuer_id,
-    payer_email: body.formData?.payer?.email,
   });
 
   if (!externalReference) {

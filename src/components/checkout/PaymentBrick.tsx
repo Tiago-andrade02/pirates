@@ -148,8 +148,6 @@ export function PaymentBrick({
                 installments: formData?.installments,
                 issuer_id: formData?.issuer_id,
                 transaction_amount: formData?.transaction_amount,
-                payer_email: (formData?.payer as { email?: string } | undefined)
-                  ?.email,
                 token: safeToken,
               });
               try {
