@@ -130,6 +130,17 @@ const SCHEMA = `
     date TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS payment_diagnostics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    external_reference TEXT NOT NULL DEFAULT '',
+    payment_type_id TEXT NOT NULL DEFAULT '',
+    payment_method_id TEXT NOT NULL DEFAULT '',
+    installments TEXT NOT NULL DEFAULT '',
+    mp_result TEXT NOT NULL DEFAULT '',
+    mp_error TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_perfumes_brand ON perfumes(brand_id);
   CREATE INDEX IF NOT EXISTS idx_perfumes_gender ON perfumes(gender);
   CREATE INDEX IF NOT EXISTS idx_perfumes_aroma ON perfumes(aroma);

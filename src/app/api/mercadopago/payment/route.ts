@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { createPayment } from "@/lib/mercadopago";
+import { recordPaymentDiagnostic } from "@/lib/payment-diagnostics";
 
 interface PaymentRequestBody {
   externalReference?: string;
@@ -83,6 +84,15 @@ export async function POST(request: Request) {
       payerIdentification: formData.payer?.identification,
     });
 
+    await recordPaymentDiagnostic({
+      externalReference,
+      paymentTypeId,
+      paymentMethodId,
+      installments: String(formData.installments ?? ""),
+      mpResult: `ok:${String(payment.status)}`,
+      mpError: "",
+    });
+
     return Response.json({
       id: payment.id,
       status: payment.status,
@@ -93,6 +103,14 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error ? error.message : "Error al procesar el pago en Mercado Pago";
     console.error("[mercadopago/payment]", message);
+    await recordPaymentDiagnostic({
+      externalReference,
+      paymentTypeId,
+      paymentMethodId,
+      installments: String(formData.installments ?? ""),
+      mpResult: "error",
+      mpError: message,
+    });
     return Response.json({ error: message }, { status: 500 });
   }
 }

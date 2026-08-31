@@ -119,29 +119,32 @@ export function PaymentBrick({
                 ? `••••${rawToken.slice(-4)}`
                 : "(ninguno)";
 
-              // Dump completo y seguro de selectedPaymentMethod: puede ser un
-              // string ('credit_card') o un objeto { id, type, payment_type_id }.
+              // Estructura confirmada (docs oficiales del Payment Brick):
+              //   onSubmit: ({ selectedPaymentMethod, formData }, additionalData)
+              //   - selectedPaymentMethod: string ('credit_card'|'debit_card'|...)
+              //   - additionalData.paymentTypeId: string = payment_type_id real
+              // Mapeo: se usa additionalData.paymentTypeId como fuente autoritativa
+              // de `payment_type_id`; selectedPaymentMethod queda como respaldo.
               let selectedMethodDump: string;
               try {
                 selectedMethodDump = JSON.stringify(selectedPaymentMethod);
               } catch {
                 selectedMethodDump = String(selectedPaymentMethod);
               }
-
               const selectedPaymentTypeId =
-                typeof selectedPaymentMethod === "string"
+                additionalData?.paymentTypeId ??
+                (typeof selectedPaymentMethod === "string"
                   ? selectedPaymentMethod
                   : (selectedPaymentMethod as
                       | { payment_type_id?: string; type?: string }
                       | undefined)?.payment_type_id ??
                     (selectedPaymentMethod as {
                       type?: string;
-                    } | undefined)?.type;
+                    } | undefined)?.type);
 
               console.log("[PaymentBrick] onSubmit payload:", {
                 selectedPaymentMethod_dump: selectedMethodDump,
                 selectedPaymentMethod_typeof: typeof selectedPaymentMethod,
-                selectedPaymentTypeId,
                 additionalPaymentTypeId: additionalData?.paymentTypeId,
                 payment_type_id_enviado: selectedPaymentTypeId,
                 payment_method_id: formData?.payment_method_id,
