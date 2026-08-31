@@ -211,7 +211,6 @@ export default function CheckoutPage() {
               </p>
               <div className="mt-4">
                 <PaymentBrick
-                  preferenceId={payment.preferenceId}
                   publicKey={payment.publicKey}
                   externalReference={payment.code}
                   amount={payment.amount}

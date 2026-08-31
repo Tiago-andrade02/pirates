@@ -22,7 +22,6 @@ declare global {
 }
 
 interface PaymentBrickProps {
-  preferenceId: string;
   publicKey: string;
   externalReference: string;
   amount: number;
@@ -87,7 +86,6 @@ function sendClientDiagnostic(payload: ClientDiagPayload) {
 }
 
 export function PaymentBrick({
-  preferenceId,
   publicKey,
   externalReference,
   amount,
@@ -137,8 +135,13 @@ export function PaymentBrick({
         const mp = new window.MercadoPago(publicKey, { locale: "es-AR" });
         brick = await mp.bricks().create("payment", containerId, {
           initialization: {
-            preferenceId,
             amount,
+          },
+          customization: {
+            paymentMethods: {
+              creditCard: "all",
+              debitCard: "all",
+            },
           },
           callbacks: {
             onReady: finish,
@@ -294,7 +297,7 @@ export function PaymentBrick({
       clearTimeout(safetyTimer);
       brick?.unmount();
     };
-  }, [preferenceId, publicKey, externalReference, amount, clear, router]);
+  }, [publicKey, externalReference, amount, clear, router]);
 
   return (
     <div>
