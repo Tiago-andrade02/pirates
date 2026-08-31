@@ -109,6 +109,75 @@ export async function getPayment(paymentId: string): Promise<MercadoPagoPayment>
   return (await res.json()) as MercadoPagoPayment;
 }
 
+export interface CreatePaymentInput {
+  transactionAmount: number;
+  description: string;
+  externalReference: string;
+  token?: string;
+  paymentMethodId?: string;
+  installments?: number;
+  issuerId?: string | null;
+  payerEmail?: string;
+}
+
+export interface CreatedPayment {
+  id: number;
+  status: string;
+  status_detail: string | null;
+  transaction_amount: number;
+}
+
+// Crea un pago de Mercado Pago desde el backend (POST /v1/payments).
+// Debe usarse dentro de onsubmit del Payment Brick para cobrar tarjeta.
+export async function createPayment(
+  input: CreatePaymentInput
+): Promise<CreatedPayment> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("MERCADO_PAGO_ACCESS_TOKEN no configurado");
+  }
+
+  const body: Record<string, unknown> = {
+    transaction_amount: input.transactionAmount,
+    description: input.description,
+    external_reference: input.externalReference,
+    payer: { email: input.payerEmail },
+  };
+  if (input.token) body.token = input.token;
+  if (input.paymentMethodId) body.payment_method_id = input.paymentMethodId;
+  if (input.installments) body.installments = input.installments;
+  if (input.issuerId) body.issuer_id = input.issuerId;
+
+  const res = await fetch(`${API_BASE}/v1/payments`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+
+  if (!res.ok || !data.id) {
+    const message =
+      typeof data.message === "string"
+        ? data.message
+        : typeof data.error_description === "string"
+          ? data.error_description
+          : res.statusText || "Error desconocido de Mercado Pago";
+    throw new Error(`Mercado Pago ${res.status}: ${message}`);
+  }
+
+  return {
+    id: Number(data.id),
+    status: String(data.status),
+    status_detail: data.status_detail ? String(data.status_detail) : null,
+    transaction_amount: Number(data.transaction_amount),
+  };
+}
+
 export function verifyWebhookSignature(input: {
   signature: string | null;
   requestId: string | null;

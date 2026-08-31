@@ -79,6 +79,14 @@ export function PaymentBrick({
       if (!disposed) setLoading(false);
     };
 
+    const brickErrorText = (err: unknown): string => {
+      if (err && typeof err === "object") {
+        const msg = (err as { message?: unknown }).message;
+        if (typeof msg === "string" && msg) return msg;
+      }
+      return err instanceof Error ? err.message : "Error al procesar el pago";
+    };
+
     (async () => {
       setLoading(true);
       setError(null);
@@ -94,10 +102,45 @@ export function PaymentBrick({
           },
           callbacks: {
             onReady: finish,
+            onSubmit: async ({
+              formData,
+            }: {
+              formData: Record<string, unknown>;
+            }) => {
+              try {
+                const res = await fetch("/api/mercadopago/payment", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    externalReference,
+                    formData,
+                  }),
+                });
+                const data = (await res.json().catch(() => ({}))) as {
+                  error?: string;
+                };
+                if (!res.ok) {
+                  const message =
+                    data.error ?? "No se pudo procesar el pago. Intentalo de nuevo.";
+                  setError(message);
+                  throw new Error(message);
+                }
+                // Resolvemos: el Brick se encarga de onStatusChange.
+                return {} as { id: string | number };
+              } catch (err) {
+                const message = brickErrorText(err);
+                console.error("[PaymentBrick] onSubmit error:", err);
+                if (!disposed) {
+                  setError(message);
+                  setLoading(false);
+                }
+                throw err;
+              }
+            },
             onError: (err: unknown) => {
               if (disposed) return;
-              const message =
-                err instanceof Error ? err.message : "Error al procesar el pago";
+              const message = brickErrorText(err);
+              console.error("[PaymentBrick] onError:", err);
               setError(message);
               setLoading(false);
             },
