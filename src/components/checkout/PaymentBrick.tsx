@@ -46,6 +46,46 @@ function loadSdk(): Promise<void> {
   return sdkPromise;
 }
 
+// Identificador de esta build de diagnóstico. Sirve para distinguir en el
+// navegador si se está ejecutando esta versión del código o una cacheada.
+// Subí este marcador en cada build de diagnóstico nuevo.
+const DIAG_BUILD_TAG = "brick-client-v4-clientside-diag";
+
+interface ClientDiagPayload {
+  eventType: "onSubmit" | "onError";
+  message: string;
+  hasSelectedMethod: boolean;
+  selectedMethodType: string;
+  hasAdditionalPaymentType: boolean;
+  paymentMethodId: string;
+  installments: string;
+  issuerId: string;
+}
+
+// Envía (sin bloquear) UN evento de diagnóstico seguro al backend. Fire-and-forget:
+// nunca interfiere con el flujo de pago ni expone datos sensibles.
+function sendClientDiagnostic(payload: ClientDiagPayload) {
+  try {
+    void fetch("/api/mercadopago/client-diagnostics", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventType: payload.eventType,
+        message: payload.message,
+        buildTag: DIAG_BUILD_TAG,
+        hasSelectedMethod: payload.hasSelectedMethod,
+        selectedMethodType: payload.selectedMethodType,
+        hasAdditionalPaymentType: payload.hasAdditionalPaymentType,
+        paymentMethodId: payload.paymentMethodId,
+        installments: payload.installments,
+        issuerId: payload.issuerId,
+      }),
+    }).catch(() => {});
+  } catch {
+    /* sin opción sensible disponible */
+  }
+}
+
 export function PaymentBrick({
   preferenceId,
   publicKey,
@@ -153,6 +193,22 @@ export function PaymentBrick({
                 transaction_amount: formData?.transaction_amount,
                 token: safeToken,
               });
+
+              // DIAGNÓSTICO (temporal): el evento onSubmit SÍ se ejecutó en el navegador.
+              // Solo presencia/tipo y campos no sensibles, sin token/CVV/email/DNI.
+              sendClientDiagnostic({
+                eventType: "onSubmit",
+                message: selectedPaymentTypeId ? "paymentTypeId=ok" : "paymentTypeId=vacio",
+                hasSelectedMethod: selectedPaymentMethod !== undefined,
+                selectedMethodType: typeof selectedPaymentMethod,
+                hasAdditionalPaymentType: !!additionalData?.paymentTypeId,
+                paymentMethodId: String(
+                  (formData as Record<string, unknown>)?.payment_method_id ?? ""
+                ),
+                installments: String((formData as Record<string, unknown>)?.installments ?? ""),
+                issuerId: String((formData as Record<string, unknown>)?.issuer_id ?? ""),
+              });
+
               try {
                 const res = await fetch("/api/mercadopago/payment", {
                   method: "POST",
@@ -190,6 +246,18 @@ export function PaymentBrick({
               console.error("[PaymentBrick] onError:", err);
               setError(message);
               setLoading(false);
+              // DIAGNÓSTICO (temporal): el SDK del Brick disparó onError.
+              // Solo mensaje, sin ningún dato sensible.
+              sendClientDiagnostic({
+                eventType: "onError",
+                message,
+                hasSelectedMethod: false,
+                selectedMethodType: "",
+                hasAdditionalPaymentType: false,
+                paymentMethodId: "",
+                installments: "",
+                issuerId: "",
+              });
             },
             onStatusChange: (status: { status?: string }) => {
               if (disposed) return;

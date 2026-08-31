@@ -141,6 +141,20 @@ const SCHEMA = `
     created_at TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS client_diagnostics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_type TEXT NOT NULL DEFAULT '',
+    message TEXT NOT NULL DEFAULT '',
+    build_tag TEXT NOT NULL DEFAULT '',
+    has_selected_method INTEGER NOT NULL DEFAULT 0,
+    selected_method_type TEXT NOT NULL DEFAULT '',
+    has_additional_payment_type INTEGER NOT NULL DEFAULT 0,
+    payment_method_id TEXT NOT NULL DEFAULT '',
+    installments TEXT NOT NULL DEFAULT '',
+    issuer_id TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_perfumes_brand ON perfumes(brand_id);
   CREATE INDEX IF NOT EXISTS idx_perfumes_gender ON perfumes(gender);
   CREATE INDEX IF NOT EXISTS idx_perfumes_aroma ON perfumes(aroma);
