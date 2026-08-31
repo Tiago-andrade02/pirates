@@ -115,9 +115,11 @@ export interface CreatePaymentInput {
   externalReference: string;
   token?: string;
   paymentMethodId?: string;
+  paymentTypeId?: string;
   installments?: number;
   issuerId?: string | null;
   payerEmail?: string;
+  payerIdentification?: { type?: string; number?: string };
 }
 
 export interface CreatedPayment {
@@ -143,10 +145,30 @@ export async function createPayment(
     external_reference: input.externalReference,
     payer: { email: input.payerEmail },
   };
+  if (input.payerIdentification?.type && input.payerIdentification.number) {
+    (body.payer as Record<string, unknown>).identification = {
+      type: input.payerIdentification.type,
+      number: input.payerIdentification.number,
+    };
+  }
   if (input.token) body.token = input.token;
   if (input.paymentMethodId) body.payment_method_id = input.paymentMethodId;
+  if (input.paymentTypeId) body.payment_type_id = input.paymentTypeId;
   if (input.installments) body.installments = input.installments;
   if (input.issuerId) body.issuer_id = input.issuerId;
+
+  // LOG TEMPORAL (debugging): payload final enviado a POST /v1/payments,
+  // sin exponer el token (se enmascara).
+  {
+    const safeBody: Record<string, unknown> = { ...body };
+    if (typeof safeBody.payer === "object" && safeBody.payer !== null) {
+      safeBody.payer = { ...(safeBody.payer as Record<string, unknown>) };
+    }
+    if (typeof safeBody.token === "string" && safeBody.token) {
+      safeBody.token = `••••${(safeBody.token as string).slice(-4)}`;
+    }
+    console.log("[mercadopago/createPayment] payload final a /v1/payments:", safeBody);
+  }
 
   const res = await fetch(`${API_BASE}/v1/payments`, {
     method: "POST",

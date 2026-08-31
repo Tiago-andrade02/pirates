@@ -3,12 +3,16 @@ import { createPayment } from "@/lib/mercadopago";
 
 interface PaymentRequestBody {
   externalReference?: string;
+  paymentTypeId?: string;
   formData?: {
     token?: string;
     payment_method_id?: string;
     installments?: number;
     issuer_id?: string | null;
-    payer?: { email?: string };
+    payer?: {
+      email?: string;
+      identification?: { type?: string; number?: string };
+    };
   };
 }
 
@@ -28,6 +32,17 @@ export async function POST(request: Request) {
   const formData = body.formData ?? {};
   const token = (formData.token ?? "").trim();
   const paymentMethodId = (formData.payment_method_id ?? "").trim();
+  const paymentTypeId = (body.paymentTypeId ?? "").trim();
+
+  // LOG TEMPORAL (debugging): confirmar la estructura del formData del Brick.
+  console.log("[mercadopago/payment] payload recibido:", {
+    externalReference,
+    paymentTypeId,
+    payment_method_id: paymentMethodId,
+    installments: body.formData?.installments,
+    issuer_id: body.formData?.issuer_id,
+    payer_email: body.formData?.payer?.email,
+  });
 
   if (!externalReference) {
     return Response.json({ error: "Falta la referencia externa del pedido" }, { status: 400 });
@@ -61,9 +76,11 @@ export async function POST(request: Request) {
       externalReference,
       token,
       paymentMethodId,
+      paymentTypeId,
       installments: formData.installments,
       issuerId: formData.issuer_id,
       payerEmail: formData.payer?.email,
+      payerIdentification: formData.payer?.identification,
     });
 
     return Response.json({

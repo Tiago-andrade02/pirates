@@ -102,17 +102,63 @@ export function PaymentBrick({
           },
           callbacks: {
             onReady: finish,
-            onSubmit: async ({
-              formData,
-            }: {
-              formData: Record<string, unknown>;
-            }) => {
+            onSubmit: async (
+              {
+                selectedPaymentMethod,
+                formData,
+              }: {
+                selectedPaymentMethod?: string;
+                formData: Record<string, unknown>;
+              },
+              additionalData?: { paymentTypeId?: string }
+            ) => {
+              // LOG TEMPORAL (debugging): sin exponer datos sensibles.
+              // El token se enmascara a sus últimos 4 dígitos.
+              const rawToken = (formData?.token as string | undefined) ?? "";
+              const safeToken = rawToken
+                ? `••••${rawToken.slice(-4)}`
+                : "(ninguno)";
+
+              // Dump completo y seguro de selectedPaymentMethod: puede ser un
+              // string ('credit_card') o un objeto { id, type, payment_type_id }.
+              let selectedMethodDump: string;
+              try {
+                selectedMethodDump = JSON.stringify(selectedPaymentMethod);
+              } catch {
+                selectedMethodDump = String(selectedPaymentMethod);
+              }
+
+              const selectedPaymentTypeId =
+                typeof selectedPaymentMethod === "string"
+                  ? selectedPaymentMethod
+                  : (selectedPaymentMethod as
+                      | { payment_type_id?: string; type?: string }
+                      | undefined)?.payment_type_id ??
+                    (selectedPaymentMethod as {
+                      type?: string;
+                    } | undefined)?.type;
+
+              console.log("[PaymentBrick] onSubmit payload:", {
+                selectedPaymentMethod_dump: selectedMethodDump,
+                selectedPaymentMethod_typeof: typeof selectedPaymentMethod,
+                selectedPaymentTypeId,
+                additionalPaymentTypeId: additionalData?.paymentTypeId,
+                payment_type_id_enviado: selectedPaymentTypeId,
+                payment_method_id: formData?.payment_method_id,
+                installments: formData?.installments,
+                issuer_id: formData?.issuer_id,
+                transaction_amount: formData?.transaction_amount,
+                payer_email: (formData?.payer as { email?: string } | undefined)
+                  ?.email,
+                token: safeToken,
+              });
               try {
                 const res = await fetch("/api/mercadopago/payment", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     externalReference,
+                    paymentTypeId: selectedPaymentTypeId,
                     formData,
                   }),
                 });
