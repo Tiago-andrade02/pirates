@@ -190,7 +190,25 @@ export async function createPayment(
 
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
+  // LOG TEMPORAL (debugging) reversible: capturar el body completo de error de
+  // Mercado Pago (status, error, cause[], message) para diagnosticar el 401.
+  // NO se expone ningún secreto: se enmascara cualquier cadena tipo credencial
+  // (APP_USR-/TEST-) y el token de tarjeta nunca viaja en la respuesta de error.
+  const redact = (value: unknown): unknown => {
+    if (typeof value === "string") {
+      return value.replace(/APP_USR-[A-Z0-9]+/gi, "APP_USR-••••").replace(/TEST-[A-Z0-9]+/gi, "TEST-••••");
+    }
+    if (Array.isArray(value)) return value.map(redact);
+    if (value && typeof value === "object") {
+      const out: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = redact(v);
+      return out;
+    }
+    return value;
+  };
+
   if (!res.ok || !data.id) {
+    console.log("[mercadopago/createPayment] body completo de error MP:", JSON.stringify(redact(data)));
     const message =
       typeof data.message === "string"
         ? data.message
