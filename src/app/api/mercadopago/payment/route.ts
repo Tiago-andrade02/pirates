@@ -118,6 +118,10 @@ export async function POST(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Error al procesar el pago en Mercado Pago";
+    const mpRaw =
+      error instanceof Error && (error as Error & { mpRaw?: string | null }).mpRaw
+        ? (error as Error & { mpRaw?: string | null }).mpRaw!
+        : undefined;
     console.error("[mercadopago/payment]", message);
     await recordPaymentDiagnostic({
       externalReference,
@@ -126,6 +130,7 @@ export async function POST(request: Request) {
       installments: String(formData.installments ?? ""),
       mpResult: "error",
       mpError: message,
+      mpRaw,
     });
     return Response.json({ error: message }, { status: 500 });
   }

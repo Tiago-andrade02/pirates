@@ -138,6 +138,7 @@ const SCHEMA = `
     installments TEXT NOT NULL DEFAULT '',
     mp_result TEXT NOT NULL DEFAULT '',
     mp_error TEXT NOT NULL DEFAULT '',
+    mp_raw TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
   );
 
@@ -226,6 +227,14 @@ async function migrate(database: Client) {
       "ALTER TABLE supplier_purchase_items ADD COLUMN size INTEGER NOT NULL DEFAULT 100"
     );
   }
+
+  const pdColumns = await tableColumns("payment_diagnostics");
+  if (!pdColumns.some((c) => c.name === "mp_raw")) {
+    await database.execute(
+      "ALTER TABLE payment_diagnostics ADD COLUMN mp_raw TEXT NOT NULL DEFAULT ''"
+    );
+  }
+
   await database.execute(
     `UPDATE perfumes SET cost = ROUND(COALESCE(price_50, price_100, price_30) * 0.45, 0) WHERE cost IS NULL`
   );
