@@ -135,6 +135,16 @@ export async function createPayment(
   input: CreatePaymentInput
 ): Promise<CreatedPayment> {
   const token = getAccessToken();
+
+  // LOG TEMPORAL (debugging): SOLO token enmascarado. NUNCA imprime el token
+  // completo: primeros 8 caracteres + últimos 4 + largo + existencia.
+  console.log("[mercadopago/createPayment] diag access_token:", {
+    existe: token.length > 0,
+    largo: token.length,
+    primeros8: token.length >= 8 ? token.slice(0, 8) : "(menor a 8)",
+    ultimos4: token.length >= 4 ? token.slice(-4) : "(menor a 4)",
+  });
+
   if (!token) {
     throw new Error("MERCADO_PAGO_ACCESS_TOKEN no configurado");
   }
