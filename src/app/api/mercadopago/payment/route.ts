@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import { createPayment } from "@/lib/mercadopago";
 import { recordPaymentDiagnostic } from "@/lib/payment-diagnostics";
+import { finalizePaidOrderByCode } from "@/lib/checkout-finalize";
 
 interface PaymentRequestBody {
   externalReference?: string;
@@ -99,6 +100,13 @@ export async function POST(request: Request) {
       payerEmail: formData.payer?.email,
       payerIdentification: formData.payer?.identification,
     });
+
+    // Si el pago ya quedó aprobado, finalizamos la orden acá mismo (marca
+    // 'pagado', descuenta stock y envía el email). Así la orden se genera
+    // aunque el webhook de Mercado Pago nunca llegue.
+    if (payment.status === "approved") {
+      await finalizePaidOrderByCode(externalReference);
+    }
 
     await recordPaymentDiagnostic({
       externalReference,

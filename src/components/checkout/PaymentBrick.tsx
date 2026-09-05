@@ -226,6 +226,7 @@ export function PaymentBrick({
                   error?: string;
                   id?: string | number;
                   status?: string;
+                  status_detail?: string;
                 };
                 if (!res.ok) {
                   const message =
@@ -233,11 +234,33 @@ export function PaymentBrick({
                   setError(message);
                   throw new Error(message);
                 }
-                // Devolvemos el pago creado (con status) para que el Brick
-                // dispare onStatusChange y se navegue a /checkout/resultado.
+                // Navegación directa y robusta: no depende de que el SDK
+                // dispare onStatusChange. Devolvemos además {id, status,
+                // status_detail} para que el Payment Brick finalice su UI.
+                const st = String(data.status ?? "");
+                if (!disposed) {
+                  if (st === "approved") {
+                    clear();
+                    router.push(
+                      `/checkout/resultado?status=success&external_reference=${encodeURIComponent(externalReference)}`
+                    );
+                  } else if (st === "pending" || st === "in_process") {
+                    clear();
+                    router.push(
+                      `/checkout/resultado?status=in_process&external_reference=${encodeURIComponent(externalReference)}`
+                    );
+                  } else {
+                    setError(
+                      "El pago fue rechazado por el emisor. Probá con otro medio o intentá de nuevo."
+                    );
+                    setLoading(false);
+                    throw new Error("rejected");
+                  }
+                }
                 return {
                   id: (data.id ?? "") as string | number,
-                  status: (data.status ?? "pending") as string,
+                  status: (st || "pending") as string,
+                  status_detail: (data.status_detail ?? "") as string,
                 };
               } catch (err) {
                 const message = brickErrorText(err);
