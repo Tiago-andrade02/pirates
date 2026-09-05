@@ -224,6 +224,8 @@ export function PaymentBrick({
                 });
                 const data = (await res.json().catch(() => ({}))) as {
                   error?: string;
+                  id?: string | number;
+                  status?: string;
                 };
                 if (!res.ok) {
                   const message =
@@ -231,8 +233,12 @@ export function PaymentBrick({
                   setError(message);
                   throw new Error(message);
                 }
-                // Resolvemos: el Brick se encarga de onStatusChange.
-                return {} as { id: string | number };
+                // Devolvemos el pago creado (con status) para que el Brick
+                // dispare onStatusChange y se navegue a /checkout/resultado.
+                return {
+                  id: (data.id ?? "") as string | number,
+                  status: (data.status ?? "pending") as string,
+                };
               } catch (err) {
                 const message = brickErrorText(err);
                 console.error("[PaymentBrick] onSubmit error:", err);
