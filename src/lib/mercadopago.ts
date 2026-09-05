@@ -193,6 +193,7 @@ export async function createPayment(
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
+      "X-Idempotency-Key": input.externalReference,
     },
     body: JSON.stringify(body),
     cache: "no-store",
