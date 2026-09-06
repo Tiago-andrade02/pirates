@@ -19,14 +19,21 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
     | undefined;
   if (!order || order.status === "pagado") return false;
 
-  await db.executeMultiple("BEGIN");
+  // IMPORTANTE (Turso/LibSQL): NO usar BEGIN / COMMIT / ROLLBACK sueltos con
+  // db.execute(): en la base remota cada statement puede ejecutarse en una
+  // conexión distinta, por lo que el ROLLBACK del catch se ejecuta sin
+  // transacción activa ("cannot rollback - no transaction is active") y
+  // reemplaza/enmascara el error real. Se usa la transacción del cliente:
+  // db.transaction("write") + tx.commit()/tx.rollback(), que gestiona el
+  // estado de la transacción por nosotros.
+  const tx = await db.transaction("write");
   try {
-    await db.execute({
+    await tx.execute({
       sql: "UPDATE orders SET status = 'pagado' WHERE id = ?",
       args: [order.id],
     });
 
-    const itemsResult = await db.execute({
+    const itemsResult = await tx.execute({
       sql: "SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?",
       args: [order.id],
     });
@@ -37,14 +44,22 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
     }[];
     for (const item of items) {
       const size = [30, 50, 100].includes(item.size) ? item.size : 100;
-      await db.execute({
+      await tx.execute({
         sql: `UPDATE perfumes SET stock_${size} = MAX(0, stock_${size} - ?), stock = MAX(0, stock - ?) WHERE id = ?`,
         args: [item.qty, item.qty, item.perfume_id],
       });
     }
-    await db.executeMultiple("COMMIT");
+    await tx.commit();
   } catch (error) {
-    await db.executeMultiple("ROLLBACK");
+    // El rollback es secundario y no debe ocultar el error original: si
+    // falla, se loguea y se relanza el error primario.
+    if (!tx.closed) {
+      try {
+        await tx.rollback();
+      } catch (rollbackError) {
+        console.error("[checkout-finalize] rollback fallido", rollbackError);
+      }
+    }
     throw error;
   }
 
