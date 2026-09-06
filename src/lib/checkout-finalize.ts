@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getOrderById } from "@/lib/admin-data";
-import { sendOrderEmail } from "@/lib/notify";
+import { notifyNewOrder } from "@/lib/notify";
 
 // Finaliza una orden ya paga: marca 'pagado', descuenta stock y envía el
 // email del pedido (fire-and-forget). Idempotente: no re-procesa ordenes ya
@@ -11,13 +11,14 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
   const db = await getDb();
 
   const orderResult = await db.execute({
-    sql: "SELECT id, status FROM orders WHERE code = ?",
+    sql: "SELECT id, status, notified_at FROM orders WHERE code = ?",
     args: [code],
   });
   const order = orderResult.rows[0] as unknown as
-    | { id: number; status: string }
+    | { id: number; status: string; notified_at: string | null }
     | undefined;
   if (!order || order.status === "pagado") return false;
+  const alreadyNotified = Boolean(order.notified_at);
 
   // IMPORTANTE (Turso/LibSQL): NO usar BEGIN / COMMIT / ROLLBACK sueltos con
   // db.execute(): en la base remota cada statement puede ejecutarse en una
@@ -28,9 +29,13 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
   // estado de la transacción por nosotros.
   const tx = await db.transaction("write");
   try {
+    // Reclama el aviso de forma atómica: notified_at se setea una sola vez
+    // (COALESCE). Si un webhook de Mercado Pago se reenvía o el path síncrono
+    // ya finalizó, este UPDATE vuelve a marcar 'pagado' pero no re-notifica.
+    const notifiedAt = new Date().toISOString();
     await tx.execute({
-      sql: "UPDATE orders SET status = 'pagado' WHERE id = ?",
-      args: [order.id],
+      sql: "UPDATE orders SET status = 'pagado', notified_at = COALESCE(notified_at, ?) WHERE id = ?",
+      args: [notifiedAt, order.id],
     });
 
     const itemsResult = await tx.execute({
@@ -64,9 +69,9 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
   }
 
   const fullOrder = await getOrderById(order.id);
-  if (fullOrder) {
-    sendOrderEmail(fullOrder).catch((error) => {
-      console.error("[notify] No se pudo enviar el email del pedido", error);
+  if (fullOrder && !alreadyNotified) {
+    notifyNewOrder(fullOrder).catch((error) => {
+      console.error("[notify] No se pudieron enviar los avisos del pedido", error);
     });
   }
 

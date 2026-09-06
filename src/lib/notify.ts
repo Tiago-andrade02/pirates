@@ -14,7 +14,7 @@ function deliveryLabel(order: Order): string {
 }
 
 export function orderEmailSubject(order: Order): string {
-  return `Nuevo pedido pagado ${order.code} — ${order.customerName}`;
+  return `Nueva orden PIRATES - ${order.code}`;
 }
 
 export function orderEmailText(order: Order): string {
@@ -125,4 +125,92 @@ export async function sendOrderEmail(order: Order): Promise<void> {
     text: orderEmailText(order),
     html: orderEmailHtml(order),
   });
+}
+
+export function orderUrl(order: Order): string {
+  const base = process.env.SITE_URL ?? "https://piratesarg.com";
+  return `${base}/admin/pedidos/${order.id}`;
+}
+
+function productsSummary(order: Order): string {
+  return (
+    order.items
+      .map(
+        (i) =>
+          `${i.name}${i.size ? ` ${i.size}ml` : ""} x${i.qty} (${money(i.price * i.qty)})`
+      )
+      .join(", ") || "—"
+  );
+}
+
+export function hasWhatsAppConfig(): boolean {
+  return Boolean(
+    process.env.WHATSAPP_ACCESS_TOKEN &&
+      process.env.WHATSAPP_PHONE_NUMBER_ID &&
+      process.env.WHATSAPP_TO
+  );
+}
+
+// WhatsApp Business Platform / Cloud API de Meta: un único POST a Graph API,
+// sin SDK. Los mensajes iniciados por el negocio requieren una plantilla
+// aprobada (WHATSAPP_TEMPLATE_NAME) con estas 7 variables en el cuerpo:
+// {{1}} pedido, {{2}} cliente, {{3}} teléfono, {{4}} total, {{5}} productos,
+// {{6}} envío, {{7}} enlace al pedido.
+export async function sendWhatsAppOrderNotification(order: Order): Promise<void> {
+  if (!hasWhatsAppConfig()) {
+    console.warn(
+      "[notify] WhatsApp no configurado (WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID/WHATSAPP_TO)."
+    );
+    return;
+  }
+
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
+  const template = process.env.WHATSAPP_TEMPLATE_NAME || "nueva_orden_pirates";
+  const res = await fetch(
+    `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN!}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: process.env.WHATSAPP_TO,
+        type: "template",
+        template: {
+          name: template,
+          language: { code: "es" },
+          components: [
+            {
+              type: "body",
+              parameters: [
+                { type: "text", text: order.code },
+                { type: "text", text: order.customerName },
+                { type: "text", text: order.customerPhone || "—" },
+                { type: "text", text: money(order.total) },
+                { type: "text", text: productsSummary(order) },
+                { type: "text", text: deliveryLabel(order) },
+                { type: "text", text: orderUrl(order) },
+              ],
+            },
+          ],
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`WhatsApp Cloud API error ${res.status}: ${detail.slice(0, 300)}`);
+  }
+}
+
+// Aviso de nueva orden al administrador por email y WhatsApp. Los fallos de
+// cada canal no se propagan: se loguean en el llamador (fire-and-forget).
+export async function notifyNewOrder(order: Order): Promise<void> {
+  await Promise.allSettled([
+    sendOrderEmail(order),
+    sendWhatsAppOrderNotification(order),
+  ]);
 }

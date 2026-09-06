@@ -92,6 +92,7 @@ const SCHEMA = `
     tracking_events TEXT NOT NULL DEFAULT '[]',
     shipped_at TEXT,
     shipping_label TEXT NOT NULL DEFAULT '',
+    notified_at TEXT,
     created_at TEXT NOT NULL
   );
 
@@ -219,6 +220,10 @@ async function migrate(database: Client) {
        ALTER TABLE orders ADD COLUMN shipped_at TEXT;
        ALTER TABLE orders ADD COLUMN shipping_label TEXT NOT NULL DEFAULT '';`
     );
+  }
+
+  if (!orderColumns.some((c) => c.name === "notified_at")) {
+    await database.execute("ALTER TABLE orders ADD COLUMN notified_at TEXT");
   }
 
   const itemColumns = await tableColumns("supplier_purchase_items");
