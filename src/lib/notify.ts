@@ -206,11 +206,37 @@ export async function sendWhatsAppOrderNotification(order: Order): Promise<void>
   }
 }
 
-// Aviso de nueva orden al administrador por email y WhatsApp. Los fallos de
-// cada canal no se propagan: se loguean en el llamador (fire-and-forget).
+// Reintenta una operación de notificación hasta `attempts` veces con backoff
+// creciente. Un canal no configurado sale a la primera (no reintenta): los
+// pre-checks de sendOrderEmail/sendWhatsAppOrderNotification cortan sin lanzar.
+async function withRetry<T>(
+  label: string,
+  fn: () => Promise<T>,
+  attempts = 3
+): Promise<T | undefined> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      }
+    }
+  }
+  console.error(`[notify] ${label}: falló tras ${attempts} intentos`, lastError);
+  return undefined;
+}
+
+// Aviso de nueva orden al administrador por email y WhatsApp. Cada canal se
+// intenta hasta 3 veces si falla, de forma independiente. Los fallos finales
+// no se propagan: se loguean en el llamador (fire-and-forget). La
+// deduplicación se maneja por orden con notified_at en finalizePaidOrderByCode:
+// un webhook duplicado o el path síncrono no vuelven a notificar.
 export async function notifyNewOrder(order: Order): Promise<void> {
   await Promise.allSettled([
-    sendOrderEmail(order),
-    sendWhatsAppOrderNotification(order),
+    withRetry("email", () => sendOrderEmail(order)),
+    withRetry("whatsapp", () => sendWhatsAppOrderNotification(order)),
   ]);
 }
