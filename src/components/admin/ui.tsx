@@ -57,9 +57,8 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   enviado: "border-violet-500/40 bg-violet-500/10 text-violet-300",
   entregado: "border-white/30 bg-white/10 text-white",
   cancelado: "border-red-500/40 bg-red-500/10 text-red-300",
-};
-
-export function StatusBadge({ status }: { status: OrderStatus }) {
+  sin_stock: "border-red-500/40 bg-red-500/10 text-red-300",
+};export function StatusBadge({ status }: { status: OrderStatus }) {
   return (
     <span
       className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${STATUS_STYLES[status]}`}

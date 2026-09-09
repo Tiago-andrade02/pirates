@@ -71,6 +71,7 @@ const STATUS_STYLES: Record<OrderStatus, string> = {
   enviado: "border-violet-500/40 bg-violet-500/10 text-violet-300",
   entregado: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
   cancelado: "border-red-500/40 bg-red-500/10 text-red-300",
+  sin_stock: "border-red-500/40 bg-red-500/10 text-red-300",
 };
 
 export default async function PedidoPage({

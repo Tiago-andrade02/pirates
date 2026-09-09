@@ -1,7 +1,9 @@
+import { requireAdminPage } from "../actions";
 import { getCustomers } from "@/lib/admin-data";
 import { PageHeader, Money, Th, Td } from "@/components/admin/ui";
 
 export default async function AdminClientesPage() {
+  await requireAdminPage();
   const customers = await getCustomers();
 
   return (

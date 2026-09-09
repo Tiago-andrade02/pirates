@@ -1,5 +1,5 @@
 import { getExpenses, getExpensesTotal, getDashboardStats } from "@/lib/admin-data";
-import { createExpense, deleteExpense } from "../actions";
+import { createExpense, deleteExpense, requireAdminPage } from "../actions";
 import { EXPENSE_CATEGORIES } from "@/lib/types";
 import { formatARS } from "@/lib/format";
 import { PageHeader, StatCard, EmptyState, Money, Th, Td } from "@/components/admin/ui";
@@ -9,6 +9,7 @@ const inputCls =
   "w-full rounded-xl border border-line bg-background px-3.5 py-2.5 text-sm text-white placeholder:text-faint focus:border-gold focus:outline-none";
 
 export default async function AdminCajaPage() {
+  await requireAdminPage();
   const expenses = await getExpenses();
   const stats = await getDashboardStats();
   const monthExpenses = expenses

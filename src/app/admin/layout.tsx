@@ -8,13 +8,13 @@ export default async function AdminLayout({
 }: LayoutProps<"/admin">) {
   const admin = await isAdmin();
 
-  if (!admin) {
-    return (
-      <Suspense fallback={null}>
-        <AdminLogin />
-      </Suspense>
-    );
+  if (admin) {
+    return <AdminShell>{children}</AdminShell>;
   }
 
-  return <AdminShell>{children}</AdminShell>;
+  return (
+    <Suspense fallback={null}>
+      <AdminLogin />
+    </Suspense>
+  );
 }

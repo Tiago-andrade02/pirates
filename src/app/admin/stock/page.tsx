@@ -1,6 +1,6 @@
 import { getAdminProducts, getLowStockItems } from "@/lib/admin-data";
 import { productImageUrl } from "@/lib/images";
-import { updateProductStock, restockLow } from "../actions";
+import { updateProductStock, restockLow, requireAdminPage } from "../actions";
 import { formatARS } from "@/lib/format";
 import { PageHeader, Th, Td } from "@/components/admin/ui";
 import { CheckIcon } from "@/components/icons";
@@ -10,6 +10,7 @@ export default async function AdminStockPage({
 }: {
   searchParams: Promise<{ ok?: string }>;
 }) {
+  await requireAdminPage();
   const { ok } = await searchParams;
   const products = await getAdminProducts();
   const lowStock = await getLowStockItems();

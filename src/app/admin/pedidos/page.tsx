@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdminPage } from "../actions";
 import { getOrders } from "@/lib/admin-data";
 import { ORDER_STATUSES, ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/types";
 import { PageHeader, Money, Th, Td } from "@/components/admin/ui";
@@ -35,6 +36,7 @@ export default async function AdminPedidosPage({
 }: {
   searchParams: Promise<{ status?: string; q?: string; ok?: string; error?: string }>;
 }) {
+  await requireAdminPage();
   const sp = await searchParams;
   const status = (ORDER_STATUSES.includes(sp.status as OrderStatus)
     ? (sp.status as OrderStatus)

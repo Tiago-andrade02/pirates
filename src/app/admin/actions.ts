@@ -1,33 +1,79 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { cookies, headers } from "next/headers";
+import { redirect, unauthorized } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { getDb } from "@/lib/db";
 import { getOrderById } from "@/lib/admin-data";
+import {
+  clientIp,
+  rateLimitAllowed,
+  rateLimitClear,
+  rateLimitRecordFailure,
+} from "@/lib/rate-limit";
 import { hasEmailConfig, sendOrderEmail } from "@/lib/notify";
-import type { OrderStatus } from "@/lib/types";
+import {
+  ORDER_STATUSES_WITH_STOCK_TAKEN,
+  type OrderStatus,
+} from "@/lib/types";
 
 const ADMIN_COOKIE = "pirates_admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "pirates2026";
+// Sin fallback: si ADMIN_PASSWORD no está configurada, el acceso queda
+// denegado (fail closed) en lugar de usar una contraseña por defecto.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const COOKIE_SECRET = "pirates-admin-cookie-v1";
 const LOW_STOCK_THRESHOLD = 10;
+const LOGIN_MAX_ATTEMPTS = 10;
+const LOGIN_WINDOW_MS = 5 * 60 * 1000;
+
+function adminCookieValue(): string {
+  return crypto
+    .createHash("sha256")
+    .update(`${ADMIN_PASSWORD}:${COOKIE_SECRET}`)
+    .digest("hex")
+    .slice(0, 32);
+}
 
 export async function isAdmin(): Promise<boolean> {
   const cookieStore = await cookies();
-  return cookieStore.get(ADMIN_COOKIE)?.value === "1";
+  const value = cookieStore.get(ADMIN_COOKIE)?.value;
+  if (!value) return false;
+  const expected = adminCookieValue();
+  if (value.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(value), Buffer.from(expected));
 }
 
 export async function login(formData: FormData) {
+  if (!ADMIN_PASSWORD) {
+    redirect("/admin?error=3");
+  }
+  const h = await headers();
+  const key = `login:${clientIp(h)}`;
+  if (!(await rateLimitAllowed(key, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW_MS))) {
+    redirect("/admin?error=2");
+  }
+
   const password = String(formData.get("password") ?? "");
-  if (password !== ADMIN_PASSWORD) {
+  const expectedHash = crypto.createHash("sha256").update(ADMIN_PASSWORD).digest();
+  const givenHash = crypto.createHash("sha256").update(password).digest();
+  const valid =
+    expectedHash.length === givenHash.length &&
+    crypto.timingSafeEqual(expectedHash, givenHash);
+
+  if (!valid) {
+    await rateLimitRecordFailure(key, LOGIN_WINDOW_MS);
     redirect("/admin?error=1");
   }
+
+  await rateLimitClear(key);
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_COOKIE, "1", {
+  cookieStore.set(ADMIN_COOKIE, adminCookieValue(), {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
@@ -44,6 +90,15 @@ async function requireAdmin() {
   const admin = await isAdmin();
   if (!admin) {
     redirect("/admin");
+  }
+}
+
+// Guard para páginas (Server Components): corta el render ANTES de que la
+// página haga queries, porque los guards de layout no evitan que el
+// segmento hijo renderice su RSC payload.
+export async function requireAdminPage(): Promise<void> {
+  if (!(await isAdmin())) {
+    unauthorized();
   }
 }
 
@@ -350,7 +405,7 @@ export async function updateOrderStatus(formData: FormData) {
   await requireAdmin();
   const id = int(formData.get("id"));
   const status = String(formData.get("status") ?? "") as OrderStatus;
-  const valid = ["pendiente", "pagado", "preparando", "enviado", "entregado", "cancelado"];
+  const valid = ["pendiente", "pagado", "preparando", "enviado", "entregado", "cancelado", "sin_stock"];
   if (id === null || !valid.includes(status)) redirect("/admin/pedidos");
 
   const db = await getDb();
@@ -361,7 +416,11 @@ export async function updateOrderStatus(formData: FormData) {
 
   await db.execute({ sql: "UPDATE orders SET status = ? WHERE id = ?", args: [status, id] });
 
-  if (status === "cancelado" && previous.status !== "cancelado") {
+  // Al cancelar solo se repone el stock si la orden ya lo había descontado
+  // (pagado/preparando/enviado/entregado). Las órdenes 'pendiente' o
+  // 'sin_stock' nunca descontaron stock en el cierre, así que reponerlo sería
+  // sumar unidades de más.
+  if (status === "cancelado" && ORDER_STATUSES_WITH_STOCK_TAKEN.includes(previous.status)) {
     const itemsResult = await db.execute({ sql: "SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?", args: [id] });
     const items = itemsResult.rows as unknown as { perfume_id: number | null; qty: number; size: number }[];
     for (const item of items) {

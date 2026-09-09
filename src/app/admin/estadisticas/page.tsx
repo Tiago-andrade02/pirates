@@ -1,3 +1,4 @@
+import { requireAdminPage } from "../actions";
 import {
   getDashboardStats,
   getMonthlyRevenue,
@@ -10,6 +11,7 @@ import { formatARS, formatNumber } from "@/lib/format";
 import { PageHeader, StatCard } from "@/components/admin/ui";
 
 export default async function AdminEstadisticasPage() {
+  await requireAdminPage();
   const stats = await getDashboardStats();
   const monthly = await getMonthlyRevenue(6);
   const topSellers = await getTopSellers(8);

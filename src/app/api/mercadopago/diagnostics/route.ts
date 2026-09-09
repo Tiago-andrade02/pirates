@@ -1,12 +1,21 @@
+import crypto from "node:crypto";
 import { getDb } from "@/lib/db";
 
 // Endpoint TEMPORAL de diagnóstico: devuelve los últimos registros de pago
 // SIN datos sensibles (no hay token, CVV, email ni DNI en la tabla).
 // Acceso protegido: header "x-diagnostic-key" debe coincidir con ADMIN_PASSWORD.
 export async function GET(request: Request) {
-  const secret = process.env.ADMIN_PASSWORD ?? "pirates2026";
+  const secret = process.env.ADMIN_PASSWORD || "";
+  if (!secret) {
+    return Response.json(
+      { error: "ADMIN_PASSWORD no configurado" },
+      { status: 503 }
+    );
+  }
   const key = request.headers.get("x-diagnostic-key") ?? "";
-  if (key !== secret) {
+  const a = crypto.createHash("sha256").update(secret).digest();
+  const b = crypto.createHash("sha256").update(key).digest();
+  if (!crypto.timingSafeEqual(a, b)) {
     return Response.json({ error: "No autorizado" }, { status: 401 });
   }
 
