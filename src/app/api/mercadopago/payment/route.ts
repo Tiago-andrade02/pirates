@@ -2,6 +2,14 @@ import { getDb } from "@/lib/db";
 import { createPayment } from "@/lib/mercadopago";
 import { recordPaymentDiagnostic } from "@/lib/payment-diagnostics";
 import { finalizePaidOrderByCode } from "@/lib/checkout-finalize";
+import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
+
+const PAYMENT_MAX_ATTEMPTS = 60;
+const PAYMENT_WINDOW_MS = 10 * 60 * 1000;
+
+// Logs detallados de diagnóstico (sin datos sensibles) habilitados solo si se
+// pide explícitamente y fuera de producción.
+const PAYMENT_DIAG = process.env.ENABLE_PAYMENT_DIAGNOSTICS === "true" && process.env.NODE_ENV !== "production";
 
 interface PaymentRequestBody {
   externalReference?: string;
@@ -30,21 +38,34 @@ export async function POST(request: Request) {
     return Response.json({ error: "Body inválido" }, { status: 400 });
   }
 
+  if (
+    !(await rateLimitConsume(
+      `payment:${clientIp(request.headers)}`,
+      PAYMENT_MAX_ATTEMPTS,
+      PAYMENT_WINDOW_MS
+    ))
+  ) {
+    return Response.json(
+      { error: "Demasiados intentos de pago. Intentalo más tarde." },
+      { status: 429 }
+    );
+  }
+
   const externalReference = (body.externalReference ?? "").trim();
   const formData = body.formData ?? {};
   const token = (formData.token ?? "").trim();
   const paymentMethodId = (formData.payment_method_id ?? "").trim();
   const paymentTypeId = (body.paymentTypeId ?? "").trim();
 
-  // LOG TEMPORAL (debugging): confirmar la estructura del formData del Brick.
-  // No se loguean datos sensibles (token, CVV, email del comprador).
-  console.log("[mercadopago/payment] payload recibido:", {
-    externalReference,
-    paymentTypeId,
-    payment_method_id: paymentMethodId,
-    installments: body.formData?.installments,
-    issuer_id: body.formData?.issuer_id,
-  });
+  if (PAYMENT_DIAG) {
+    console.log("[mercadopago/payment] payload recibido:", {
+      externalReference,
+      paymentTypeId,
+      payment_method_id: paymentMethodId,
+      installments: body.formData?.installments,
+      issuer_id: body.formData?.issuer_id,
+    });
+  }
 
   // Si algún dato mínimo falta o el pedido es inválido, lo registramos como
   // diagnóstico (sin datos sensibles) para poder diagnosticar fallos reales.

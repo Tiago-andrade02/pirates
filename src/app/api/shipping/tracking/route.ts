@@ -51,8 +51,8 @@ export async function GET(request: Request) {
 
   // Consulta el estado REAL del envío en Correo Argentino cuando hay tracking.
   if (order.tracking_number) {
-    const provider = getShippingProvider();
     try {
+      const provider = getShippingProvider();
       const result = await provider.getTracking(order.tracking_number);
       if (result.events.length > 0) {
         events = result.events;

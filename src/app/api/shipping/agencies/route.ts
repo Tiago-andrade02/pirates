@@ -1,4 +1,5 @@
 import { getShippingProvider } from "@/lib/shipping";
+import type { ShippingProvider } from "@/lib/shipping/types";
 import { provinceCodeFor } from "@/lib/shipping/provinces";
 
 export async function GET(request: Request) {
@@ -13,7 +14,16 @@ export async function GET(request: Request) {
     );
   }
 
-  const provider = getShippingProvider();
+  let provider: ShippingProvider;
+  try {
+    provider = getShippingProvider();
+  } catch (error) {
+    console.error("[shipping/agencies]", error instanceof Error ? error.message : error);
+    return Response.json(
+      { error: "No se pudieron obtener las sucursales. Intentalo de nuevo." },
+      { status: 502 }
+    );
+  }
   if (!provider.getAgencies) {
     return Response.json({ agencies: [] });
   }

@@ -2,6 +2,11 @@ import crypto from "node:crypto";
 
 const API_BASE = "https://api.mercadopago.com";
 
+// Habilita los logs detallados de diagnóstico de pagos (payloads enmascarados,
+// token parcial, body de errores MP) para depurar sin exponer datos sensibles.
+// En producción queda deshabilitado a menos que se pida explícitamente.
+const PAYMENT_DIAG = process.env.ENABLE_PAYMENT_DIAGNOSTICS === "true" && process.env.NODE_ENV !== "production";
+
 export function getAccessToken(): string {
   return process.env.MERCADO_PAGO_ACCESS_TOKEN ?? "";
 }
@@ -72,7 +77,19 @@ export async function createPreference(
 
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`Mercado Pago ${res.status}: ${body}`);
+    let msg = `Mercado Pago ${res.status}: Error desconocido`;
+    try {
+      const parsed = JSON.parse(body) as Record<string, unknown>;
+      msg =
+        typeof parsed.message === "string" && parsed.message
+          ? `Mercado Pago ${res.status}: ${parsed.message.slice(0, 200)}`
+          : typeof parsed.error_description === "string" && parsed.error_description
+            ? `Mercado Pago ${res.status}: ${parsed.error_description.slice(0, 200)}`
+            : msg;
+    } catch {
+      // JSON inválido: usar mensaje genérico sin exponer el body crudo.
+    }
+    throw new Error(msg);
   }
 
   const data = (await res.json()) as {
@@ -92,6 +109,8 @@ export interface MercadoPagoPayment {
   id: number;
   status: "approved" | "pending" | "in_process" | "rejected" | "cancelled" | string;
   external_reference?: string | null;
+  currency_id?: string | null;
+  transaction_amount?: number | null;
 }
 
 export async function getPayment(paymentId: string): Promise<MercadoPagoPayment> {
@@ -136,14 +155,14 @@ export async function createPayment(
 ): Promise<CreatedPayment> {
   const token = getAccessToken();
 
-  // LOG TEMPORAL (debugging): SOLO token enmascarado. NUNCA imprime el token
-  // completo: primeros 8 caracteres + últimos 4 + largo + existencia.
-  console.log("[mercadopago/createPayment] diag access_token:", {
-    existe: token.length > 0,
-    largo: token.length,
-    primeros8: token.length >= 8 ? token.slice(0, 8) : "(menor a 8)",
-    ultimos4: token.length >= 4 ? token.slice(-4) : "(menor a 4)",
-  });
+  if (PAYMENT_DIAG) {
+    console.log("[mercadopago/createPayment] diag access_token:", {
+      existe: token.length > 0,
+      largo: token.length,
+      primeros8: token.length >= 8 ? token.slice(0, 8) : "(menor a 8)",
+      ultimos4: token.length >= 4 ? token.slice(-4) : "(menor a 4)",
+    });
+  }
 
   if (!token) {
     throw new Error("MERCADO_PAGO_ACCESS_TOKEN no configurado");
@@ -167,10 +186,7 @@ export async function createPayment(
   if (input.installments) body.installments = input.installments;
   if (input.issuerId) body.issuer_id = input.issuerId;
 
-  // LOG TEMPORAL (debugging): payload final enviado a POST /v1/payments.
-  // No se exponen datos sensibles: el token se enmascara y el contenido de
-  // `payer` (email, identificación/DNI) se reemplaza por un marcador de presencia.
-  {
+  if (PAYMENT_DIAG) {
     const safeBody: Record<string, unknown> = { ...body };
     if (typeof safeBody.payer === "object" && safeBody.payer !== null) {
       const p = safeBody.payer as Record<string, unknown>;
@@ -201,10 +217,9 @@ export async function createPayment(
 
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
-  // LOG TEMPORAL (debugging) reversible: extraer SOLO campos seguros del body de
-  // error de Mercado Pago (status, error, message, status_detail, cause[].code/
-  // description) para diagnosticar el 401. NUNCA se capturan token, public_key,
-  // payer, email ni DNI, ni el access token (se omiten por whitelist).
+  // Extrae SOLO campos seguros del body de error de Mercado Pago (status,
+  // error, message, status_detail, cause[].code/description) para diagnóstico.
+  // NUNCA se capturan token, public_key, payer, email ni DNI (whitelist).
   const extractSafe = (raw: Record<string, unknown>): Record<string, unknown> | null => {
     if (!raw || typeof raw !== "object") return null;
     const safe: Record<string, unknown> = {};
@@ -228,17 +243,15 @@ export async function createPayment(
   };
 
   if (!res.ok || !data.id) {
+    // El mensaje que llega al cliente NO incluye el detalle crudo del error de
+    // Mercado Pago: se devuelve un mensaje genérico para no exponer internos.
     const err = new Error(
-      `Mercado Pago ${res.status}: ${
-        typeof data.message === "string"
-          ? data.message
-          : typeof data.error_description === "string"
-            ? data.error_description
-            : res.statusText || "Error desconocido de Mercado Pago"
-      }`
+      `Mercado Pago ${res.status}: ${res.statusText || "Error al procesar el pago"}`
     ) as Error & { mpRaw?: string | null };
     err.mpRaw = extractSafe(data) ? JSON.stringify(extractSafe(data)) : null;
-    console.log("[mercadopago/createPayment] body de error MP (solo campos seguros):", extractSafe(data));
+    if (PAYMENT_DIAG && err.mpRaw) {
+      console.log("[mercadopago/createPayment] body de error MP (solo campos seguros):", extractSafe(data));
+    }
     throw err;
   }
 
@@ -260,20 +273,34 @@ export function verifyWebhookSignature(input: {
     return false;
   }
 
-  const params = new URLSearchParams(input.signature);
-  const ts = params.get("ts");
-  const v1 = params.get("v1");
+  // Mercado Pago envía el header así: "ts=1704908010,v1=<hex>" (a veces usa
+  // '&' como separador). El formato real NO es URL-encoded, por eso se parsea
+  // manualmente en lugar de usar URLSearchParams.
+  const params: Record<string, string> = {};
+  for (const pair of input.signature.split(/[,&]/)) {
+    const eq = pair.indexOf("=");
+    if (eq === -1) continue;
+    params[pair.slice(0, eq).trim()] = pair.slice(eq + 1).trim();
+  }
+  const ts = params["ts"];
+  const v1 = params["v1"];
   if (!ts || !v1) return false;
+
+  // Anti-replay: rechazar firmas con timestamp muy viejo o del futuro.
+  const tsMs = Number(ts);
+  if (!Number.isFinite(tsMs) || Math.abs(Date.now() - tsMs) > 5 * 60 * 1000) {
+    return false;
+  }
 
   const manifest = `id:${input.dataId};request-id:${input.requestId};ts:${ts};`;
   const expected = crypto
     .createHmac("sha256", secret)
     .update(manifest)
-    .digest("hex");
+    .digest("hex")
+    .toLowerCase();
 
-  const a = Buffer.from(expected, "utf8");
-  const b = Buffer.from(v1, "utf8");
-  if (a.length !== b.length) return false;
-
+  // Mismo largo garantizado (hash de ambos) para timingSafeEqual.
+  const a = crypto.createHash("sha256").update(expected).digest();
+  const b = crypto.createHash("sha256").update(v1.toLowerCase()).digest();
   return crypto.timingSafeEqual(a, b);
 }

@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { getDb } from "@/lib/db";
 import {
   createPreference,
@@ -7,6 +8,8 @@ import {
 import { computePackageForItems } from "@/lib/shipping/packages";
 import { getShippingProvider, applyFreeShipping } from "@/lib/shipping";
 import { provinceCodeFor, isValidPostalCode } from "@/lib/shipping/provinces";
+import type { ShippingProvider } from "@/lib/shipping/types";
+import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
 import type { DeliveryType } from "@/lib/types";
 
 const SIZE_PRICE: Record<string, "price_30" | "price_50" | "price_100" | null> = {
@@ -14,6 +17,31 @@ const SIZE_PRICE: Record<string, "price_30" | "price_50" | "price_100" | null> =
   "50": "price_50",
   "100": "price_100",
 };
+
+// Límite de pedidos por IP: evita que un bot genere órdenes y preferencias
+// de pago en bucle.
+const CHECKOUT_MAX_ATTEMPTS = 20;
+const CHECKOUT_WINDOW_MS = 15 * 60 * 1000;
+
+function orderCode(): string {
+  // Código con alta entropía (64 bits) para que no se pueda enumerar
+  // /pedido/[code] ni /api/shipping/tracking.
+  return `PIR-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
+}
+
+// URL base usada para backUrls / notificationUrl de Mercado Pago. NO se
+// confía en el header "Origin" del cliente (un atacante podría poner su
+// dominio y hacer que MP notifique/redirija ahí). Se usa SITE_URL, el host
+// real de la request o, en última instancia, el origin de la propia URL.
+function appOrigin(request: Request): string {
+  const fromEnv = (process.env.SITE_URL ?? "").trim().replace(/\/+$/, "");
+  if (fromEnv) return fromEnv;
+  const host = request.headers.get("host");
+  if (host && /^[a-z0-9.-]+(:\d+)?$/i.test(host)) {
+    return `https://${host}`;
+  }
+  return new URL(request.url).origin;
+}
 
 interface CheckoutItemInput {
   slug: string;
@@ -71,6 +99,22 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (name.length > 120 || phone.length > 30 || (body.customer?.email ?? "").length > 160) {
+    return Response.json({ error: "Datos de contacto inválidos" }, { status: 400 });
+  }
+
+  if (
+    !(await rateLimitConsume(
+      `checkout:${clientIp(request.headers)}`,
+      CHECKOUT_MAX_ATTEMPTS,
+      CHECKOUT_WINDOW_MS
+    ))
+  ) {
+    return Response.json(
+      { error: "Demasiados pedidos en poco tiempo. Intentalo más tarde." },
+      { status: 429 }
+    );
+  }
 
   const shipping = body.shipping ?? {};
   const postalCode = (shipping.postalCode ?? "").trim();
@@ -93,15 +137,82 @@ export async function POST(request: Request) {
   }
   const deliveryType: DeliveryType =
     shipping.deliveryType === "S" ? "S" : "D";
-  if (deliveryType === "S" && !(shipping.agencyCode ?? "").trim()) {
+
+  // Provider de envío: en producción, si Correo Argentino no está configurado,
+  // getShippingProvider() lanza un error y NO se aplica una tarifa plana
+  // silenciosa (para no cobrar un precio incorrecto).
+  let provider: ShippingProvider;
+  try {
+    provider = getShippingProvider();
+  } catch (error) {
+    console.error("[checkout/provider]", error instanceof Error ? error.message : error);
     return Response.json(
-      { error: "Seleccioná una sucursal de retiro" },
+      { error: "El envío no está disponible en este momento. Intentalo más tarde." },
+      { status: 503 }
+    );
+  }
+
+  // Localidad: el frontend la exige; el backend también valida que venga.
+  const locality = (shipping.locality ?? "").trim();
+  if (!locality || locality.length > 120) {
+    return Response.json(
+      { error: "Completá una localidad válida" },
       { status: 400 }
     );
+  }
+
+  const agencyCode = (shipping.agencyCode ?? "").trim();
+  if (deliveryType === "S") {
+    if (!agencyCode) {
+      return Response.json(
+        { error: "Seleccioná una sucursal de retiro" },
+        { status: 400 }
+      );
+    }
+    if (agencyCode.length > 40) {
+      return Response.json({ error: "Sucursal inválida" }, { status: 400 });
+    }
+    // La sucursal debe existir y pertenecer a la provincia elegida: un código
+    // inventado (o de otra provincia) se rechaza acá. Nunca se confía en el
+    // cliente para validar sucursales.
+    if (!provider.getAgencies) {
+      return Response.json(
+        { error: "El retiro en sucursal no está disponible para este proveedor" },
+        { status: 400 }
+      );
+    }
+    try {
+      const agencies = await provider.getAgencies(provinceCode);
+      const validAgency = agencies.some((a) => a.code === agencyCode);
+      if (!validAgency) {
+        return Response.json(
+          { error: "La sucursal seleccionada no pertenece a la provincia indicada" },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      console.error("[checkout/agencies]", error instanceof Error ? error.message : error);
+      return Response.json(
+        { error: "No se pudieron verificar las sucursales. Intentalo de nuevo." },
+        { status: 502 }
+      );
+    }
   }
   if (deliveryType === "D" && !(shipping.street ?? "").trim()) {
     return Response.json(
       { error: "Completá la dirección de entrega" },
+      { status: 400 }
+    );
+  }
+  if (
+    deliveryType === "D" &&
+    ((shipping.street ?? "").trim().length > 150 ||
+      (shipping.number ?? "").trim().length > 20 ||
+      (shipping.floor ?? "").trim().length > 12 ||
+      (shipping.apartment ?? "").trim().length > 12)
+  ) {
+    return Response.json(
+      { error: "Dirección de entrega inválida" },
       { status: 400 }
     );
   }
@@ -148,7 +259,6 @@ export async function POST(request: Request) {
   let productType = "CP";
   try {
     const pkg = await computePackageForItems(body.items);
-    const provider = getShippingProvider();
     const options = await provider.quote({
       postalCodeDestination: postalCode,
       provinceCode,
@@ -185,8 +295,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const code = `PIR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-  const origin = request.headers.get("origin") ?? new URL(request.url).origin;
+  const code = orderCode();
+  const origin = appOrigin(request);
 
   let preference;
   try {
@@ -199,7 +309,7 @@ export async function POST(request: Request) {
     if (shippingCost > 0) {
       items.push({
         id: "envio",
-        title: "Envío Correo Argentino",
+        title: provider.id === "flat_rate" ? "Envío" : "Envío Correo Argentino",
         quantity: 1,
         unit_price: shippingCost,
       });
@@ -232,8 +342,8 @@ export async function POST(request: Request) {
          code, customer_id, status, subtotal, shipping, total, payment_method,
          province, postal_code, locality, address_street, address_number,
          address_floor, address_apartment, delivery_type, agency_code,
-         shipping_service, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         shipping_provider, shipping_service, created_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       code,
       customerId,
@@ -244,13 +354,14 @@ export async function POST(request: Request) {
       "mercadopago",
       province,
       postalCode,
-      (shipping.locality ?? "").trim(),
+      locality,
       (shipping.street ?? "").trim(),
       (shipping.number ?? "").trim(),
       (shipping.floor ?? "").trim(),
       (shipping.apartment ?? "").trim(),
       deliveryType,
-      (shipping.agencyCode ?? "").trim(),
+      agencyCode,
+      provider.id,
       productType,
       now,
     ],
