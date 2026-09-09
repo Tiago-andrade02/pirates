@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { SearchIcon, CloseIcon } from "./icons";
@@ -31,15 +31,17 @@ export function NavSearch({
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const desktopInputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // true solo en el cliente (evita render del portal en SSR / hidratación).
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     return () => {
@@ -198,7 +200,7 @@ export function NavSearch({
         )}
       </button>
 
-      {mobileOpen && mounted && createPortal(
+      {mobileOpen && isMounted && createPortal(
         <div className="fixed inset-x-0 top-[64px] z-[110] animate-slide-down border-b border-line bg-background px-4 py-3 backdrop-blur-md sm:top-[68px] lg:hidden">
           <form onSubmit={onSubmit} className="relative" role="search">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
