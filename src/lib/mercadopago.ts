@@ -150,6 +150,10 @@ export interface CreatedPayment {
 
 // Crea un pago de Mercado Pago desde el backend (POST /v1/payments).
 // Debe usarse dentro de onsubmit del Payment Brick para cobrar tarjeta.
+// Reintenta SOLO errores transitorios (red o HTTP >= 500) hasta 3 veces con la
+// MISMA X-Idempotency-Key: si el primer intento llegó a MP, el reintento no
+// duplica el cargo (MP devuelve el mismo pago). Los 4xx (tarjeta rechazada,
+// token inválido, etc.) nunca se reintentan.
 export async function createPayment(
   input: CreatePaymentInput
 ): Promise<CreatedPayment> {
@@ -168,6 +172,28 @@ export async function createPayment(
     throw new Error("MERCADO_PAGO_ACCESS_TOKEN no configurado");
   }
 
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
+    }
+    try {
+      return await createPaymentOnce(input, token);
+    } catch (error) {
+      lastError = error;
+      const retryable =
+        error instanceof Error &&
+        (error as Error & { retryable?: boolean }).retryable === true;
+      if (!retryable) break;
+    }
+  }
+  throw lastError;
+}
+
+async function createPaymentOnce(
+  input: CreatePaymentInput,
+  token: string
+): Promise<CreatedPayment> {
   const body: Record<string, unknown> = {
     transaction_amount: input.transactionAmount,
     description: input.description,
@@ -204,16 +230,25 @@ export async function createPayment(
     console.log("[mercadopago/createPayment] payload final a /v1/payments:", safeBody);
   }
 
-  const res = await fetch(`${API_BASE}/v1/payments`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "X-Idempotency-Key": input.externalReference,
-    },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/v1/payments`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "X-Idempotency-Key": input.externalReference,
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch {
+    const err = new Error(
+      "Mercado Pago no respondió. Intentalo de nuevo."
+    ) as Error & { mpRaw?: string | null; retryable?: boolean };
+    err.retryable = true;
+    throw err;
+  }
 
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
@@ -247,8 +282,9 @@ export async function createPayment(
     // Mercado Pago: se devuelve un mensaje genérico para no exponer internos.
     const err = new Error(
       `Mercado Pago ${res.status}: ${res.statusText || "Error al procesar el pago"}`
-    ) as Error & { mpRaw?: string | null };
+    ) as Error & { mpRaw?: string | null; retryable?: boolean };
     err.mpRaw = extractSafe(data) ? JSON.stringify(extractSafe(data)) : null;
+    err.retryable = res.status >= 500;
     if (PAYMENT_DIAG && err.mpRaw) {
       console.log("[mercadopago/createPayment] body de error MP (solo campos seguros):", extractSafe(data));
     }

@@ -124,9 +124,22 @@ export async function POST(request: Request) {
 
     // Si el pago ya quedó aprobado, finalizamos la orden acá mismo (marca
     // 'pagado', descuenta stock y envía el email). Así la orden se genera
-    // aunque el webhook de Mercado Pago nunca llegue.
+    // aunque el webhook de Mercado Pago nunca llegue. Y asociamos el id del
+    // pago + la fecha de pago (idempotente; el webhook también lo hace si
+    // llega después).
     if (payment.status === "approved") {
       await finalizePaidOrderByCode(externalReference);
+      try {
+        await db.execute({
+          sql: "UPDATE orders SET mp_payment_id = COALESCE(mp_payment_id, ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
+          args: [String(payment.id), new Date().toISOString(), externalReference],
+        });
+      } catch (error) {
+        console.error(
+          "[mercadopago/payment] Error persistiendo mp_payment_id/paid_at",
+          error instanceof Error ? error.message : error
+        );
+      }
     }
 
     await recordPaymentDiagnostic({

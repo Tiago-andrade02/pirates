@@ -93,6 +93,8 @@ const SCHEMA = `
     shipped_at TEXT,
     shipping_label TEXT NOT NULL DEFAULT '',
     notified_at TEXT,
+    mp_payment_id TEXT NOT NULL DEFAULT '',
+    paid_at TEXT,
     created_at TEXT NOT NULL
   );
 
@@ -232,6 +234,13 @@ async function migrate(database: Client) {
 
   if (!orderColumns.some((c) => c.name === "notified_at")) {
     await database.execute("ALTER TABLE orders ADD COLUMN notified_at TEXT");
+  }
+
+  if (!orderColumns.some((c) => c.name === "mp_payment_id")) {
+    await database.executeMultiple(
+      `ALTER TABLE orders ADD COLUMN mp_payment_id TEXT NOT NULL DEFAULT '';
+       ALTER TABLE orders ADD COLUMN paid_at TEXT;`
+    );
   }
 
   const itemColumns = await tableColumns("supplier_purchase_items");

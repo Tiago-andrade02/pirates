@@ -112,5 +112,25 @@ export async function POST(request: Request) {
     );
   }
 
+  // Asocia el pago de MP a la orden (idempotente con COALESCE: el primer id
+  // gana, y paid_at se fija una sola vez). Es seguro que esto corra también
+  // en un webhook duplicado. Si el UPDATE falla, respondemos 502 para que MP
+  // reintente: finalize es idempotente, así que NO vuelve a descontar stock.
+  try {
+    await db.execute({
+      sql: "UPDATE orders SET mp_payment_id = COALESCE(mp_payment_id, ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
+      args: [String(payment.id), new Date().toISOString(), reference],
+    });
+  } catch (error) {
+    console.error(
+      "[webhook] Error persistiendo mp_payment_id/paid_at",
+      error instanceof Error ? error.message : error
+    );
+    return Response.json(
+      { ok: false, error: "No se pudo registrar el pago" },
+      { status: 502 }
+    );
+  }
+
   return Response.json({ ok: true });
 }
