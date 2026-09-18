@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -35,7 +36,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "pirates-cart";
 
 const EMPTY_ITEMS: CartItem[] = [];
-let items: CartItem[] = [];
+let items: CartItem[] = EMPTY_ITEMS;
 let loaded = false;
 const listeners = new Set<() => void>();
 
@@ -46,7 +47,7 @@ function ensureLoaded() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as CartItem[];
-      if (Array.isArray(parsed)) items = parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) items = parsed;
     }
   } catch {
     // ignore
@@ -70,7 +71,6 @@ function subscribe(listener: () => void): () => void {
 }
 
 function getSnapshot(): CartItem[] {
-  ensureLoaded();
   return items;
 }
 
@@ -80,6 +80,11 @@ function getServerSnapshot(): CartItem[] {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  useEffect(() => {
+    ensureLoaded();
+    emit();
+  }, []);
 
   const addItem = useCallback(
     (item: Omit<CartItem, "qty"> & { qty?: number }) => {
