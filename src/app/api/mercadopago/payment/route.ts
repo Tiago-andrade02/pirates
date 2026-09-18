@@ -131,7 +131,7 @@ export async function POST(request: Request) {
       await finalizePaidOrderByCode(externalReference);
       try {
         await db.execute({
-          sql: "UPDATE orders SET mp_payment_id = COALESCE(mp_payment_id, ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
+          sql: "UPDATE orders SET mp_payment_id = COALESCE(NULLIF(mp_payment_id, ''), ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
           args: [String(payment.id), new Date().toISOString(), externalReference],
         });
       } catch (error) {

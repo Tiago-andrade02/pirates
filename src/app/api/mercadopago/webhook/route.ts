@@ -112,13 +112,14 @@ export async function POST(request: Request) {
     );
   }
 
-  // Asocia el pago de MP a la orden (idempotente con COALESCE: el primer id
-  // gana, y paid_at se fija una sola vez). Es seguro que esto corra también
+  // Asocia el pago de MP a la orden (idempotente: el primer id gana y paid_at
+  // se fija una sola vez). NULLIF cubre la columna con DEFAULT '' de bases
+  // existentes: COALESCE sobre '' no la llenaría. Es seguro que corra también
   // en un webhook duplicado. Si el UPDATE falla, respondemos 502 para que MP
   // reintente: finalize es idempotente, así que NO vuelve a descontar stock.
   try {
     await db.execute({
-      sql: "UPDATE orders SET mp_payment_id = COALESCE(mp_payment_id, ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
+      sql: "UPDATE orders SET mp_payment_id = COALESCE(NULLIF(mp_payment_id, ''), ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
       args: [String(payment.id), new Date().toISOString(), reference],
     });
   } catch (error) {

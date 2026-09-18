@@ -93,7 +93,7 @@ const SCHEMA = `
     shipped_at TEXT,
     shipping_label TEXT NOT NULL DEFAULT '',
     notified_at TEXT,
-    mp_payment_id TEXT NOT NULL DEFAULT '',
+    mp_payment_id TEXT,
     paid_at TEXT,
     created_at TEXT NOT NULL
   );
@@ -238,7 +238,7 @@ async function migrate(database: Client) {
 
   if (!orderColumns.some((c) => c.name === "mp_payment_id")) {
     await database.executeMultiple(
-      `ALTER TABLE orders ADD COLUMN mp_payment_id TEXT NOT NULL DEFAULT '';
+      `ALTER TABLE orders ADD COLUMN mp_payment_id TEXT;
        ALTER TABLE orders ADD COLUMN paid_at TEXT;`
     );
   }
@@ -287,9 +287,9 @@ async function backfillPackageDefaults(database: Client) {
   );
 }
 
-async function seedIfEmpty(database: Client) {
+async function seedIfEmpty(database: Client): Promise<boolean> {
   const row = await database.execute("SELECT COUNT(*) AS count FROM perfumes");
-  if ((row.rows[0]?.count as number) > 0) return;
+  if ((row.rows[0]?.count as number) > 0) return false;
 
   const brandIds = new Map<string, number>();
   for (const brand of seed.brands) {
@@ -337,6 +337,7 @@ async function seedIfEmpty(database: Client) {
       ],
     });
   }
+  return true;
 }
 
 async function reconcilePrices(database: Client) {
@@ -355,9 +356,14 @@ async function ensureInit(db: Client) {
     initPromise = (async () => {
       await createSchema(db);
       await migrate(db);
-      await seedIfEmpty(db);
-      await reconcileStock(db);
-      await reconcilePrices(db);
+      const seeded = await seedIfEmpty(db);
+      // Los reconciles de stock/precios solo corren al sembrar una base nueva.
+      // Correrlos en cada init sobreescribía lo que el admin cargó (precios y
+      // stock por tamaño) en cada cold start / deploy: se "perdían" los datos.
+      if (seeded) {
+        await reconcileStock(db);
+        await reconcilePrices(db);
+      }
       await backfillPackageDefaults(db);
     })();
   }
