@@ -15,8 +15,16 @@ export function getPublicKey(): string {
   return process.env.MERCADO_PAGO_PUBLIC_KEY ?? "";
 }
 
+// En producción SOLO se acepta un token LIVE (APP_USR-). Un token de prueba
+// (TEST-) en prod es un error de configuración: cobraría con la cuenta sandbox
+// y rompería los pagos reales silenciosamente. En dev/test ambos se aceptan.
 export function hasCredentials(): boolean {
-  return getAccessToken().startsWith("TEST-") || getAccessToken().startsWith("APP_USR-");
+  const token = getAccessToken();
+  if (!token) return false;
+  if (process.env.NODE_ENV === "production") {
+    return token.startsWith("APP_USR-");
+  }
+  return token.startsWith("TEST-") || token.startsWith("APP_USR-");
 }
 
 export interface PreferenceItem {
@@ -70,6 +78,17 @@ export async function createPreference(
       external_reference: input.externalReference,
       back_urls: input.backUrls,
       auto_return: "approved",
+      // Checkout Pro ofrece por defecto TODOS los métodos de la cuenta. Se
+      // excluyen los offline (tickets/efectivo, cajeros y transferencia) para
+      // que, al redirigir, solo se vean métodos online (tarjetas + billetera).
+      // Las cuotas/promociones las determina y aplica Mercado Pago.
+      payment_methods: {
+        excluded_payment_types: [
+          { id: "ticket" },
+          { id: "atm" },
+          { id: "bank_transfer" },
+        ],
+      },
       notification_url: input.notificationUrl,
     }),
     cache: "no-store",

@@ -6,7 +6,7 @@ import { formatARS } from "@/lib/format";
 import { CartIcon, CreditCardIcon, TruckIcon, WhatsAppIcon } from "../icons";
 import { ProductImage } from "../ProductImage";
 
-export function CartView() {
+export function CartView({ freeShippingMin }: { freeShippingMin: number }) {
   const { items, setQty, removeItem, clear, subtotal, count } = useCart();
 
   if (items.length === 0) {
@@ -31,7 +31,7 @@ export function CartView() {
     );
   }
 
-  const shipping = subtotal >= 80000 ? 0 : null;
+  const shipping = subtotal >= freeShippingMin ? 0 : null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8 lg:py-10">
@@ -144,10 +144,10 @@ export function CartView() {
             </span>
           </div>
 
-          {subtotal < 80000 && (
+          {subtotal < freeShippingMin && (
             <p className="mt-3 flex items-start gap-2 rounded-lg border border-line bg-background p-2.5 text-[11px] text-muted sm:rounded-xl sm:text-xs">
               <TruckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
-              Te faltan {formatARS(80000 - subtotal)} para el envío gratis.
+              Te faltan {formatARS(freeShippingMin - subtotal)} para el envío gratis.
             </p>
           )}
 

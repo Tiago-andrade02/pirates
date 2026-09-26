@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CartView } from "@/components/cart/CartView";
+import { FREE_SHIPPING_MIN } from "@/lib/shipping";
 
 export const metadata: Metadata = {
   title: "Carrito",
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function CartPage() {
-  return <CartView />;
+  return <CartView freeShippingMin={FREE_SHIPPING_MIN} />;
 }

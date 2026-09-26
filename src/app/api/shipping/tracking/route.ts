@@ -1,6 +1,11 @@
 import { getDb } from "@/lib/db";
-import { getShippingProvider } from "@/lib/shipping";
+import { getShippingProvider, getShippingProviderById } from "@/lib/shipping";
+import type { ShippingProviderId } from "@/lib/shipping/types";
 import type { TrackingEvent } from "@/lib/types";
+import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
+
+const TRACKING_MAX_ATTEMPTS = 30;
+const TRACKING_WINDOW_MS = 60_000;
 
 function parseEvents(json: string): TrackingEvent[] {
   try {
@@ -12,6 +17,19 @@ function parseEvents(json: string): TrackingEvent[] {
 }
 
 export async function GET(request: Request) {
+  if (
+    !(await rateLimitConsume(
+      `tracking:${clientIp(request.headers)}`,
+      TRACKING_MAX_ATTEMPTS,
+      TRACKING_WINDOW_MS
+    ))
+  ) {
+    return Response.json(
+      { error: "Demasiadas solicitudes. Inténtalo en un minuto." },
+      { status: 429 }
+    );
+  }
+
   const url = new URL(request.url);
   const code = (url.searchParams.get("code") ?? "").trim();
   if (!code) {
@@ -49,10 +67,13 @@ export async function GET(request: Request) {
 
   let events: TrackingEvent[] = parseEvents(order.tracking_events);
 
-  // Consulta el estado REAL del envío en Correo Argentino cuando hay tracking.
+  // Consulta el estado REAL del envío en el proveedor cuando hay tracking.
+  // Usa el provider con el que se despachó el pedido (no el configurado hoy).
   if (order.tracking_number) {
     try {
-      const provider = getShippingProvider();
+      const provider = order.shipping_provider
+        ? getShippingProviderById(order.shipping_provider as ShippingProviderId)
+        : getShippingProvider();
       const result = await provider.getTracking(order.tracking_number);
       if (result.events.length > 0) {
         events = result.events;

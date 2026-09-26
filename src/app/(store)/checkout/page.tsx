@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { FREE_SHIPPING_MIN } from "@/lib/shipping/client";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatARS } from "@/lib/format";
-import { CartIcon, CreditCardIcon } from "@/components/icons";
+import { CartIcon, CreditCardIcon, WalletIcon } from "@/components/icons";
 import {
   ShippingForm,
   type ShippingSelection,
@@ -27,7 +28,9 @@ export default function CheckoutPage() {
     publicKey: string;
     code: string;
     amount: number;
+    initPoint: string;
   } | null>(null);
+  const [cardChosen, setCardChosen] = useState(false);
 
   const shippingCost = shipping?.price ?? 0;
   const total = subtotal + shippingCost;
@@ -81,6 +84,7 @@ export default function CheckoutPage() {
         publicKey?: string;
         code?: string;
         initPoint?: string;
+        sandboxInitPoint?: string;
         total?: number;
         error?: string;
       };
@@ -90,10 +94,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      // Si hay clave pública, renderizamos el pago embebido (Payment Brick).
-      // Si no, caemos al redirect clásico de Checkout Pro.
-      // El Brick de Mercado Pago requiere que el monto total (productos + envío)
-      // se pase como un number válido en `initialization.amount`.
+      // Tras crear el pedido se muestra un selector con dos opciones:
+      // - Tarjeta: Payment Brick embebido (cuotas que ofrezca Mercado Pago).
+      // - Mercado Pago: redirección a Checkout Pro (initPoint), donde MP
+      //   ofrece cuotas/promociones y el pedido se confirma con el webhook.
+      // El Brick requiere que el monto total llegue como number válido.
       const amount = Number(data.total);
       if (
         data.preferenceId &&
@@ -107,12 +112,15 @@ export default function CheckoutPage() {
           publicKey: data.publicKey,
           code: data.code,
           amount,
+          initPoint: data.initPoint || data.sandboxInitPoint || "",
         });
         setLoading(false);
+        setCardChosen(false);
         return;
       }
 
-      window.location.href = data.initPoint ?? "";
+      window.location.href = data.initPoint || data.sandboxInitPoint || "";
+      setLoading(false);
     } catch {
       setError("Ocurrió un error inesperado. Intentalo de nuevo.");
       setLoading(false);
@@ -192,7 +200,7 @@ export default function CheckoutPage() {
               qty: item.qty,
             }))}
             subtotal={subtotal}
-            freeShippingMin={80000}
+            freeShippingMin={FREE_SHIPPING_MIN}
             onChange={setShipping}
           />
 
@@ -203,20 +211,59 @@ export default function CheckoutPage() {
           )}
 
           {payment ? (
-            <section className="rounded-xl border border-line bg-surface p-3.5 sm:rounded-2xl sm:p-5">
-              <h2 className="font-serif text-base text-white sm:text-xl">Pago</h2>
-              <p className="mt-1 text-xs text-muted sm:text-sm">
-                Completá el pago de forma segura. Pedido:{" "}
-                <span className="font-semibold text-white">{payment.code}</span>
-              </p>
-              <div className="mt-4">
-                <PaymentBrick
-                  publicKey={payment.publicKey}
-                  externalReference={payment.code}
-                  amount={payment.amount}
-                />
-              </div>
-            </section>
+            cardChosen ? (
+              <section className="rounded-xl border border-line bg-surface p-3.5 sm:rounded-2xl sm:p-5">
+                <h2 className="font-serif text-base text-white sm:text-xl">Pago con tarjeta</h2>
+                <p className="mt-1 text-xs text-muted sm:text-sm">
+                  Completá el pago de forma segura. Pedido:{" "}
+                  <span className="font-semibold text-white">{payment.code}</span>
+                </p>
+                <div className="mt-4">
+                  <PaymentBrick
+                    publicKey={payment.publicKey}
+                    externalReference={payment.code}
+                    amount={payment.amount}
+                  />
+                </div>
+              </section>
+            ) : (
+              <section className="rounded-xl border border-line bg-surface p-3.5 sm:rounded-2xl sm:p-5">
+                <h2 className="font-serif text-base text-white sm:text-xl">¿Cómo querés pagar?</h2>
+                <p className="mt-1 text-xs text-muted sm:text-sm">
+                  Pedido:{" "}
+                  <span className="font-semibold text-white">{payment.code}</span>
+                </p>
+                <div className="mt-4 grid gap-2.5 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCardChosen(true)}
+                    className="flex w-full flex-col items-start gap-0.5 rounded-xl border border-white bg-white px-4 py-3.5 text-left transition-colors hover:bg-neutral-100 sm:px-5"
+                  >
+                    <span className="flex items-center gap-2 text-sm font-semibold text-black">
+                      <CreditCardIcon className="h-5 w-5" />
+                      Pagar con tarjeta
+                    </span>
+                    <span className="text-[11px] text-black/60">
+                      Débito o crédito · Elegí las cuotas que te ofrezca Mercado Pago
+                    </span>
+                  </button>
+                  {payment.initPoint && (
+                    <a
+                      href={payment.initPoint}
+                      className="flex w-full flex-col items-start gap-0.5 rounded-xl border border-line bg-surface-2 px-4 py-3.5 text-left text-white transition-colors hover:border-white/40 sm:px-5"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold">
+                        <WalletIcon className="h-5 w-5" />
+                        Pagar con Mercado Pago
+                      </span>
+                      <span className="text-[11px] text-muted">
+                        Te redirigimos a Mercado Pago para elegir cuotas y promociones
+                      </span>
+                    </a>
+                  )}
+                </div>
+              </section>
+            )
           ) : (
             <>
               <button
@@ -228,7 +275,7 @@ export default function CheckoutPage() {
                 <CreditCardIcon className="h-4 w-4" />
               </button>
               <p className="text-center text-[11px] text-faint sm:text-xs">
-                Serás redirigido a Mercado Pago para completar el pago de forma segura.
+                Al continuar elegís pagar con tu tarjeta o redirigiéndote a Mercado Pago.
               </p>
             </>
           )}

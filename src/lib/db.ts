@@ -7,6 +7,25 @@ function getDbSync(): Client {
   if (!client) {
     const url = process.env.TURSO_DATABASE_URL || "file:./data/pirates.db";
     const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
+    // Guard Etapa E — FAIL-CLOSED en producción:
+    //  • NODE_ENV=production EXIGE TURSO_DATABASE_URL + TURSO_AUTH_TOKEN. Si
+    //    falta cualquiera, NO se cae a SQLite local (una BD local en prod
+    //    perde datos y se comporta distinto que Turso). Se lanza un error
+    //    claro y controlado ANTES de crear el client.
+    //  • El error jamás incluye el token ni valores de env.
+    //  • En desarrollo se conserva el fallback a SQLite local (archivo)
+    //    cuando no hay Turso configurado, para no romper el flujo local.
+    //  • La conexión Turso real (createClient + credenciales) NO se toca.
+    if (process.env.NODE_ENV === "production") {
+      const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = process.env;
+      if (!TURSO_DATABASE_URL || !TURSO_AUTH_TOKEN) {
+        throw new Error(
+          "TURSO_DATABASE_URL y TURSO_AUTH_TOKEN son obligatorios en producción. " +
+            "Configuralos en el entorno (ver .env.example). " +
+            "No se puede usar una base local en producción."
+        );
+      }
+    }
     client = createClient({ url, authToken });
   }
   return client;

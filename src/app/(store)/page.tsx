@@ -22,7 +22,7 @@ const BENEFITS = [
   {
     icon: CreditCardIcon,
     title: "Mercado Pago",
-    description: "Tarjetas, efectivo y cuotas con la seguridad de Mercado Pago.",
+    description: "Tarjetas y cuotas con la seguridad de Mercado Pago.",
   },
   {
     icon: ShieldIcon,

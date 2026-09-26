@@ -22,12 +22,31 @@ export default async function AdminStockPage({
         title="Stock"
         description={`${lowStock.length} productos bajo mínimos · ${outOfStock.length} agotados`}
       >
-        <form action={restockLow}>
+        <form action={restockLow} className="flex flex-wrap items-end gap-3">
+          {[
+            { k: "30", label: "Reponer 30 ml" },
+            { k: "50", label: "Reponer 50 ml" },
+            { k: "100", label: "Reponer 100 ml" },
+          ].map((size) => (
+            <label key={size.k} className="block">
+              <span className="mb-1 block text-center text-[10px] font-semibold uppercase text-faint">
+                {size.label}
+              </span>
+              <input
+                type="number"
+                name={`rep_${size.k}`}
+                min="0"
+                step="1"
+                defaultValue={0}
+                className="w-16 rounded-lg border border-line bg-background px-2 py-1.5 text-center text-sm text-white focus:border-gold focus:outline-none"
+              />
+            </label>
+          ))}
           <button
             type="submit"
             className="rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold transition hover:bg-gold/20"
           >
-            Reponer stock bajo (→ 20)
+            Reponer stock bajo
           </button>
         </form>
       </PageHeader>

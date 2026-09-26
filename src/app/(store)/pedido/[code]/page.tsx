@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getOrderByCode } from "@/lib/admin-data";
 import { formatARS, formatNumber } from "@/lib/format";
@@ -17,6 +18,14 @@ import {
   ArrowRightIcon,
   WhatsAppIcon,
 } from "@/components/icons";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
+};
 
 const CONTACT_MAIL = "pirates.arg@hotmail.com";
 const CONTACT_WHATSAPP = "https://wa.me/5491172919482";

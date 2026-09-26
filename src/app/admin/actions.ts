@@ -586,17 +586,36 @@ export async function deleteExpense(formData: FormData) {
   redirect("/admin/caja?ok=borrado");
 }
 
-export async function restockLow() {
+export async function restockLow(formData: FormData) {
   await requireAdmin();
   const db = await getDb();
+
+  const r30 = int(formData.get("rep_30")) ?? 0;
+  const r50 = int(formData.get("rep_50")) ?? 0;
+  const r100 = int(formData.get("rep_100")) ?? 0;
+  if (r30 < 0 || r50 < 0 || r100 < 0) redirect("/admin/stock");
+  if (r30 + r50 + r100 === 0) redirect("/admin/stock");
+
   const idsResult = await db.execute({
     sql: `SELECT id FROM perfumes WHERE stock <= ?`,
     args: [LOW_STOCK_THRESHOLD],
   });
   const ids = idsResult.rows as unknown as { id: number }[];
-  for (const row of ids) {
-    await db.execute({ sql: "UPDATE perfumes SET stock = ? WHERE id = ?", args: [LOW_STOCK_THRESHOLD + 10, row.id] });
+
+  await db.executeMultiple("BEGIN");
+  try {
+    for (const row of ids) {
+      await db.execute({
+        sql: "UPDATE perfumes SET stock_30 = stock_30 + ?, stock_50 = stock_50 + ?, stock_100 = stock_100 + ?, stock = (stock_30 + ?) + (stock_50 + ?) + (stock_100 + ?) WHERE id = ?",
+        args: [r30, r50, r100, r30, r50, r100, row.id],
+      });
+    }
+    await db.executeMultiple("COMMIT");
+  } catch (error) {
+    await db.executeMultiple("ROLLBACK");
+    throw error;
   }
+
   revalidatePath("/admin/stock");
   revalidatePath("/admin/productos");
   redirect("/admin/stock?ok=restock");

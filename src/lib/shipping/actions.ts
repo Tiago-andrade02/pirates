@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db";
 import { isAdmin } from "@/app/admin/actions";
-import { getShippingProvider } from "./index";
+import { getShippingProvider, getShippingProviderById } from "./index";
 import { computePackageForItems } from "./packages";
 import { provinceCodeFor } from "./provinces";
+import type { ShippingProvider, ShippingProviderId } from "./types";
 import type { DeliveryType, TrackingEvent } from "@/lib/types";
 
 interface OrderRow {
@@ -70,6 +71,15 @@ function orderPath(id: number) {
   revalidatePath("/admin");
 }
 
+// Resuelve el provider con el que se despachó el pedido (si ya hay uno) para
+// operar tracking/cancelación de forma estable aunque la config cambie.
+function providerFor(order: { shipping_provider: string }): ShippingProvider {
+  if (order.shipping_provider) {
+    return getShippingProviderById(order.shipping_provider as ShippingProviderId);
+  }
+  return getShippingProvider();
+}
+
 // Genera el envío en Correo Argentino una vez confirmado el pago.
 // Idempotente: si el pedido ya fue despachado (shipping_provider set) no se
 // vuelve a llamar a la API. Adicionalmente Correo Argentino rechaza el
@@ -124,7 +134,14 @@ export async function createShipment(formData: FormData) {
   const customer = customerResult.rows[0] as unknown as { name: string; email: string | null; phone: string | null } | undefined;
 
   const deliveryType: DeliveryType = order.delivery_type === "S" ? "S" : "D";
-  const provider = getShippingProvider();
+
+  let provider;
+  try {
+    provider = getShippingProvider();
+  } catch (error) {
+    logError("createShipment/provider", error);
+    redirect(`/admin/pedidos?error=despacho-fallido&id=${id}`);
+  }
 
   let result;
   try {
@@ -190,15 +207,22 @@ export async function refreshTracking(formData: FormData) {
     redirect(`/admin/pedidos?error=sin-tracking&id=${id}`);
   }
 
-  const provider = getShippingProvider();
-  let events: TrackingEvent[] = parseEvents(order.tracking_events);
+  let provider;
   try {
-    const result = await provider.getTracking(order.tracking_number);
-    if (result.events.length > 0) {
-      events = result.events;
-    }
+    provider = providerFor(order);
   } catch (error) {
-    logError("refreshTracking", error);
+    logError("refreshTracking/provider", error);
+  }
+  let events: TrackingEvent[] = parseEvents(order.tracking_events);
+  if (provider) {
+    try {
+      const result = await provider.getTracking(order.tracking_number);
+      if (result.events.length > 0) {
+        events = result.events;
+      }
+    } catch (error) {
+      logError("refreshTracking", error);
+    }
   }
 
   const db = await getDb();
@@ -242,7 +266,14 @@ export async function cancelShipment(formData: FormData) {
   const order = await getOrder(id);
   if (!order) redirect("/admin/pedidos");
 
-  const provider = getShippingProvider();
+  let provider;
+  try {
+    provider = providerFor(order);
+  } catch (error) {
+    logError("cancelShipment/provider", error);
+    redirect(`/admin/pedidos?error=cancelacion-fallida&id=${id}`);
+  }
+
   if (provider.cancelShipment && order.tracking_number) {
     try {
       await provider.cancelShipment(order.tracking_number);

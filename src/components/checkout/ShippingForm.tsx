@@ -231,7 +231,7 @@ export function ShippingForm({
     <section className="rounded-2xl border border-line bg-surface p-6">
       <h2 className="font-serif text-xl text-white">Envío</h2>
       <p className="mt-1 text-xs text-muted">
-        Cotización real de Correo Argentino según tu código postal y el peso del pedido.
+        Cotización del envío según tu código postal y el peso del pedido.
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">

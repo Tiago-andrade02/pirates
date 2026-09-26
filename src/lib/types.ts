@@ -24,6 +24,12 @@ export interface Prices {
   "100": number | null;
 }
 
+export interface Stocks {
+  "30": number;
+  "50": number;
+  "100": number;
+}
+
 export interface Perfume {
   id: number;
   slug: string;
@@ -35,6 +41,7 @@ export interface Perfume {
   occasions: Occasion[];
   prices: Prices;
   stock: number;
+  stockBySize: Stocks;
   description: string;
   notes: {
     top: string[];

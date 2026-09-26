@@ -18,6 +18,15 @@ const SIZE_PRICE: Record<string, "price_30" | "price_50" | "price_100" | null> =
   "100": "price_100",
 };
 
+// Whitelist de tallas para el stock por presentación. Los únicos valores válidos
+// son 30/50/100 (como parseSize en admin), de modo que la columna SQL se arma
+// solo desde el mapa, nunca desde el input del cliente.
+const SIZE_STOCK: Record<string, "stock_30" | "stock_50" | "stock_100" | null> = {
+  "30": "stock_30",
+  "50": "stock_50",
+  "100": "stock_100",
+};
+
 // Límite de pedidos por IP: evita que un bot genere órdenes y preferencias
 // de pago en bucle.
 const CHECKOUT_MAX_ATTEMPTS = 20;
@@ -78,6 +87,9 @@ type PerfumeRow = {
   price_50: number | null;
   price_100: number | null;
   stock: number;
+  stock_30: number;
+  stock_50: number;
+  stock_100: number;
 };
 
 export async function POST(request: Request) {
@@ -228,7 +240,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "Cantidad inválida" }, { status: 400 });
     }
     const perfumeResult = await db.execute({
-      sql: "SELECT id, name, price_30, price_50, price_100, stock FROM perfumes WHERE slug = ?",
+      sql: "SELECT id, name, price_30, price_50, price_100, stock, stock_30, stock_50, stock_100 FROM perfumes WHERE slug = ?",
       args: [item.slug],
     });
     const perfume = perfumeResult.rows[0] as unknown as PerfumeRow | undefined;
@@ -242,6 +254,17 @@ export async function POST(request: Request) {
     }
     if (perfume.stock < qty) {
       return Response.json({ error: `No hay stock suficiente de ${perfume.name}` }, { status: 400 });
+    }
+    // Disponibilidad por presentación: la talla EXACTA pedida debe alcanzar,
+    // no solo el stock total. Solo se arma la columna desde SIZE_STOCK (whitelist),
+    // nunca desde el input del cliente. Evita que se pague por una variante agotada.
+    const sizeStockCol = SIZE_STOCK[String(item.size)];
+    const sizeStock = sizeStockCol ? perfume[sizeStockCol] : null;
+    if (sizeStock === null || sizeStock < qty) {
+      return Response.json(
+        { error: `No hay stock de ${perfume.name} en ${item.size} ml. Elegí otra presentación.` },
+        { status: 400 }
+      );
     }
     orderItems.push({
       perfumeId: perfume.id,
@@ -309,7 +332,12 @@ export async function POST(request: Request) {
     if (shippingCost > 0) {
       items.push({
         id: "envio",
-        title: provider.id === "flat_rate" ? "Envío" : "Envío Correo Argentino",
+        title:
+          provider.id === "paq_ar"
+            ? "Envío PAQ.AR"
+            : provider.id === "correo_argentino"
+              ? "Envío Correo Argentino"
+              : "Envío",
         quantity: 1,
         unit_price: shippingCost,
       });

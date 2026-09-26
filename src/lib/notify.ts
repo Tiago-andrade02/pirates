@@ -5,6 +5,19 @@ function money(value: number): string {
   return "$" + Math.round(value).toLocaleString("es-AR");
 }
 
+// Escapa HTML en valores controlados por el usuario (nombre, tel/email,
+// provincia, dirección, tamaños). Sin esto, un dato tipo "<img src=x onerror=...>"
+// o "A&B" en línea de un pedido se inyecta como HTML en el correo de
+// notificación (HTML injection expuesta al admin que recibe el email).
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function deliveryLabel(order: Order): string {
   return order.deliveryType === "S"
     ? `Retiro en sucursal (${order.agencyCode || "—"})`
@@ -43,12 +56,12 @@ export function orderEmailText(order: Order): string {
 }
 
 export function orderEmailHtml(order: Order): string {
-  const rows = order.items
+      const rows = order.items
     .map(
       (i) => `
       <tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${i.name}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${i.size ? `${i.size} ml` : "—"}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${escapeHtml(i.name)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${i.size ? `${escapeHtml(String(i.size))} ml` : "—"}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${i.qty}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${money(i.price)}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:600;">${money(i.price * i.qty)}</td>
@@ -63,11 +76,11 @@ export function orderEmailHtml(order: Order): string {
 
       <h3 style="margin:16px 0 6px;font-size:14px;text-transform:uppercase;color:#555;">Cliente</h3>
       <table style="font-size:14px;border-collapse:collapse;">
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Nombre</td><td style="font-weight:600;">${order.customerName}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Teléfono</td><td>${order.customerPhone || "—"}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Email</td><td>${order.customerEmail || "—"}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Provincia</td><td>${order.province || "—"}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Envío</td><td>${deliveryLabel(order)}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Nombre</td><td style="font-weight:600;">${escapeHtml(order.customerName)}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Teléfono</td><td>${escapeHtml(order.customerPhone || "—")}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Email</td><td>${escapeHtml(order.customerEmail || "—")}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Provincia</td><td>${escapeHtml(order.province || "—")}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Envío</td><td>${escapeHtml(deliveryLabel(order))}</td></tr>
       </table>
 
       <h3 style="margin:20px 0 6px;font-size:14px;text-transform:uppercase;color:#555;">Productos</h3>

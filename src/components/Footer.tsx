@@ -17,9 +17,7 @@ const CATEGORIES = [
 ];
 
 const PAYMENT_METHODS = [
-  "MercadoPago",
-  "Transferencia",
-  "Efectivo",
+  "Mercado Pago",
   "Débito",
   "Crédito",
 ];
