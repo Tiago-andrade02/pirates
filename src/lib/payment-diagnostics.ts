@@ -6,11 +6,15 @@ export interface PaymentDiagnosticInput {
   paymentMethodId: string;
   installments: string;
   mpResult: string;
+  // Codigo generico del fallo (por ejemplo "http_400"). NUNCA un mensaje
+  // libre de Mercado Pago: puede contener ultimos 4 de tarjeta, DNI o nombre.
   mpError: string;
-  mpRaw?: string;
 }
 
-// Registra un diagnóstico de pago SIN datos sensibles (ni token, CVV, email ni DNI).
+// Registra un diagnóstico de pago SOLO con campos estructurados: referencia del
+// pedido, metodo, tipo, cuotas, resultado y un codigo de error generico. No se
+// persiste mp_raw (respuesta cruda de MP) ni ningun texto libre: la columna se
+// deja vacia a proposito para no volver a filtrar PII en la base.
 export async function recordPaymentDiagnostic(
   input: PaymentDiagnosticInput
 ): Promise<void> {
@@ -27,7 +31,7 @@ export async function recordPaymentDiagnostic(
         input.installments,
         input.mpResult,
         input.mpError,
-        input.mpRaw ?? "",
+        "",
         new Date().toISOString(),
       ],
     });

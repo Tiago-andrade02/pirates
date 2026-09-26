@@ -95,20 +95,15 @@ export async function createPreference(
   });
 
   if (!res.ok) {
-    const body = await res.text();
-    let msg = `Mercado Pago ${res.status}: Error desconocido`;
-    try {
-      const parsed = JSON.parse(body) as Record<string, unknown>;
-      msg =
-        typeof parsed.message === "string" && parsed.message
-          ? `Mercado Pago ${res.status}: ${parsed.message.slice(0, 200)}`
-          : typeof parsed.error_description === "string" && parsed.error_description
-            ? `Mercado Pago ${res.status}: ${parsed.error_description.slice(0, 200)}`
-            : msg;
-    } catch {
-      // JSON inválido: usar mensaje genérico sin exponer el body crudo.
-    }
-    throw new Error(msg);
+    // No se propaga el cuerpo de respuesta de Mercado Pago: sus campos
+    // message/error_description son texto libre que puede incluir ultimos 4 de
+    // tarjeta, DNI o nombre del titular. Se propaga solo el estado HTTP como
+    // codigo generico, que es lo unico accionable desde el checkout.
+    const err = new Error(`Mercado Pago http_${res.status}`) as Error & {
+      mpStatus?: number;
+    };
+    err.mpStatus = res.status;
+    throw err;
   }
 
   const data = (await res.json()) as {
@@ -140,8 +135,14 @@ export async function getPayment(paymentId: string): Promise<MercadoPagoPayment>
   });
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Mercado Pago ${res.status}: ${body}`);
+    // Igual que en createPreference: no se propaga el cuerpo de la respuesta.
+    // Este error lo consume el webhook, que lo loguea, asi que un body crudo
+    // de MP terminaria en los logs con posible PII del pagador.
+    const err = new Error(`Mercado Pago http_${res.status}`) as Error & {
+      mpStatus?: number;
+    };
+    err.mpStatus = res.status;
+    throw err;
   }
 
   return (await res.json()) as MercadoPagoPayment;
@@ -179,11 +180,11 @@ export async function createPayment(
   const token = getAccessToken();
 
   if (PAYMENT_DIAG) {
-    console.log("[mercadopago/createPayment] diag access_token:", {
-      existe: token.length > 0,
-      largo: token.length,
-      primeros8: token.length >= 8 ? token.slice(0, 8) : "(menor a 8)",
-      ultimos4: token.length >= 4 ? token.slice(-4) : "(menor a 4)",
+    // Solo se informa si el token esta presente. Nunca se registran sus
+    // caracteres (ni total, ni primeros, ni ultimos): cualquier fragmento de
+    // un secreto en logs queda expuesto a quien tenga acceso al log.
+    console.log("[mercadopago/createPayment] credenciales:", {
+      access_token_configurado: token.length > 0,
     });
   }
 
@@ -232,21 +233,18 @@ async function createPaymentOnce(
   if (input.issuerId) body.issuer_id = input.issuerId;
 
   if (PAYMENT_DIAG) {
-    const safeBody: Record<string, unknown> = { ...body };
-    if (typeof safeBody.payer === "object" && safeBody.payer !== null) {
-      const p = safeBody.payer as Record<string, unknown>;
-      safeBody.payer = {
-        hasEmail: typeof p.email === "string" && p.email.length > 0,
-        hasIdentification:
-          !!p.identification &&
-          typeof p.identification === "object" &&
-          Object.keys(p.identification as object).length > 0,
-      };
-    }
-    if (typeof safeBody.token === "string" && safeBody.token) {
-      safeBody.token = `••••${(safeBody.token as string).slice(-4)}`;
-    }
-    console.log("[mercadopago/createPayment] payload final a /v1/payments:", safeBody);
+    // Whitelist minima de campos ESTRUCTURADOS. No se copia el body ni el
+    // payer: description puede contener texto del pedido y el token de tarjeta
+    // es un secreto de un solo uso. Solo interesan el monto y como se paga.
+    console.log("[mercadopago/createPayment] payload a /v1/payments:", {
+      transaction_amount: body.transaction_amount,
+      payment_method_id: body.payment_method_id ?? null,
+      payment_type_id: body.payment_type_id ?? null,
+      installments: body.installments ?? null,
+      issuer_id: body.issuer_id ?? null,
+      token_enviado: typeof body.token === "string" && !!body.token,
+      payer_enviado: typeof body.payer === "object" && body.payer !== null,
+    });
   }
 
   let res: Response;
@@ -271,41 +269,45 @@ async function createPaymentOnce(
 
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
-  // Extrae SOLO campos seguros del body de error de Mercado Pago (status,
-  // error, message, status_detail, cause[].code/description) para diagnóstico.
-  // NUNCA se capturan token, public_key, payer, email ni DNI (whitelist).
+  // Resumen ESTRUCTURADO del fallo. Solo se conservan identificadores y codigos
+  // de Mercado Pago: NUNCA texto libre (message, error_description, cause
+  // description), porque MP suele incluir ultimos 4 de tarjeta, DNI o nombre del
+  // titular en esos campos. Tampoco se capturan token, public_key ni payer.
   const extractSafe = (raw: Record<string, unknown>): Record<string, unknown> | null => {
     if (!raw || typeof raw !== "object") return null;
     const safe: Record<string, unknown> = {};
-    for (const k of ["status", "error", "message", "status_detail", "error_detail", "id", "error_description"]) {
+    for (const k of ["status", "id"]) {
       const v = raw[k];
       if (v !== undefined && v !== null) safe[k] = typeof v === "string" ? v : String(v);
     }
     if (Array.isArray(raw.cause)) {
-      safe.cause = raw.cause
+      const codes = raw.cause
         .map((c) => {
           if (!c || typeof c !== "object") return null;
-          const cc = c as Record<string, unknown>;
-          const out: Record<string, unknown> = {};
-          if (cc.code !== undefined && cc.code !== null) out.code = cc.code;
-          if (cc.description !== undefined && cc.description !== null) out.description = String(cc.description);
-          return out;
+          const code = (c as Record<string, unknown>).code;
+          return typeof code === "string" ? code : null;
         })
-        .filter((c) => c !== null);
+        .filter((c): c is string => c !== null);
+      if (codes.length) safe.cause_codes = [...new Set(codes)];
     }
     return Object.keys(safe).length ? safe : null;
   };
 
   if (!res.ok || !data.id) {
     // El mensaje que llega al cliente NO incluye el detalle crudo del error de
-    // Mercado Pago: se devuelve un mensaje genérico para no exponer internos.
+    // Mercado Pago: se devuelve un mensaje generico para no exponer internos.
     const err = new Error(
       `Mercado Pago ${res.status}: ${res.statusText || "Error al procesar el pago"}`
-    ) as Error & { mpRaw?: string | null; retryable?: boolean };
+    ) as Error & { mpRaw?: string | null; mpStatus?: number; retryable?: boolean };
+    err.mpStatus = res.status;
     err.mpRaw = extractSafe(data) ? JSON.stringify(extractSafe(data)) : null;
     err.retryable = res.status >= 500;
-    if (PAYMENT_DIAG && err.mpRaw) {
-      console.log("[mercadopago/createPayment] body de error MP (solo campos seguros):", extractSafe(data));
+    if (PAYMENT_DIAG) {
+      console.log("[mercadopago/createPayment] fallo en /v1/payments:", {
+        http_status: res.status,
+        retryable: err.retryable,
+        resumen: extractSafe(data),
+      });
     }
     throw err;
   }

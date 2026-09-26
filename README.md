@@ -55,6 +55,27 @@ hardcodeada en código. Para arrancar un entorno nuevo:
 | `MERCADO_PAGO_WEBHOOK_SECRET` | Firma para validar webhooks de Mercado Pago. |
 | `ADMIN_PASSWORD` | Panel de administración. |
 
+### Diagnóstico de pagos — solo local
+
+`ENABLE_PAYMENT_DIAGNOSTICS` activa un log detallado en `stdout` de cada intento
+de pago. Está pensado **exclusivamente para desarrollo local**.
+
+Cuando vale `true` se registra un resumen **estructurado**: monto, método de
+pago, tipo, cuotas, si se envió token de tarjeta y los **códigos** de error de
+Mercado Pago. Por diseño **no** se registra:
+
+- el `MERCADO_PAGO_ACCESS_TOKEN` (ni total, ni fragmentos, ni fingerprint)
+- el token de tarjeta ni datos del pagador (email, DNI, nombre)
+- el cuerpo crudo de la respuesta de Mercado Pago
+- ningún texto libre: el detalle de errores se guarda en Turso solo como código
+  genérico (`http_400`, `http_500`, …) en `payment_diagnostics.mp_error`
+
+El código además exige `NODE_ENV !== "production"`, así que en Vercel el flag
+queda anulado. Aun así, **no lo actives en Vercel** (ni en producción ni en
+preview): dejarlo en `false` es la garantía explícita. Para diagnóstico puntual
+en un entorno remoto, usá el endpoint protegido `GET /api/mercadopago/diagnostics`
+(header `x-diagnostic-key`) en lugar de activar el flag.
+
 ### "Envío gratis" — una sola fuente
 
 El mínimo para envío gratis NO está hardcodeado en el frontend. La fuente

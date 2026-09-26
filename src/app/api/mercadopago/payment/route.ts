@@ -160,19 +160,23 @@ export async function POST(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Error al procesar el pago en Mercado Pago";
-    const mpRaw =
-      error instanceof Error && (error as Error & { mpRaw?: string | null }).mpRaw
-        ? (error as Error & { mpRaw?: string | null }).mpRaw!
+    // Se registra un codigo generico del status HTTP, no el mensaje de MP: el
+    // texto libre puede incluir ultimos 4 de tarjeta, DNI o nombre del titular.
+    const mpStatus =
+      error instanceof Error && typeof (error as Error & { mpStatus?: number }).mpStatus === "number"
+        ? (error as Error & { mpStatus?: number }).mpStatus!
         : undefined;
-    console.error("[mercadopago/payment]", message);
+    console.error("[mercadopago/payment] fallo:", {
+      externalReference,
+      http_status: mpStatus ?? null,
+    });
     await recordPaymentDiagnostic({
       externalReference,
       paymentTypeId,
       paymentMethodId,
       installments: String(formData.installments ?? ""),
       mpResult: "error",
-      mpError: message,
-      mpRaw,
+      mpError: mpStatus ? `http_${mpStatus}` : "http_unknown",
     });
     return Response.json({ error: message }, { status: 500 });
   }
