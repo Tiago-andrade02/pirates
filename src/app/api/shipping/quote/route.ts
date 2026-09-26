@@ -1,5 +1,8 @@
 import { computePackageForItems } from "@/lib/shipping/packages";
-import { getShippingProvider } from "@/lib/shipping";
+import {
+  getShippingProviderForOrder,
+  CUSTOMER_SHIPPING_COST,
+} from "@/lib/shipping";
 import { isValidPostalCode, provinceCodeFor } from "@/lib/shipping/provinces";
 import type { QuoteOption, ShippingProvider } from "@/lib/shipping/types";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
@@ -93,7 +96,10 @@ export async function POST(request: Request) {
   let provider: ShippingProvider;
   let options: QuoteOption[];
   try {
-    provider = getShippingProvider();
+    // Tolerante a falta de credenciales: en el lanzamiento el envío es gratis,
+    // así que la cotización NO determina el precio y un provider sin
+    // credenciales no puede impedir agregar al carrito.
+    provider = getShippingProviderForOrder();
     options = await provider.quote({
       postalCodeDestination: postalCode,
       provinceCode,
@@ -115,8 +121,13 @@ export async function POST(request: Request) {
     );
   }
 
+  // El precio al cliente es 0 sin importar la cotización: se fuerza acá para
+  // que el frontend nunca muestre un cargo, aunque el provider devuelva precio.
+  // El precio real que se cobra lo recalcula el backend en /api/checkout.
+  const freeOptions = options.map((o) => ({ ...o, price: CUSTOMER_SHIPPING_COST }));
+
   return Response.json({
-    options,
+    options: freeOptions,
     provider: provider.id,
     package: {
       weightGrams: pkg.weightGrams,
@@ -124,6 +135,5 @@ export async function POST(request: Request) {
       widthCm: pkg.widthCm,
       heightCm: pkg.heightCm,
     },
-    freeShippingMin: Number(process.env.SHIPPING_FREE_MIN ?? 80000),
   });
 }

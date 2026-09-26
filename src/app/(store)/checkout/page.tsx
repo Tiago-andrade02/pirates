@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { FREE_SHIPPING_MIN } from "@/lib/shipping/client";
 import { useCart } from "@/components/cart/CartProvider";
 import { formatARS } from "@/lib/format";
 import { CartIcon, CreditCardIcon, WalletIcon } from "@/components/icons";
@@ -39,7 +38,7 @@ export default function CheckoutPage() {
     event.preventDefault();
     setError(null);
     if (!shipping) {
-      setError("Completá provincia y código postal para calcular el envío.");
+      setError("Completá provincia y código postal para elegir la entrega.");
       return;
     }
     if (shipping.deliveryType === "S" && !shipping.agencyCode) {
@@ -199,8 +198,6 @@ export default function CheckoutPage() {
               size: item.size,
               qty: item.qty,
             }))}
-            subtotal={subtotal}
-            freeShippingMin={FREE_SHIPPING_MIN}
             onChange={setShipping}
           />
 

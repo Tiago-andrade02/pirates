@@ -13,7 +13,6 @@ interface AddToCartProps {
   image: string;
   prices: Prices;
   stockBySize: Stocks;
-  freeShippingMin: number;
 }
 
 const SIZES: { key: SizeKey; label: string }[] = [
@@ -29,7 +28,6 @@ export function AddToCart({
   image,
   prices,
   stockBySize,
-  freeShippingMin,
 }: AddToCartProps) {
   const { addItem } = useCart();
   const [size, setSize] = useState<SizeKey | null>(
@@ -196,23 +194,14 @@ export function AddToCart({
           : `${currentStock} ${currentStock === 1 ? "unidad" : "unidades"} · Envío a todo el país`}
       </p>
 
-      {!outOfStock && price !== null && (() => {
-        const lineTotal = price * qty;
-        const freeShipping = lineTotal >= freeShippingMin;
-        const missing = Math.max(0, freeShippingMin - lineTotal);
-        return (
-          <p className="mt-1.5 flex items-center gap-2 text-[11px] sm:text-xs">
-            <TruckIcon className="h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
-            {freeShipping ? (
-              <span className="font-medium text-emerald-400">Envío gratis</span>
-            ) : (
-              <span className="text-muted">
-                Te faltan {formatARS(missing)} para envío gratis
-              </span>
-            )}
-          </p>
-        );
-      })()}
+      {!outOfStock && price !== null && (
+        <p className="mt-1.5 flex items-center gap-2 text-[11px] sm:text-xs">
+          <TruckIcon className="h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
+          <span className="font-medium text-emerald-400">
+            Envío gratis a todo el país
+          </span>
+        </p>
+      )}
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { formatARS } from "@/lib/format";
 import { PROVINCES, isValidPostalCode } from "@/lib/shipping/provinces";
 import { StoreIcon, TruckIcon, CheckIcon } from "@/components/icons";
 
@@ -18,7 +17,6 @@ export interface ShippingSelection {
   service: string;
   productName: string;
   price: number;
-  rawPrice: number;
   deliveryTimeMin: string | null;
   deliveryTimeMax: string | null;
 }
@@ -46,20 +44,13 @@ interface Agency {
 
 interface ShippingFormProps {
   items: { slug: string; size: string; qty: number }[];
-  subtotal: number;
-  freeShippingMin: number;
   onChange: (selection: ShippingSelection | null) => void;
 }
 
 const inputCls =
   "w-full rounded-xl border border-line bg-background px-4 py-3 text-sm text-white placeholder:text-faint outline-none transition-colors focus:border-white/40";
 
-export function ShippingForm({
-  items,
-  subtotal,
-  freeShippingMin,
-  onChange,
-}: ShippingFormProps) {
+export function ShippingForm({ items, onChange }: ShippingFormProps) {
   const [province, setProvince] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [locality, setLocality] = useState("");
@@ -88,8 +79,9 @@ export function ShippingForm({
       onChange(null);
       return;
     }
-    const raw = option.price;
-    const price = subtotal >= freeShippingMin ? 0 : raw;
+    // Envío gratis para todos los pedidos (launch): el precio siempre es 0.
+    // El backend ni siquiera lee este campo (calcula el envío en el servidor),
+    // pero se manda en 0 para que ningún cliente antiguo pueda cobrar.
     onChange({
       deliveryType: option.deliveryType,
       postalCode: postalCode.trim(),
@@ -102,8 +94,7 @@ export function ShippingForm({
       agencyCode,
       service: option.productType,
       productName: option.productName,
-      price,
-      rawPrice: raw,
+      price: 0,
       deliveryTimeMin: option.deliveryTimeMin,
       deliveryTimeMax: option.deliveryTimeMax,
     });
@@ -231,7 +222,7 @@ export function ShippingForm({
     <section className="rounded-2xl border border-line bg-surface p-6">
       <h2 className="font-serif text-xl text-white">Envío</h2>
       <p className="mt-1 text-xs text-muted">
-        Cotización del envío según tu código postal y el peso del pedido.
+        Envío gratis a todo el país. Elegí la modalidad según tu código postal.
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -349,7 +340,6 @@ export function ShippingForm({
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {options.map((option) => {
           const isSelected = option.deliveryType === deliveryType;
-          const price = subtotal >= freeShippingMin ? 0 : option.price;
           return (
             <button
               key={option.deliveryType}
@@ -377,16 +367,7 @@ export function ShippingForm({
                   {option.deliveryTimeMin && option.deliveryTimeMax
                     ? `Entre ${option.deliveryTimeMin} y ${option.deliveryTimeMax} días hábiles · `
                     : ""}
-                  {subtotal >= freeShippingMin ? (
-                    <span className="text-emerald-400">Envío gratis</span>
-                  ) : (
-                    formatARS(price)
-                  )}
-                  {subtotal >= freeShippingMin && (
-                    <span className="ml-1 line-through opacity-60">
-                      {formatARS(option.price)}
-                    </span>
-                  )}
+                  <span className="text-emerald-400">Envío gratis</span>
                 </span>
               </span>
             </button>
@@ -397,7 +378,7 @@ export function ShippingForm({
       {quoting && (
         <p className="mt-4 flex items-center gap-2 text-xs text-muted">
           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-          Cotizando envío…
+          Buscando opciones de entrega…
         </p>
       )}
 

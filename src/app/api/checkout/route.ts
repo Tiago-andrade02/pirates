@@ -5,8 +5,10 @@ import {
   getPublicKey,
   hasCredentials,
 } from "@/lib/mercadopago";
-import { computePackageForItems } from "@/lib/shipping/packages";
-import { getShippingProvider, applyFreeShipping } from "@/lib/shipping";
+import {
+  getShippingProviderForOrder,
+  CUSTOMER_SHIPPING_COST,
+} from "@/lib/shipping";
 import { provinceCodeFor, isValidPostalCode } from "@/lib/shipping/provinces";
 import type { ShippingProvider } from "@/lib/shipping/types";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
@@ -150,19 +152,11 @@ export async function POST(request: Request) {
   const deliveryType: DeliveryType =
     shipping.deliveryType === "S" ? "S" : "D";
 
-  // Provider de envío: en producción, si Correo Argentino no está configurado,
-  // getShippingProvider() lanza un error y NO se aplica una tarifa plana
-  // silenciosa (para no cobrar un precio incorrecto).
-  let provider: ShippingProvider;
-  try {
-    provider = getShippingProvider();
-  } catch (error) {
-    console.error("[checkout/provider]", error instanceof Error ? error.message : error);
-    return Response.json(
-      { error: "El envío no está disponible en este momento. Intentalo más tarde." },
-      { status: 503 }
-    );
-  }
+  // Provider de envío. En el lanzamiento el envío es GRATIS para todos, así que
+  // el provider NO se consulta para calcular el precio: se sigue resolviendo
+  // para persistir el proveedor/servicio en la orden y para las sucursales de
+  // retiro, pero un provider sin credenciales ya no bloquea el checkout.
+  const provider: ShippingProvider = getShippingProviderForOrder();
 
   // Localidad: el frontend la exige; el backend también valida que venga.
   const locality = (shipping.locality ?? "").trim();
@@ -276,36 +270,20 @@ export async function POST(request: Request) {
     subtotal += unitPrice * qty;
   }
 
-  // El costo de envío SIEMPRE se calcula en el backend consultando a Correo
-  // Argentino. El cliente envía destino/modalidad, nunca un precio.
-  let shippingCost = 0;
-  let productType = "CP";
-  try {
-    const pkg = await computePackageForItems(body.items);
-    const options = await provider.quote({
-      postalCodeDestination: postalCode,
-      provinceCode,
-      deliveryType,
-      package: pkg,
-    });
-    const match = options.find((o) => o.deliveryType === deliveryType);
-    if (!match) {
-      return Response.json(
-        { error: "No hay servicios de envío disponibles para ese destino" },
-        { status: 400 }
-      );
-    }
-    productType = match.productType;
-    shippingCost = applyFreeShipping(subtotal, match.price);
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "No se pudo calcular el envío";
-    console.error("[checkout/shipping]", message);
-    return Response.json(
-      { error: "No se pudo calcular el envío. Intentalo de nuevo." },
-      { status: 502 }
-    );
-  }
+  // El costo de envío al cliente es SIEMPRE 0 (ver CUSTOMER_SHIPPING_COST).
+  // No se llama a provider.quote() porque:
+  //   1. el precio no depende de la cotización, y
+  //   2. evita exigir credenciales de PAQ.AR/Correo Argentino para cobrar.
+  // El provider se sigue usando para sucursales, despacho y tracking.
+  //
+  // OJO: `productType` NO es el precio, es el código de servicio que se le pasa
+  // al transportista al generar la etiqueta (ver lib/shipping/actions.ts). Se
+  // fija "CP", que es el valor por defecto que ya usan paqar.ts y
+  // correo-argentino.ts. PAQ.AR exige un código de 2 caracteres y Correo
+  // Argentino lo manda verbatim en el body del alta, así que un valor libre
+  // tipo "FREE" haría fallar el despacho. El precio nunca sale de acá.
+  const shippingCost = CUSTOMER_SHIPPING_COST;
+  const productType = "CP";
   const total = subtotal + shippingCost;
 
   if (!hasCredentials()) {

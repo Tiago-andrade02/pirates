@@ -3,11 +3,25 @@ import { correoArgentinoProvider, hasCredentials } from "./correo-argentino";
 import { paqArProvider, hasPaqArCredentials } from "./paqar";
 import { flatRateProvider } from "./flat-rate";
 
-export const FREE_SHIPPING_MIN = Number(
-  process.env.NEXT_PUBLIC_SHIPPING_FREE_MIN ??
-    process.env.SHIPPING_FREE_MIN ??
-    80000
-);
+// ═══════════════════════════════════════════════════════════════════
+// POLÍTICA DE ENVÍO DEL LANZAMIENTO: envío GRATIS para todos los
+// pedidos, sin mínimo de compra.
+//
+// Esta es la ÚNICA fuente de verdad. El costo de envío que ve el
+// cliente y que se persiste en la orden es SIEMPRE 0, sin importar
+// el importe del pedido, la modalidad ni el proveedor configurado.
+//
+// No se lee SHIPPING_FREE_MIN ni NEXT_PUBLIC_SHIPPING_FREE_MIN: una
+// variable vieja o un valor por defecto no pueden volver a cobrar
+// envío. Para cobrar envío hay que cambiar ESTE archivo, no el .env.
+//
+// Los providers (PAQ.AR, Correo Argentino, flat_rate) siguen
+// implementados y se siguen usando para despacho, sucursales y
+// tracking. Solo quedan fuera del cálculo del precio al cliente.
+// ═══════════════════════════════════════════════════════════════════
+
+/** Costo de envío que se cobra al cliente. Launch: siempre 0. */
+export const CUSTOMER_SHIPPING_COST = 0;
 
 function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
@@ -61,8 +75,27 @@ export function getShippingProvider(): ShippingProvider {
   return getShippingProviderById(id);
 }
 
-export function applyFreeShipping(subtotal: number, shippingCost: number): number {
-  return subtotal >= FREE_SHIPPING_MIN ? 0 : shippingCost;
+/**
+ * Provider para resolver en una orden, tolerante a la falta de credenciales.
+ *
+ * En el lanzamiento el envío es gratis, así que un provider sin credenciales
+ * NO debe impedir crear la orden: se cae al de tarifa fija solo para poder
+ * registrar proveedor y servicio. El precio nunca sale de acá
+ * (CUSTOMER_SHIPPING_COST es 0), de modo que no hay riesgo de cobrar una
+ * tarifa alternativa.
+ */
+export function getShippingProviderForOrder(): ShippingProvider {
+  try {
+    return getShippingProvider();
+  } catch (error) {
+    if (isProduction()) {
+      console.error(
+        "[shipping] provider activo sin credenciales; la orden usa flat_rate porque el envío es gratis:",
+        error instanceof Error ? error.message : error
+      );
+    }
+    return flatRateProvider;
+  }
 }
 
 export function shippingProviderLabel(id: string): string {

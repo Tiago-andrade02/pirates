@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPerfumeBySlug, getRelated } from "@/lib/data";
 import { formatARS } from "@/lib/format";
-import { FREE_SHIPPING_MIN } from "@/lib/shipping/index";
 import type { Aroma, Occasion, Season } from "@/lib/types";
 import { Gallery } from "@/components/Gallery";
 import { AddToCart } from "@/components/AddToCart";
@@ -149,7 +148,6 @@ export default async function PerfumePage(props: PerfumePageProps) {
               image={perfume.image}
               prices={perfume.prices}
               stockBySize={perfume.stockBySize}
-              freeShippingMin={FREE_SHIPPING_MIN}
             />
           </div>
 
