@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getAdminProducts } from "@/lib/admin-data";
 import { productImageUrl } from "@/lib/images";
-import { deleteProduct } from "../actions";
+import { deleteProduct, requireAdminPage } from "../actions";
 import { formatARS } from "@/lib/format";
 import { PageHeader, Th, Td } from "@/components/admin/ui";
 import { PlusIcon, EditIcon, TrashIcon } from "@/components/icons";
@@ -20,6 +20,7 @@ export default async function AdminProductosPage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { ok, error } = await searchParams;
+  await requireAdminPage();
   const products = await getAdminProducts();
 
   return (

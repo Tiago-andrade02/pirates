@@ -4,6 +4,7 @@ import {
   updateTrackingNumber,
   cancelShipment,
 } from "@/lib/shipping/actions";
+import { getShippingProvider, shippingProviderLabel } from "@/lib/shipping";
 import {
   DELIVERY_TYPE_LABELS,
   type Order,
@@ -14,6 +15,13 @@ import { TruckIcon, BoxIcon, ArrowRightIcon } from "@/components/icons";
 
 const inputCls =
   "w-full rounded-lg border border-line bg-background px-3 py-2 text-sm text-white placeholder:text-faint focus:border-gold focus:outline-none";
+
+let activeProviderLabel = "el proveedor configurado";
+try {
+  activeProviderLabel = shippingProviderLabel(getShippingProvider().id);
+} catch {
+  activeProviderLabel = "el proveedor configurado";
+}
 
 function TrackingTimeline({ events }: { events: TrackingEvent[] }) {
   const sorted = [...events].sort((a, b) => (a.date > b.date ? -1 : 1));
@@ -65,6 +73,14 @@ export function ShippingCard({ order }: { order: Order }) {
             <dt className="text-muted">Provincia</dt>
             <dd className="text-right capitalize text-white">{order.province}</dd>
           </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Proveedor</dt>
+            <dd className="text-right capitalize text-white">
+              {order.shippingProvider
+                ? shippingProviderLabel(order.shippingProvider)
+                : "—"}
+            </dd>
+          </div>
           {order.postalCode && (
             <div className="flex justify-between gap-3">
               <dt className="text-muted">CP</dt>
@@ -112,14 +128,14 @@ export function ShippingCard({ order }: { order: Order }) {
           <div className="space-y-3">
             <p className="rounded-xl border border-line bg-background p-3 text-xs leading-relaxed text-muted">
               El pedido todavía no fue despachado. Cuando el pago esté confirmado
-              y el paquete esté armado, generá el envío con Correo Argentino.
+              y el paquete esté armado, generá el envío con {activeProviderLabel}.
             </p>
             {canDispatch ? (
               <form action={createShipment}>
                 <input type="hidden" name="id" value={order.id} />
                 <button className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-black transition hover:bg-neutral-200">
                   <BoxIcon className="h-4 w-4" />
-                  Despachar con Correo Argentino
+                  Despachar con {activeProviderLabel}
                 </button>
               </form>
             ) : (
@@ -172,12 +188,12 @@ export function ShippingCard({ order }: { order: Order }) {
                   </a>
                 )}
               </div>
-            ) : (
-              <form action={updateTrackingNumber} className="space-y-2">
-                <p className="text-xs text-muted">
-                  Correo Argentino asigna el número de seguimiento en el panel de
-                  MiCorreo. Registralo acá para poder consultar el estado.
-                </p>
+) : (
+                <form action={updateTrackingNumber} className="space-y-2">
+                  <p className="text-xs text-muted">
+                    El proveedor asigna el número de seguimiento en su panel.
+                    Registralo acá para poder consultar el estado.
+                  </p>
                 <div className="flex gap-2">
                   <input
                     type="hidden"
@@ -205,6 +221,17 @@ export function ShippingCard({ order }: { order: Order }) {
                     Actualizar seguimiento
                   </button>
                 </form>
+              )}
+              {order.trackingNumber && order.shippingProvider === "paq_ar" && (
+                <a
+                  href={`/api/shipping/label?code=${encodeURIComponent(order.code)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line px-4 text-sm font-medium text-white transition hover:bg-line/40"
+                >
+                  <BoxIcon className="h-4 w-4" />
+                  Descargar rótulo (PDF)
+                </a>
               )}
               <form action={cancelShipment}>
                 <input type="hidden" name="id" value={order.id} />

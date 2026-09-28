@@ -1,4 +1,8 @@
 import { getDb } from "@/lib/db";
+import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
+
+const ASSISTANT_MAX_ATTEMPTS = 30;
+const ASSISTANT_WINDOW_MS = 60_000;
 
 interface AssistantRequest {
   aromas: string[];
@@ -8,6 +12,19 @@ interface AssistantRequest {
 }
 
 export async function POST(request: Request) {
+  if (
+    !(await rateLimitConsume(
+      `assistant:${clientIp(request.headers)}`,
+      ASSISTANT_MAX_ATTEMPTS,
+      ASSISTANT_WINDOW_MS
+    ))
+  ) {
+    return Response.json(
+      { error: "Demasiadas solicitudes. Inténtalo en un minuto." },
+      { status: 429 }
+    );
+  }
+
   const body = (await request.json()) as AssistantRequest;
   const { aromas, occasions, intensity, budget } = body;
 

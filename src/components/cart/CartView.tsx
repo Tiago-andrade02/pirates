@@ -31,7 +31,8 @@ export function CartView() {
     );
   }
 
-  const shipping = subtotal >= 80000 ? 0 : null;
+  // Envío gratis para todos los pedidos (launch). No depende del subtotal.
+  const shipping = 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5 sm:py-8 lg:py-10">
@@ -124,11 +125,7 @@ export function CartView() {
             <div className="flex justify-between">
               <dt className="text-muted">Envío</dt>
               <dd className="text-white">
-                {shipping === 0 ? (
-                  <span className="text-emerald-400">Gratis</span>
-                ) : (
-                  <span className="text-muted">Se calcula en el checkout</span>
-                )}
+                <span className="text-emerald-400">Gratis</span>
               </dd>
             </div>
             <div className="flex justify-between">
@@ -139,17 +136,14 @@ export function CartView() {
           <div className="mt-3 flex justify-between border-t border-line pt-3 sm:mt-4 sm:pt-4">
             <span className="text-sm font-semibold text-white">Total</span>
             <span className="font-serif text-lg text-white sm:text-xl">
-              {formatARS(subtotal + (shipping ?? 0))}
-              {shipping !== 0 && <span className="ml-1 text-[10px] font-sans font-normal text-faint sm:text-xs">+ envío</span>}
+              {formatARS(subtotal + shipping)}
             </span>
           </div>
 
-          {subtotal < 80000 && (
-            <p className="mt-3 flex items-start gap-2 rounded-lg border border-line bg-background p-2.5 text-[11px] text-muted sm:rounded-xl sm:text-xs">
-              <TruckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
-              Te faltan {formatARS(80000 - subtotal)} para el envío gratis.
-            </p>
-          )}
+          <p className="mt-3 flex items-start gap-2 rounded-lg border border-line bg-background p-2.5 text-[11px] text-muted sm:rounded-xl sm:text-xs">
+            <TruckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
+            Envío gratis a todo el país, sin mínimo de compra.
+          </p>
 
           <Link
             href="/checkout"

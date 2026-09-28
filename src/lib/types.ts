@@ -24,6 +24,12 @@ export interface Prices {
   "100": number | null;
 }
 
+export interface Stocks {
+  "30": number;
+  "50": number;
+  "100": number;
+}
+
 export interface Perfume {
   id: number;
   slug: string;
@@ -35,6 +41,7 @@ export interface Perfume {
   occasions: Occasion[];
   prices: Prices;
   stock: number;
+  stockBySize: Stocks;
   description: string;
   notes: {
     top: string[];
@@ -65,7 +72,8 @@ export type OrderStatus =
   | "preparando"
   | "enviado"
   | "entregado"
-  | "cancelado";
+  | "cancelado"
+  | "sin_stock";
 
 export const ORDER_STATUSES: OrderStatus[] = [
   "pendiente",
@@ -74,6 +82,7 @@ export const ORDER_STATUSES: OrderStatus[] = [
   "enviado",
   "entregado",
   "cancelado",
+  "sin_stock",
 ];
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -83,7 +92,16 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   enviado: "Enviado",
   entregado: "Entregado",
   cancelado: "Cancelado",
+  sin_stock: "Sin stock",
 };
+
+// Estados en los que el stock ya fue descontado al finalizar la orden.
+export const ORDER_STATUSES_WITH_STOCK_TAKEN: OrderStatus[] = [
+  "pagado",
+  "preparando",
+  "enviado",
+  "entregado",
+];
 
 export interface Customer {
   id: number;

@@ -13,7 +13,6 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
   const price = referencePrice(perfume);
   const price50 = perfume.prices["50"];
   const displayPrice = price50 ?? price;
-  const transferPrice = displayPrice !== null ? Math.round(displayPrice * 0.9) : null;
   const outOfStock = perfume.stock <= 0;
   const hasReviews = perfume.reviewCount > 0;
 
@@ -108,9 +107,6 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
               </div>
               {displayPrice !== null && (
                 <div className="mt-0.5">
-                  <p className="truncate text-[9px] font-medium text-emerald-400 sm:text-[11px]">
-                    Transf: {transferPrice !== null ? formatARS(transferPrice) : "—"}
-                  </p>
                   <p className="text-[9px] text-muted sm:text-[11px]">
                     3 cuotas sin interés
                   </p>

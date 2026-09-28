@@ -57,3 +57,4 @@ auth-*
 
 .vercel
 .env*
+!.env.example

@@ -1,7 +1,6 @@
 import { getDb } from "@/lib/db";
-import { getOrderById } from "@/lib/admin-data";
 import { getPayment, verifyWebhookSignature } from "@/lib/mercadopago";
-import { sendOrderEmail } from "@/lib/notify";
+import { finalizePaidOrderByCode } from "@/lib/checkout-finalize";
 
 interface WebhookBody {
   type?: string;
@@ -15,71 +14,123 @@ export async function POST(request: Request) {
   const notificationId = body?.data?.id ? String(body.data.id) : dataId;
   if (!notificationId) return Response.json({ ok: true });
 
-  const secretConfigured = Boolean(process.env.MERCADO_PAGO_WEBHOOK_SECRET);
-  if (secretConfigured) {
-    const valid = verifyWebhookSignature({
-      signature: request.headers.get("x-signature"),
-      requestId: request.headers.get("x-request-id"),
-      dataId: notificationId,
-    });
-    if (!valid) {
-      return Response.json({ error: "Firma inválida" }, { status: 401 });
-    }
+  const secret = process.env.MERCADO_PAGO_WEBHOOK_SECRET ?? "";
+  if (!secret) {
+    // Sin secret configurado el webhook no puede autenticarse: fallar de forma
+    // visible (503) en lugar de aceptar peticiones sin firmar.
+    return Response.json(
+      { ok: false, error: "WEBHOOK_SECRET no configurado" },
+      { status: 503 }
+    );
   }
 
-  const db = await getDb();
+  const valid = verifyWebhookSignature({
+    signature: request.headers.get("x-signature"),
+    requestId: request.headers.get("x-request-id"),
+    dataId: notificationId,
+  });
+  if (!valid) {
+    return Response.json({ error: "Firma inválida" }, { status: 401 });
+  }
+
   let payment;
   try {
     payment = await getPayment(notificationId);
-  } catch {
-    return Response.json({ ok: true });
+  } catch (error) {
+    // NO responder ok:true ante un error real de consulta: así Mercado Pago
+    // reintenta el envío.
+    const message =
+      error instanceof Error ? error.message : "Error al consultar el pago";
+    console.error("[webhook] No se pudo consultar el pago", message);
+    return Response.json(
+      { ok: false, error: "No se pudo consultar el pago" },
+      { status: 502 }
+    );
   }
 
   if (payment.status !== "approved" || !payment.external_reference) {
     return Response.json({ ok: true });
   }
 
-  const orderResult = await db.execute({
-    sql: "SELECT id, status FROM orders WHERE code = ?",
-    args: [payment.external_reference],
-  });
-  const order = orderResult.rows[0] as unknown as { id: number; status: string } | undefined;
-  if (!order || order.status === "pagado") {
-    return Response.json({ ok: true });
+  const reference = payment.external_reference;
+
+  // Verificar que el pago aprobado corresponde EXACTAMENTE a la orden:
+  // mismo código, moneda ARS y monto = total de la orden. Si algo no
+  // coincide, NO se finaliza: se responde 409 para que quede visible en
+  // logs/monitoreo (MP reintenta unas pocas veces, lo cual es útil para
+  // observabilidad, pero no vuelve a crear stock ni a notificar).
+  if (payment.currency_id !== "ARS") {
+    console.error(
+      `[webhook] Pago ${payment.id} aprobado con currency_id ${payment.currency_id} para pedido ${reference}`
+    );
+    return Response.json({ ok: false, error: "Moneda incorrecta" }, { status: 409 });
   }
 
-  await db.executeMultiple("BEGIN");
+  const db = await getDb();
+  let orderTotal: number | undefined;
+  try {
+    const result = await db.execute({
+      sql: "SELECT total FROM orders WHERE code = ?",
+      args: [reference],
+    });
+    const row = result.rows[0] as unknown as { total: number } | undefined;
+    orderTotal = row?.total != null ? Number(row.total) : undefined;
+  } catch (error) {
+    console.error("[webhook] Error leyendo la orden", error instanceof Error ? error.message : error);
+    return Response.json({ ok: false, error: "Error interno" }, { status: 500 });
+  }
+
+  if (orderTotal === undefined) {
+    console.error(
+      `[webhook] Pago ${payment.id} aprobado pero el pedido ${reference} no existe en la base`
+    );
+    return Response.json({ ok: false, error: "Pedido no encontrado" }, { status: 404 });
+  }
+
+  const paidAmount = Number(payment.transaction_amount);
+  if (!Number.isFinite(paidAmount) || Math.abs(paidAmount - orderTotal) > 0.01) {
+    console.error(
+      `[webhook] Pago ${payment.id} aprobado: monto ${paidAmount} no coincide con el total del pedido ${reference} (${orderTotal})`
+    );
+    return Response.json(
+      { ok: false, error: "Monto del pago no coincide con la orden" },
+      { status: 409 }
+    );
+  }
+
+  // Finalización idempotente (marca 'pagado' o 'sin_stock', descuenta stock si
+  // alcanza, envía email si es necesario). Devuelve true solo cuando se finalizó
+  // correctamente. Si el pago ya fue procesado (doble webhook) devuelve false.
+  // Si hay error transitorio lanza y respondemos 502 para que MP reintente.
+  try {
+    await finalizePaidOrderByCode(reference);
+  } catch (error) {
+    console.error("[webhook] Error finalizando", error instanceof Error ? error.message : error);
+    return Response.json(
+      { ok: false, error: "No se pudo finalizar el pedido" },
+      { status: 502 }
+    );
+  }
+
+  // Asocia el pago de MP a la orden (idempotente: el primer id gana y paid_at
+  // se fija una sola vez). NULLIF cubre la columna con DEFAULT '' de bases
+  // existentes: COALESCE sobre '' no la llenaría. Es seguro que corra también
+  // en un webhook duplicado. Si el UPDATE falla, respondemos 502 para que MP
+  // reintente: finalize es idempotente, así que NO vuelve a descontar stock.
   try {
     await db.execute({
-      sql: "UPDATE orders SET status = 'pagado' WHERE id = ?",
-      args: [order.id],
+      sql: "UPDATE orders SET mp_payment_id = COALESCE(NULLIF(mp_payment_id, ''), ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
+      args: [String(payment.id), new Date().toISOString(), reference],
     });
-
-    const itemsResult = await db.execute({
-      sql: "SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?",
-      args: [order.id],
-    });
-    const items = itemsResult.rows as unknown as { perfume_id: number; qty: number; size: number }[];
-    for (const item of items) {
-      const size = [30, 50, 100].includes(item.size) ? item.size : 100;
-      await db.execute({
-        sql: `UPDATE perfumes SET stock_${size} = MAX(0, stock_${size} - ?), stock = MAX(0, stock - ?) WHERE id = ?`,
-        args: [item.qty, item.qty, item.perfume_id],
-      });
-    }
-    await db.executeMultiple("COMMIT");
   } catch (error) {
-    await db.executeMultiple("ROLLBACK");
-    throw error;
-  }
-
-  // Notificación con el detalle del pedido (email SMTP). Fire-and-forget:
-  // si falla el envío, no debe romper la respuesta del webhook.
-  const fullOrder = await getOrderById(order.id);
-  if (fullOrder) {
-    sendOrderEmail(fullOrder).catch((error) => {
-      console.error("[notify] No se pudo enviar el email del pedido", error);
-    });
+    console.error(
+      "[webhook] Error persistiendo mp_payment_id/paid_at",
+      error instanceof Error ? error.message : error
+    );
+    return Response.json(
+      { ok: false, error: "No se pudo registrar el pago" },
+      { status: 502 }
+    );
   }
 
   return Response.json({ ok: true });

@@ -5,7 +5,7 @@ import { formatARS, formatNumber } from "@/lib/format";
 import { PageHeader, StatusBadge, Money, Th, Td } from "@/components/admin/ui";
 import { StatusSelect } from "@/components/admin/StatusSelect";
 import { ShippingCard } from "@/components/admin/ShippingCard";
-import { resendOrderEmail } from "@/app/admin/actions";
+import { resendOrderEmail, requireAdminPage } from "@/app/admin/actions";
 
 export default async function DetallePedidoPage({
   params,
@@ -14,6 +14,7 @@ export default async function DetallePedidoPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
+  await requireAdminPage();
   const { id } = await params;
   const sp = await searchParams;
   const order = await getOrderById(Number(id));

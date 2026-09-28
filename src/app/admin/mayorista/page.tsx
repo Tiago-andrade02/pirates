@@ -1,5 +1,5 @@
 import { getAdminProducts, getPurchases } from "@/lib/admin-data";
-import { deletePurchase } from "../actions";
+import { deletePurchase, requireAdminPage } from "../actions";
 import { formatARS, formatNumber } from "@/lib/format";
 import { PageHeader, EmptyState, Money, Th, Td } from "@/components/admin/ui";
 import { PurchaseForm } from "@/components/admin/PurchaseForm";
@@ -11,6 +11,7 @@ export default async function AdminMayoristaPage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const { ok, error } = await searchParams;
+  await requireAdminPage();
   const purchases = await getPurchases();
   const products = await getAdminProducts();
 

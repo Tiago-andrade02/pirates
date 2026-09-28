@@ -1,9 +1,10 @@
 import { getBrands } from "@/lib/data";
-import { createProduct } from "../../actions";
+import { createProduct, requireAdminPage } from "../../actions";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { PageHeader } from "@/components/admin/ui";
 
 export default async function NuevoProductoPage() {
+  await requireAdminPage();
   const brands = await getBrands();
 
   return (

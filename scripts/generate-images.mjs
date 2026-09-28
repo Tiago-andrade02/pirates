@@ -10,6 +10,20 @@ const outDir = path.join(root, "public", "perfumes");
 const seed = JSON.parse(fs.readFileSync(seedPath, "utf8"));
 const brands = new Map(seed.brands.map((b) => [b.slug, b.name]));
 
+// Escapa todo lo que entra a un SVG (contenido de <text>, atributos y valores):
+// el nombre/marca del perfume viene de la BD (data del admin), así que podría
+// contener <, >, & o comillas. Sin escapar, un nombre tipo "X <path ...>" o
+// "A&B" rompe el XML o inyecta nodos. <text> necesita texto escapado; las
+// funciones numéricas (bodyX, labelY...) ya son safe por construcción.
+function escXml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
 fs.mkdirSync(outDir, { recursive: true });
 
 function bottleParts(opts) {
@@ -59,7 +73,7 @@ function bottleParts(opts) {
     parts.push(`
       <g transform="translate(${cx - 400}, 300)">
         <rect x="90" y="40" width="620" height="150" rx="12" fill="#0c0c0c" stroke="#2c2c2c"/>
-        <text x="400" y="105" text-anchor="middle" font-family="Georgia, serif" font-size="30" letter-spacing="10" fill="#e8e8e8">${brand.toUpperCase()}</text>
+        <text x="400" y="105" text-anchor="middle" font-family="Georgia, serif" font-size="30" letter-spacing="10" fill="#e8e8e8">${escXml(brand.toUpperCase())}</text>
         <text x="400" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" letter-spacing="4" fill="#8a8a8a">P A R F U M S</text>
       </g>
       <g transform="scale(1.18) translate(${cx - 400 - 75}, 180)">
@@ -109,9 +123,9 @@ function bottleParts(opts) {
             fill="#0c0c0c" stroke="#2f2f2f" stroke-width="1.5"/>
       <line x1="${bodyX + 60}" y1="${labelY + 30}" x2="${bodyX + bodyW - 60}" y2="${labelY + 30}" stroke="#555555" stroke-width="1"/>
       <text x="${cx}" y="${labelY + 58}" text-anchor="middle" font-family="Arial, sans-serif"
-            font-size="13" letter-spacing="6" fill="#8a8a8a">${brand.toUpperCase()}</text>
+            font-size="13" letter-spacing="6" fill="#8a8a8a">${escXml(brand.toUpperCase())}</text>
       <text x="${cx}" y="${labelY + 108}" text-anchor="middle" font-family="Georgia, serif"
-            font-size="${variant === 2 ? 26 : 30}" letter-spacing="2" fill="#f2f2f2">${label.toUpperCase()}</text>
+            font-size="${variant === 2 ? 26 : 30}" letter-spacing="2" fill="#f2f2f2">${escXml(label.toUpperCase())}</text>
       <line x1="${bodyX + 60}" y1="${labelY + 128}" x2="${bodyX + bodyW - 60}" y2="${labelY + 128}" stroke="#555555" stroke-width="1"/>
     `);
   }

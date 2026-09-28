@@ -11,7 +11,7 @@ export default function TerminosPage() {
   return (
     <LegalPage
       title="Términos y Condiciones"
-      updated="15 de agosto de 2026"
+      updated="17 de septiembre de 2026"
       sections={[
         {
           heading: "1. Aceptación de los términos",
@@ -37,7 +37,8 @@ export default function TerminosPage() {
           ],
           bullets: [
             "Pagos con Mercado Pago: tarjeta de crédito, débito o billetera.",
-            "Pagos por transferencia bancaria: se coordina la confirmación del pago por WhatsApp.",
+            "Pago con tarjeta en el sitio: completás los datos de tu tarjeta y elegís las cuotas que te ofrezca Mercado Pago.",
+            "Pago con Mercado Pago: te redirigimos a la plataforma para completar el pago y elegir cuotas y promociones.",
             "Una vez confirmado el pago, el pedido pasa a preparación y se despacha en el menor plazo posible.",
           ],
         },

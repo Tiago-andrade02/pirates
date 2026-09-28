@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdminPage } from "../actions";
 import { getOrders } from "@/lib/admin-data";
 import { ORDER_STATUSES, ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/types";
 import { PageHeader, Money, Th, Td } from "@/components/admin/ui";
@@ -9,23 +10,23 @@ const inputCls =
 
 const OK_MESSAGES: Record<string, string> = {
   estado: "Estado actualizado.",
-  despachado: "Envío generado con Correo Argentino.",
+  despachado: "Envío generado y pedido marcado como enviado.",
   "ya-despachado": "El pedido ya había sido despachado.",
   "tracking-actualizado": "Seguimiento actualizado.",
   "tracking-registrado": "Número de seguimiento registrado.",
   cancelado: "Envío cancelado.",
   "cancelacion-no-soportada":
-    "Correo Argentino no permite cancelar envíos por API. Se debe gestionar desde el panel de MiCorreo.",
+    "El proveedor no permite cancelar envíos por API. Se debe gestionar desde su panel.",
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
   "pago-no-confirmado":
     "El pago del pedido no está confirmado. Solo se despachan pedidos pagados o en preparación.",
-  "provincia-invalida": "La provincia del pedido no es válida para Correo Argentino.",
+  "provincia-invalida": "La provincia del pedido no es válida para el proveedor de envío.",
   "cp-faltante": "El pedido no tiene código postal.",
   empaque: "No se pudo calcular el empaque del pedido.",
   "despacho-fallido":
-    "Correo Argentino rechazó el envío. Revisá los datos del pedido y las credenciales.",
+    "El proveedor rechazó el envío. Revisá los datos del pedido y las credenciales configuradas.",
   "sin-tracking": "El pedido todavía no tiene número de seguimiento.",
   "cancelacion-fallida": "No se pudo cancelar el envío. Intentalo de nuevo.",
 };
@@ -35,6 +36,7 @@ export default async function AdminPedidosPage({
 }: {
   searchParams: Promise<{ status?: string; q?: string; ok?: string; error?: string }>;
 }) {
+  await requireAdminPage();
   const sp = await searchParams;
   const status = (ORDER_STATUSES.includes(sp.status as OrderStatus)
     ? (sp.status as OrderStatus)

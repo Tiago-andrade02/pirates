@@ -5,6 +5,19 @@ function money(value: number): string {
   return "$" + Math.round(value).toLocaleString("es-AR");
 }
 
+// Escapa HTML en valores controlados por el usuario (nombre, tel/email,
+// provincia, dirección, tamaños). Sin esto, un dato tipo "<img src=x onerror=...>"
+// o "A&B" en línea de un pedido se inyecta como HTML en el correo de
+// notificación (HTML injection expuesta al admin que recibe el email).
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function deliveryLabel(order: Order): string {
   return order.deliveryType === "S"
     ? `Retiro en sucursal (${order.agencyCode || "—"})`
@@ -14,7 +27,7 @@ function deliveryLabel(order: Order): string {
 }
 
 export function orderEmailSubject(order: Order): string {
-  return `Nuevo pedido pagado ${order.code} — ${order.customerName}`;
+  return `Nueva orden PIRATES - ${order.code}`;
 }
 
 export function orderEmailText(order: Order): string {
@@ -43,12 +56,12 @@ export function orderEmailText(order: Order): string {
 }
 
 export function orderEmailHtml(order: Order): string {
-  const rows = order.items
+      const rows = order.items
     .map(
       (i) => `
       <tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${i.name}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${i.size ? `${i.size} ml` : "—"}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;">${escapeHtml(i.name)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${i.size ? `${escapeHtml(String(i.size))} ml` : "—"}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${i.qty}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${money(i.price)}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;font-weight:600;">${money(i.price * i.qty)}</td>
@@ -63,11 +76,11 @@ export function orderEmailHtml(order: Order): string {
 
       <h3 style="margin:16px 0 6px;font-size:14px;text-transform:uppercase;color:#555;">Cliente</h3>
       <table style="font-size:14px;border-collapse:collapse;">
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Nombre</td><td style="font-weight:600;">${order.customerName}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Teléfono</td><td>${order.customerPhone || "—"}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Email</td><td>${order.customerEmail || "—"}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Provincia</td><td>${order.province || "—"}</td></tr>
-        <tr><td style="padding:2px 12px 2px 0;color:#888;">Envío</td><td>${deliveryLabel(order)}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Nombre</td><td style="font-weight:600;">${escapeHtml(order.customerName)}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Teléfono</td><td>${escapeHtml(order.customerPhone || "—")}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Email</td><td>${escapeHtml(order.customerEmail || "—")}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Provincia</td><td>${escapeHtml(order.province || "—")}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#888;">Envío</td><td>${escapeHtml(deliveryLabel(order))}</td></tr>
       </table>
 
       <h3 style="margin:20px 0 6px;font-size:14px;text-transform:uppercase;color:#555;">Productos</h3>
@@ -125,4 +138,118 @@ export async function sendOrderEmail(order: Order): Promise<void> {
     text: orderEmailText(order),
     html: orderEmailHtml(order),
   });
+}
+
+export function orderUrl(order: Order): string {
+  const base = process.env.SITE_URL ?? "https://piratesarg.com";
+  return `${base}/admin/pedidos/${order.id}`;
+}
+
+function productsSummary(order: Order): string {
+  return (
+    order.items
+      .map(
+        (i) =>
+          `${i.name}${i.size ? ` ${i.size}ml` : ""} x${i.qty} (${money(i.price * i.qty)})`
+      )
+      .join(", ") || "—"
+  );
+}
+
+export function hasWhatsAppConfig(): boolean {
+  return Boolean(
+    process.env.WHATSAPP_ACCESS_TOKEN &&
+      process.env.WHATSAPP_PHONE_NUMBER_ID &&
+      process.env.WHATSAPP_TO
+  );
+}
+
+// WhatsApp Business Platform / Cloud API de Meta: un único POST a Graph API,
+// sin SDK. Los mensajes iniciados por el negocio requieren una plantilla
+// aprobada (WHATSAPP_TEMPLATE_NAME) con estas 7 variables en el cuerpo:
+// {{1}} pedido, {{2}} cliente, {{3}} teléfono, {{4}} total, {{5}} productos,
+// {{6}} envío, {{7}} enlace al pedido.
+export async function sendWhatsAppOrderNotification(order: Order): Promise<void> {
+  if (!hasWhatsAppConfig()) {
+    console.warn(
+      "[notify] WhatsApp no configurado (WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID/WHATSAPP_TO)."
+    );
+    return;
+  }
+
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
+  const template = process.env.WHATSAPP_TEMPLATE_NAME || "nueva_orden_pirates";
+  const res = await fetch(
+    `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN!}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: process.env.WHATSAPP_TO,
+        type: "template",
+        template: {
+          name: template,
+          language: { code: "es" },
+          components: [
+            {
+              type: "body",
+              parameters: [
+                { type: "text", text: order.code },
+                { type: "text", text: order.customerName },
+                { type: "text", text: order.customerPhone || "—" },
+                { type: "text", text: money(order.total) },
+                { type: "text", text: productsSummary(order) },
+                { type: "text", text: deliveryLabel(order) },
+                { type: "text", text: orderUrl(order) },
+              ],
+            },
+          ],
+        },
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`WhatsApp Cloud API error ${res.status}: ${detail.slice(0, 300)}`);
+  }
+}
+
+// Reintenta una operación de notificación hasta `attempts` veces con backoff
+// creciente. Un canal no configurado sale a la primera (no reintenta): los
+// pre-checks de sendOrderEmail/sendWhatsAppOrderNotification cortan sin lanzar.
+async function withRetry<T>(
+  label: string,
+  fn: () => Promise<T>,
+  attempts = 3
+): Promise<T | undefined> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      }
+    }
+  }
+  console.error(`[notify] ${label}: falló tras ${attempts} intentos`, lastError);
+  return undefined;
+}
+
+// Aviso de nueva orden al administrador por email y WhatsApp. Cada canal se
+// intenta hasta 3 veces si falla, de forma independiente. Los fallos finales
+// no se propagan: se loguean en el llamador (fire-and-forget). La
+// deduplicación se maneja por orden con notified_at en finalizePaidOrderByCode:
+// un webhook duplicado o el path síncrono no vuelven a notificar.
+export async function notifyNewOrder(order: Order): Promise<void> {
+  await Promise.allSettled([
+    withRetry("email", () => sendOrderEmail(order)),
+    withRetry("whatsapp", () => sendWhatsAppOrderNotification(order)),
+  ]);
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireAdminPage } from "./actions";
 import {
   getDashboardStats,
   getOrders,
@@ -11,6 +12,7 @@ import { PageHeader, StatCard, StatusBadge, Money, Th, Td } from "@/components/a
 const today = new Date();
 
 export default async function AdminDashboardPage() {
+  await requireAdminPage();
   const stats = await getDashboardStats();
   const allOrders = await getOrders(null, null);
   const recentOrders = allOrders.slice(0, 6);

@@ -147,7 +147,7 @@ export default async function PerfumePage(props: PerfumePageProps) {
               brandName={perfume.brand.name}
               image={perfume.image}
               prices={perfume.prices}
-              stock={perfume.stock}
+              stockBySize={perfume.stockBySize}
             />
           </div>
 

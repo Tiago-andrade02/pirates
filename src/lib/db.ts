@@ -7,6 +7,25 @@ function getDbSync(): Client {
   if (!client) {
     const url = process.env.TURSO_DATABASE_URL || "file:./data/pirates.db";
     const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
+    // Guard Etapa E — FAIL-CLOSED en producción:
+    //  • NODE_ENV=production EXIGE TURSO_DATABASE_URL + TURSO_AUTH_TOKEN. Si
+    //    falta cualquiera, NO se cae a SQLite local (una BD local en prod
+    //    perde datos y se comporta distinto que Turso). Se lanza un error
+    //    claro y controlado ANTES de crear el client.
+    //  • El error jamás incluye el token ni valores de env.
+    //  • En desarrollo se conserva el fallback a SQLite local (archivo)
+    //    cuando no hay Turso configurado, para no romper el flujo local.
+    //  • La conexión Turso real (createClient + credenciales) NO se toca.
+    if (process.env.NODE_ENV === "production") {
+      const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = process.env;
+      if (!TURSO_DATABASE_URL || !TURSO_AUTH_TOKEN) {
+        throw new Error(
+          "TURSO_DATABASE_URL y TURSO_AUTH_TOKEN son obligatorios en producción. " +
+            "Configuralos en el entorno (ver .env.example). " +
+            "No se puede usar una base local en producción."
+        );
+      }
+    }
     client = createClient({ url, authToken });
   }
   return client;
@@ -92,6 +111,9 @@ const SCHEMA = `
     tracking_events TEXT NOT NULL DEFAULT '[]',
     shipped_at TEXT,
     shipping_label TEXT NOT NULL DEFAULT '',
+    notified_at TEXT,
+    mp_payment_id TEXT,
+    paid_at TEXT,
     created_at TEXT NOT NULL
   );
 
@@ -138,6 +160,7 @@ const SCHEMA = `
     installments TEXT NOT NULL DEFAULT '',
     mp_result TEXT NOT NULL DEFAULT '',
     mp_error TEXT NOT NULL DEFAULT '',
+    mp_raw TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
   );
 
@@ -153,6 +176,14 @@ const SCHEMA = `
     installments TEXT NOT NULL DEFAULT '',
     issuer_id TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
+  );
+
+  -- Rate limiting genérico (login por IP, checkout, payment, cotización):
+  -- la ventana expirada se reinicia en el primer uso posterior.
+  CREATE TABLE IF NOT EXISTS rate_limits (
+    key TEXT PRIMARY KEY,
+    count INTEGER NOT NULL DEFAULT 0,
+    window_start TEXT NOT NULL
   );
 
   CREATE INDEX IF NOT EXISTS idx_perfumes_brand ON perfumes(brand_id);
@@ -220,12 +251,31 @@ async function migrate(database: Client) {
     );
   }
 
+  if (!orderColumns.some((c) => c.name === "notified_at")) {
+    await database.execute("ALTER TABLE orders ADD COLUMN notified_at TEXT");
+  }
+
+  if (!orderColumns.some((c) => c.name === "mp_payment_id")) {
+    await database.executeMultiple(
+      `ALTER TABLE orders ADD COLUMN mp_payment_id TEXT;
+       ALTER TABLE orders ADD COLUMN paid_at TEXT;`
+    );
+  }
+
   const itemColumns = await tableColumns("supplier_purchase_items");
   if (!itemColumns.some((c) => c.name === "size")) {
     await database.execute(
       "ALTER TABLE supplier_purchase_items ADD COLUMN size INTEGER NOT NULL DEFAULT 100"
     );
   }
+
+  const pdColumns = await tableColumns("payment_diagnostics");
+  if (!pdColumns.some((c) => c.name === "mp_raw")) {
+    await database.execute(
+      "ALTER TABLE payment_diagnostics ADD COLUMN mp_raw TEXT NOT NULL DEFAULT ''"
+    );
+  }
+
   await database.execute(
     `UPDATE perfumes SET cost = ROUND(COALESCE(price_50, price_100, price_30) * 0.45, 0) WHERE cost IS NULL`
   );
@@ -256,9 +306,9 @@ async function backfillPackageDefaults(database: Client) {
   );
 }
 
-async function seedIfEmpty(database: Client) {
+async function seedIfEmpty(database: Client): Promise<boolean> {
   const row = await database.execute("SELECT COUNT(*) AS count FROM perfumes");
-  if ((row.rows[0]?.count as number) > 0) return;
+  if ((row.rows[0]?.count as number) > 0) return false;
 
   const brandIds = new Map<string, number>();
   for (const brand of seed.brands) {
@@ -306,6 +356,7 @@ async function seedIfEmpty(database: Client) {
       ],
     });
   }
+  return true;
 }
 
 async function reconcilePrices(database: Client) {
@@ -324,9 +375,14 @@ async function ensureInit(db: Client) {
     initPromise = (async () => {
       await createSchema(db);
       await migrate(db);
-      await seedIfEmpty(db);
-      await reconcileStock(db);
-      await reconcilePrices(db);
+      const seeded = await seedIfEmpty(db);
+      // Los reconciles de stock/precios solo corren al sembrar una base nueva.
+      // Correrlos en cada init sobreescribía lo que el admin cargó (precios y
+      // stock por tamaño) en cada cold start / deploy: se "perdían" los datos.
+      if (seeded) {
+        await reconcileStock(db);
+        await reconcilePrices(db);
+      }
       await backfillPackageDefaults(db);
     })();
   }

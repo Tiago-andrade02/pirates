@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getBrands } from "@/lib/data";
 import { getAdminProductById } from "@/lib/admin-data";
-import { updateProduct } from "../../actions";
+import { updateProduct, requireAdminPage } from "../../actions";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { PageHeader } from "@/components/admin/ui";
 
@@ -11,6 +11,7 @@ export default async function EditarProductoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await requireAdminPage();
   const product = await getAdminProductById(Number(id));
   if (!product) notFound();
   const brands = await getBrands();

@@ -1,6 +1,9 @@
 import type { DeliveryType } from "@/lib/types";
 
-export type ShippingProviderId = "correo_argentino" | "flat_rate";
+export type ShippingProviderId =
+  | "correo_argentino"
+  | "paq_ar"
+  | "flat_rate";
 
 export interface PackageDimensions {
   weightGrams: number;
@@ -94,4 +97,7 @@ export interface ShippingProvider {
   getTracking(shippingId: string): Promise<TrackingResult>;
   getAgencies?(provinceCode: string): Promise<ShippingAgency[]>;
   cancelShipment?(trackingNumber: string): Promise<void>;
+  // Devuelve el rótulo del envío como PDF codificado en base64 (p. ej. la API
+  // PAQ.AR /v1/labels). Si el proveedor no lo soporta, debe quedar undefined.
+  getLabel?(trackingNumber: string): Promise<string | null>;
 }

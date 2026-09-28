@@ -23,6 +23,9 @@ interface PerfumeRow {
   price_50: number | null;
   price_100: number | null;
   stock: number;
+  stock_30: number;
+  stock_50: number;
+  stock_100: number;
   package_weight: number;
   package_length: number;
   package_width: number;
@@ -55,6 +58,14 @@ export const PRICE_RANGES: { key: string; label: string; min: number; max: numbe
 ];
 
 export const SIZE_OPTIONS = ["30", "50", "100"] as const;
+
+// Whitelist estricta de tallas para construir columnas SQL: el valor de la URL
+// NUNCA se interpola directo. Solo se permite pasar si está en este mapa.
+const SIZE_COLUMNS: Record<string, "price_30" | "price_50" | "price_100"> = {
+  "30": "price_30",
+  "50": "price_50",
+  "100": "price_100",
+};
 export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
   { value: "hombre", label: "Hombre" },
   { value: "mujer", label: "Mujer" },
@@ -136,6 +147,11 @@ function mapPerfume(row: Record<string, unknown>): Perfume {
     occasions: parseTags(r.occasion) as Occasion[],
     prices,
     stock: r.stock,
+    stockBySize: {
+      "30": r.stock_30,
+      "50": r.stock_50,
+      "100": r.stock_100,
+    },
     description: r.description,
     package: {
       weightGrams: r.package_weight,
@@ -292,8 +308,10 @@ export async function getCatalog(filters: CatalogFilters): Promise<Perfume[]> {
   }
 
   if (filters.size) {
-    const column = `p.price_${filters.size}`;
-    where.push(`${column} IS NOT NULL`);
+    const column = SIZE_COLUMNS[filters.size];
+    if (column) {
+      where.push(`p.${column} IS NOT NULL`);
+    }
   }
 
   if (filters.priceRange) {
