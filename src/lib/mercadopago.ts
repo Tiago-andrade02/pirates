@@ -125,6 +125,15 @@ export interface MercadoPagoPayment {
   external_reference?: string | null;
   currency_id?: string | null;
   transaction_amount?: number | null;
+  // Campos de diagnóstico. Son opcionales porque /v1/payments/{id} no los
+  // garantiza siempre. status_detail es un código de la enum de MP
+  // (p. ej. "cc_rejected_bad_filled_card_number"), no texto libre del pagador,
+  // así que es seguro persistirlo: es lo que permite saber POR QUÉ se rechazó
+  // un pago sin guardar datos personales.
+  status_detail?: string | null;
+  payment_type_id?: string | null;
+  payment_method_id?: string | null;
+  installments?: number | null;
 }
 
 export async function getPayment(paymentId: string): Promise<MercadoPagoPayment> {

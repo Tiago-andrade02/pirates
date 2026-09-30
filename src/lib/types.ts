@@ -103,6 +103,19 @@ export const ORDER_STATUSES_WITH_STOCK_TAKEN: OrderStatus[] = [
   "entregado",
 ];
 
+// Estados en los que el pago YA fue finalizado: el stock se descontó (o el
+// pedido quedó marcado sin_stock) y no corresponde volver a procesarlo. Sirve
+// para que un webhook o confirmación tardía no reintente descontar stock ni
+// haga retroceder un pedido que ya avanzó a preparando/enviado/entregado.
+export const FINALIZED_ORDER_STATUSES: OrderStatus[] = [
+  ...ORDER_STATUSES_WITH_STOCK_TAKEN,
+  "sin_stock",
+];
+
+export function isOrderFinalized(status: OrderStatus): boolean {
+  return FINALIZED_ORDER_STATUSES.includes(status);
+}
+
 export interface Customer {
   id: number;
   name: string;
@@ -167,9 +180,12 @@ export interface TrackingEvent {
 
 export type DeliveryType = "D" | "S";
 
+// El retiro en persona está desactivado: la única modalidad nueva es "D".
+// "S" se conserva para los pedidos históricos y se etiqueta sin nombrar ninguna
+// sucursal ni código interno de agencia.
 export const DELIVERY_TYPE_LABELS: Record<DeliveryType, string> = {
-  D: "A domicilio",
-  S: "Retiro en sucursal",
+  D: "Envío a domicilio",
+  S: "Retirada en persona",
 };
 
 export interface SupplierPurchase {

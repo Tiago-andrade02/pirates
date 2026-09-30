@@ -1,8 +1,10 @@
-import { getShippingProvider } from "@/lib/shipping";
-import type { ShippingProvider } from "@/lib/shipping/types";
-import { provinceCodeFor } from "@/lib/shipping/provinces";
+import { PICKUP_DISABLED_MESSAGE, pickupEnabled } from "@/lib/shipping/pickup";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
 
+// El retiro en persona esta desactivado, asi que ya no hay sucursales que
+// listar. La ruta se conserva (y sigue con su rate limit) en lugar de
+// eliminarse: si algun cliente guardado la llama, recibe un motivo claro en vez
+// de un 404 de Next que el checkout interpretaria como un fallo de red.
 const AGENCIES_MAX_ATTEMPTS = 30;
 const AGENCIES_WINDOW_MS = 60_000;
 
@@ -20,39 +22,12 @@ export async function GET(request: Request) {
     );
   }
 
-  const url = new URL(request.url);
-  const province = (url.searchParams.get("province") ?? "").trim();
-  const provinceCode = (url.searchParams.get("provinceCode") ?? "").trim() || provinceCodeFor(province) || "";
-
-  if (!provinceCode) {
+  if (!pickupEnabled()) {
     return Response.json(
-      { error: "Provincia inválida" },
-      { status: 400 }
+      { agencies: [], error: PICKUP_DISABLED_MESSAGE },
+      { status: 410 }
     );
   }
 
-  let provider: ShippingProvider;
-  try {
-    provider = getShippingProvider();
-  } catch (error) {
-    console.error("[shipping/agencies]", error instanceof Error ? error.message : error);
-    return Response.json(
-      { error: "No se pudieron obtener las sucursales. Intentalo de nuevo." },
-      { status: 502 }
-    );
-  }
-  if (!provider.getAgencies) {
-    return Response.json({ agencies: [] });
-  }
-
-  try {
-    const agencies = await provider.getAgencies(provinceCode);
-    return Response.json({ agencies });
-  } catch (error) {
-    console.error("[shipping/agencies]", error instanceof Error ? error.message : error);
-    return Response.json(
-      { error: "No se pudieron obtener las sucursales. Intentalo de nuevo." },
-      { status: 502 }
-    );
-  }
+  return Response.json({ agencies: [], error: PICKUP_DISABLED_MESSAGE });
 }

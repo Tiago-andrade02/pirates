@@ -10,6 +10,7 @@ import {
   type ShippingSelection,
 } from "@/components/checkout/ShippingForm";
 import { PaymentBrick } from "@/components/checkout/PaymentBrick";
+import { isValidEmail, MAX_EMAIL_LENGTH } from "@/lib/email-validation";
 
 const inputCls =
   "w-full rounded-lg border border-line bg-background px-3.5 py-3 text-sm text-white placeholder:text-faint outline-none transition-colors focus:border-white/40 sm:rounded-xl sm:px-4";
@@ -37,15 +38,16 @@ export default function CheckoutPage() {
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    if (!isValidEmail(email)) {
+      setError("Ingresá un email válido para recibir la confirmación de tu compra.");
+      return;
+    }
     if (!shipping) {
       setError("Completá provincia y código postal para elegir la entrega.");
       return;
     }
-    if (shipping.deliveryType === "S" && !shipping.agencyCode) {
-      setError("Seleccioná la sucursal de retiro.");
-      return;
-    }
-    if (shipping.deliveryType === "D" && (!shipping.street || !shipping.number)) {
+    // Única modalidad: envío a domicilio. No hay sucursal ni retiro que validar.
+    if (!shipping.street || !shipping.number) {
       setError("Completá la dirección de entrega.");
       return;
     }
@@ -62,11 +64,11 @@ export default function CheckoutPage() {
           })),
           customer: {
             name,
-            email: email || undefined,
+            email,
             phone,
           },
           shipping: {
-            deliveryType: shipping.deliveryType,
+            deliveryType: "D",
             postalCode: shipping.postalCode,
             province: shipping.province,
             locality: shipping.locality,
@@ -74,7 +76,6 @@ export default function CheckoutPage() {
             number: shipping.number,
             floor: shipping.floor,
             apartment: shipping.apartment,
-            agencyCode: shipping.agencyCode,
           },
         }),
       });
@@ -180,14 +181,24 @@ export default function CheckoutPage() {
                 />
               </label>
               <label className="block sm:col-span-2">
-                <span className="mb-1 block text-[11px] text-muted sm:text-xs">Email (opcional)</span>
+                <span className="mb-1 block text-[11px] text-muted sm:text-xs">Email *</span>
                 <input
+                  required
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Ej: juan@correo.com"
+                  // Se valida con la MISMA regla que la API (email-validation.ts)
+                  // para que el navegador no deje pasar una dirección que el
+                  // servidor va a rechazar y el pedido no se cree.
+                  pattern="[^\s@,;:<>()[\]\\]+@[^\s@.,;:<>()[\]\\]+(\.[^\s@.,;:<>()[\]\\]+)+"
+                  maxLength={MAX_EMAIL_LENGTH}
+                  title="Ingresá un email válido, por ejemplo juan@correo.com"
                   className={inputCls}
                 />
+                <span className="mt-1 block text-[11px] text-faint">
+                  Te enviamos la confirmación de tu compra a este correo.
+                </span>
               </label>
             </div>
           </section>
@@ -299,14 +310,12 @@ export default function CheckoutPage() {
               <dd className="text-white">{formatARS(subtotal)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted">Envío</dt>
+              <dt className="text-muted">Envío gratis</dt>
               <dd className="text-white">
-                {shipping && shippingCost === 0 ? (
-                  <span className="text-emerald-400">Gratis</span>
-                ) : shipping ? (
-                  formatARS(shippingCost)
+                {shipping ? (
+                  <span className="text-emerald-400">$0</span>
                 ) : (
-                  <span className="text-faint">Calcular</span>
+                  <span className="text-faint">$0</span>
                 )}
               </dd>
             </div>
@@ -317,10 +326,8 @@ export default function CheckoutPage() {
           </div>
           {shipping && (
             <p className="mt-3 rounded-lg border border-line bg-background p-2.5 text-[11px] text-muted sm:rounded-xl sm:text-xs">
-              {shipping.deliveryType === "S" ? "Retiro en sucursal" : "Envío a domicilio"}
-              {shipping.deliveryType === "D" && shipping.street
-                ? ` · ${shipping.street} ${shipping.number}`
-                : ""}
+              Envío a domicilio
+              {shipping.street ? ` · ${shipping.street} ${shipping.number}` : ""}
               {shipping.deliveryTimeMin && shipping.deliveryTimeMax
                 ? ` · ${shipping.deliveryTimeMin}-${shipping.deliveryTimeMax} días hábiles`
                 : ""}

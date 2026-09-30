@@ -2,26 +2,29 @@ import type { ShippingProvider, ShippingProviderId } from "./types";
 import { correoArgentinoProvider, hasCredentials } from "./correo-argentino";
 import { paqArProvider, hasPaqArCredentials } from "./paqar";
 import { flatRateProvider } from "./flat-rate";
+export { CUSTOMER_SHIPPING_COST, isFreeShipping, shippingCostFor } from "./free-shipping";
 
 // ═══════════════════════════════════════════════════════════════════
 // POLÍTICA DE ENVÍO DEL LANZAMIENTO: envío GRATIS para todos los
 // pedidos, sin mínimo de compra.
 //
-// Esta es la ÚNICA fuente de verdad. El costo de envío que ve el
-// cliente y que se persiste en la orden es SIEMPRE 0, sin importar
-// el importe del pedido, la modalidad ni el proveedor configurado.
+// La constante vive en ./free-shipping.ts y se re-exporta desde acá
+// para que sea la ÚNICA fuente de verdad y se pueda testear sin cargar
+// los providers. El costo de envío que ve el cliente y que se persiste
+// en la orden es SIEMPRE 0, sin importar el importe del pedido ni el
+// proveedor configurado.
 //
 // No se lee SHIPPING_FREE_MIN ni NEXT_PUBLIC_SHIPPING_FREE_MIN: una
 // variable vieja o un valor por defecto no pueden volver a cobrar
 // envío. Para cobrar envío hay que cambiar ESTE archivo, no el .env.
 //
 // Los providers (PAQ.AR, Correo Argentino, flat_rate) siguen
-// implementados y se siguen usando para despacho, sucursales y
-// tracking. Solo quedan fuera del cálculo del precio al cliente.
+// implementados y se siguen usando para despacho y tracking, pero
+// quedan fuera del cálculo del precio al cliente.
+//
+// La ÚNICA modalidad de entrega es "a domicilio": el retiro en persona
+// está desactivado (ver ./pickup.ts).
 // ═══════════════════════════════════════════════════════════════════
-
-/** Costo de envío que se cobra al cliente. Launch: siempre 0. */
-export const CUSTOMER_SHIPPING_COST = 0;
 
 function isProduction(): boolean {
   return process.env.NODE_ENV === "production";

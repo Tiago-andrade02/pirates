@@ -8,10 +8,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+<<<<<<< HEAD
     "assets": "node scripts/generate-images.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+=======
+    "test": "node --test \"tests/*.test.ts\"",
+    "assets": "node scripts/generate-images.mjs"
+>>>>>>> cadfd4b (feat: free shipping, manual tracking, notifications and payment fixes)
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

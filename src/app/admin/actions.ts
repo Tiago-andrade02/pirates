@@ -14,7 +14,14 @@ import {
   rateLimitClear,
   rateLimitRecordFailure,
 } from "@/lib/rate-limit";
-import { hasEmailConfig, sendOrderEmail } from "@/lib/notify";
+import {
+  hasEmailConfig,
+  hasSmtpConfig,
+  sendOrderEmail,
+  sendCustomerOrderEmail,
+  sendStockAlertEmail,
+  canNotifyCustomer,
+} from "@/lib/notify";
 import {
   ORDER_STATUSES_WITH_STOCK_TAKEN,
   type OrderStatus,
@@ -459,6 +466,64 @@ export async function resendOrderEmail(formData: FormData) {
 
   revalidatePath("/admin/pedidos");
   redirect(`/admin/pedidos/${id}?ok=email-enviado`);
+}
+
+export async function resendCustomerEmail(formData: FormData) {
+  await requireAdmin();
+  const id = int(formData.get("id"));
+  if (id === null) redirect("/admin/pedidos");
+
+  const order = await getOrderById(id);
+  if (!order) redirect("/admin/pedidos");
+  if (!hasSmtpConfig()) {
+    redirect(`/admin/pedidos/${id}?error=smtp-no-configurado`);
+  }
+  if (!canNotifyCustomer(order)) {
+    redirect(`/admin/pedidos/${id}?error=cliente-sin-email`);
+  }
+
+  // Solo con el pedido pagado: el texto de este correo afirma que el pago fue
+  // recibido, asi que no se puede enviar para un pedido pendiente o sin stock.
+  if (order.status !== "pagado") {
+    redirect(`/admin/pedidos/${id}?error=cliente-no-pagado`);
+  }
+
+  try {
+    await sendCustomerOrderEmail(order);
+  } catch {
+    // El motivo queda en los logs del servidor; al admin se le muestra un
+    // mensaje generico para no exponerle detalles de SMTP.
+    console.error("[notify] Error reenviando email al cliente");
+    redirect(`/admin/pedidos/${id}?error=email-fallo`);
+  }
+
+  revalidatePath("/admin/pedidos");
+  redirect(`/admin/pedidos/${id}?ok=email-cliente-enviado`);
+}
+
+// Reenvio manual de la alerta urgente de pedido cobrado sin stock. Es la
+// mitigacion de que la alerta sea at-most-once: si el aviso automatico se perdio
+// (SMTP caido), el admin lo puede recuperar desde el panel.
+export async function resendStockAlert(formData: FormData) {
+  await requireAdmin();
+  const id = int(formData.get("id"));
+  if (id === null) redirect("/admin/pedidos");
+
+  const order = await getOrderById(id);
+  if (!order) redirect("/admin/pedidos");
+  if (order.status !== "sin_stock") {
+    redirect(`/admin/pedidos/${id}?error=pedido-no-sin-stock`);
+  }
+
+  try {
+    await sendStockAlertEmail(order);
+  } catch {
+    console.error("[notify] Error reenviando alerta sin stock");
+    redirect(`/admin/pedidos/${id}?error=email-fallo`);
+  }
+
+  revalidatePath("/admin/pedidos");
+  redirect(`/admin/pedidos/${id}?ok=alerta-enviada`);
 }
 
 export async function createPurchase(formData: FormData) {

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PROVINCES, isValidPostalCode } from "@/lib/shipping/provinces";
-import { StoreIcon, TruckIcon, CheckIcon } from "@/components/icons";
+import { TruckIcon, CheckIcon } from "@/components/icons";
 
 export interface ShippingSelection {
   deliveryType: "D" | "S";
@@ -32,16 +32,6 @@ interface QuoteOption {
   validTo: string | null;
 }
 
-interface Agency {
-  code: string;
-  name: string;
-  address: string | null;
-  locality: string | null;
-  city: string | null;
-  postalCode: string | null;
-  phone: string | null;
-}
-
 interface ShippingFormProps {
   items: { slug: string; size: string; qty: number }[];
   onChange: (selection: ShippingSelection | null) => void;
@@ -50,6 +40,9 @@ interface ShippingFormProps {
 const inputCls =
   "w-full rounded-xl border border-line bg-background px-4 py-3 text-sm text-white placeholder:text-faint outline-none transition-colors focus:border-white/40";
 
+// El retiro en persona está desactivado: el checkout solo ofrece envío a
+// domicilio. No hay selector de modalidad ni de sucursal, así que no hay ningún
+// campo obligatorio que pueda bloquear la compra.
 export function ShippingForm({ items, onChange }: ShippingFormProps) {
   const [province, setProvince] = useState("");
   const [postalCode, setPostalCode] = useState("");
@@ -58,13 +51,9 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
   const [number, setNumber] = useState("");
   const [floor, setFloor] = useState("");
   const [apartment, setApartment] = useState("");
-  const [deliveryType, setDeliveryType] = useState<"D" | "S">("D");
-  const [agencyCode, setAgencyCode] = useState("");
-  const [agencies, setAgencies] = useState<Agency[]>([]);
   const [options, setOptions] = useState<QuoteOption[]>([]);
   const [quoting, setQuoting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loadingAgencies, setLoadingAgencies] = useState(false);
   const [nonce, setNonce] = useState(0);
   const lastQuoteKey = useRef("");
   const selectedOptionRef = useRef<QuoteOption | null>(null);
@@ -83,7 +72,7 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
     // El backend ni siquiera lee este campo (calcula el envío en el servidor),
     // pero se manda en 0 para que ningún cliente antiguo pueda cobrar.
     onChange({
-      deliveryType: option.deliveryType,
+      deliveryType: "D",
       postalCode: postalCode.trim(),
       province,
       locality,
@@ -91,7 +80,7 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
       number,
       floor,
       apartment,
-      agencyCode,
+      agencyCode: "",
       service: option.productType,
       productName: option.productName,
       price: 0,
@@ -100,35 +89,10 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
     });
   }
 
-  async function loadAgencies(provinceName: string) {
-    const code = PROVINCES.find((p) => p.name === provinceName)?.code;
-    if (!code) {
-      setAgencies([]);
-      return;
-    }
-    setLoadingAgencies(true);
-    try {
-      const res = await fetch(
-        `/api/shipping/agencies?province=${encodeURIComponent(provinceName)}`
-      );
-      const data = (await res.json()) as { agencies?: Agency[]; error?: string };
-      if (!res.ok) throw new Error(data.error ?? "No se pudieron cargar las sucursales");
-      setAgencies(data.agencies ?? []);
-      setAgencyCode((current) =>
-        current && (data.agencies ?? []).some((a) => a.code === current) ? current : ""
-      );
-    } catch {
-      setAgencies([]);
-    } finally {
-      setLoadingAgencies(false);
-    }
-  }
-
   // Cotización real: se dispara al cambiar provincia/código postal o el carrito.
   useEffect(() => {
     if (!provinceCode || !postalValid) return;
 
-    // Si solo cambió la modalidad o los campos de dirección, no hace falta re-cotizar.
     const key = `${province}|${postalCode.trim()}|${itemsKey}`;
     if (lastQuoteKey.current === key) return;
 
@@ -148,10 +112,12 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "No se pudo cotizar el envío");
-        const opts = (data.options as QuoteOption[]) ?? [];
+        const opts = ((data.options as QuoteOption[]) ?? []).filter(
+          (o) => o.deliveryType === "D"
+        );
         lastQuoteKey.current = key;
         setOptions(opts);
-        emitSelection(opts.find((o) => o.deliveryType === deliveryType) ?? null);
+        emitSelection(opts[0] ?? null);
       } catch (err) {
         setOptions([]);
         setError(err instanceof Error ? err.message : "No se pudo cotizar el envío");
@@ -163,7 +129,7 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nonce, provinceCode, postalValid, deliveryType, itemsKey]);
+  }, [nonce, provinceCode, postalValid, itemsKey]);
 
   function handleProvinceChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value;
@@ -171,9 +137,6 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
     setOptions([]);
     emitSelection(null);
     lastQuoteKey.current = "";
-    if (deliveryType === "S") {
-      void loadAgencies(next);
-    }
   }
 
   // El código postal cambia la cotización: se limpia y se re-cotiza.
@@ -188,9 +151,7 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
 
   // Los campos de dirección no afectan el costo del envío: no se limpia la
   // selección vigente, solo se re-emite con los datos de dirección actualizados.
-  function handleAddressFieldChange(
-    setter: (v: string) => void
-  ) {
+  function handleAddressFieldChange(setter: (v: string) => void) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       setter(e.target.value);
       setNonce((n) => n + 1);
@@ -204,25 +165,11 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nonce]);
 
-  function handleAgencyChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const code = e.target.value;
-    setAgencyCode(code);
-    emitSelection(options.find((o) => o.deliveryType === deliveryType) ?? null);
-  }
-
-  function handleOptionPick(option: QuoteOption) {
-    if (option.deliveryType === "S" && agencies.length === 0) {
-      void loadAgencies(province);
-    }
-    setDeliveryType(option.deliveryType);
-    emitSelection(option);
-  }
-
   return (
     <section className="rounded-2xl border border-line bg-surface p-6">
       <h2 className="font-serif text-xl text-white">Envío</h2>
       <p className="mt-1 text-xs text-muted">
-        Envío gratis a todo el país. Elegí la modalidad según tu código postal.
+        Envío gratis a todo el país. Completá tus datos para calcular el envío.
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -267,112 +214,72 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
           />
         </label>
 
-        {deliveryType === "D" ? (
-          <>
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-muted">Calle *</span>
-              <input
-                required
-                value={street}
-                onChange={handleAddressFieldChange(setStreet)}
-                placeholder="Ej: Av. Corrientes"
-                className={inputCls}
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-muted">Número *</span>
-              <input
-                required
-                inputMode="numeric"
-                value={number}
-                onChange={handleAddressFieldChange(setNumber)}
-                placeholder="Ej: 1234"
-                className={inputCls}
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-muted">Piso (opcional)</span>
-              <input
-                value={floor}
-                onChange={handleAddressFieldChange(setFloor)}
-                placeholder="Ej: 3"
-                className={inputCls}
-              />
-            </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-muted">Departamento (opcional)</span>
-              <input
-                value={apartment}
-                onChange={handleAddressFieldChange(setApartment)}
-                placeholder="Ej: D"
-                className={inputCls}
-              />
-            </label>
-          </>
-        ) : (
-          <label className="block sm:col-span-1">
-            <span className="mb-1.5 block text-xs text-muted">Sucursal *</span>
-            <select
-              required
-              value={agencyCode}
-              onChange={handleAgencyChange}
-              className={inputCls}
-            >
-              <option value="" disabled>
-                {loadingAgencies ? "Cargando sucursales…" : "Seleccioná una sucursal"}
-              </option>
-              {agencies.map((a) => (
-                <option key={a.code} value={a.code}>
-                  {a.name} · {a.locality ?? a.city ?? ""}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+        <label className="block">
+          <span className="mb-1.5 block text-xs text-muted">Calle *</span>
+          <input
+            required
+            value={street}
+            onChange={handleAddressFieldChange(setStreet)}
+            placeholder="Ej: Av. Corrientes"
+            className={inputCls}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs text-muted">Número *</span>
+          <input
+            required
+            inputMode="numeric"
+            value={number}
+            onChange={handleAddressFieldChange(setNumber)}
+            placeholder="Ej: 1234"
+            className={inputCls}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs text-muted">Piso (opcional)</span>
+          <input
+            value={floor}
+            onChange={handleAddressFieldChange(setFloor)}
+            placeholder="Ej: 3"
+            className={inputCls}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs text-muted">
+            Departamento (opcional)
+          </span>
+          <input
+            value={apartment}
+            onChange={handleAddressFieldChange(setApartment)}
+            placeholder="Ej: D"
+            className={inputCls}
+          />
+        </label>
       </div>
 
-      {deliveryType === "S" && !province && (
-        <p className="mt-4 rounded-xl border border-line bg-background p-3 text-xs text-muted">
-          Seleccioná primero la provincia para cargar las sucursales.
-        </p>
-      )}
-
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        {options.map((option) => {
-          const isSelected = option.deliveryType === deliveryType;
-          return (
-            <button
-              key={option.deliveryType}
-              type="button"
-              onClick={() => handleOptionPick(option)}
-              className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
-                isSelected
-                  ? "border-white/60 bg-white/5"
-                  : "border-line bg-background hover:border-white/30"
-              }`}
-            >
-              <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-line">
-                {isSelected && <CheckIcon className="h-3.5 w-3.5 text-white" />}
+      <div className="mt-6">
+        {options.map((option) => (
+          <div
+            key={option.deliveryType}
+            className="flex items-start gap-3 rounded-xl border border-white/60 bg-white/5 p-4"
+          >
+            <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-line">
+              <CheckIcon className="h-3.5 w-3.5 text-white" />
+            </span>
+            <TruckIcon className="mt-0.5 h-5 w-5 shrink-0 text-faint" />
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-white">
+                {option.deliveryType === "D" ? "A domicilio" : "Envío"}
               </span>
-              {option.deliveryType === "D" ? (
-                <TruckIcon className="mt-0.5 h-5 w-5 shrink-0 text-faint" />
-              ) : (
-                <StoreIcon className="mt-0.5 h-5 w-5 shrink-0 text-faint" />
-              )}
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold text-white">
-                  {option.deliveryType === "D" ? "A domicilio" : "Retiro en sucursal"}
-                </span>
-                <span className="mt-1 block text-xs text-muted">
-                  {option.deliveryTimeMin && option.deliveryTimeMax
-                    ? `Entre ${option.deliveryTimeMin} y ${option.deliveryTimeMax} días hábiles · `
-                    : ""}
-                  <span className="text-emerald-400">Envío gratis</span>
-                </span>
+              <span className="mt-1 block text-xs text-muted">
+                {option.deliveryTimeMin && option.deliveryTimeMax
+                  ? `Entre ${option.deliveryTimeMin} y ${option.deliveryTimeMax} días hábiles · `
+                  : ""}
+                <span className="text-emerald-400">Envío gratis</span>
               </span>
-            </button>
-          );
-        })}
+            </span>
+          </div>
+        ))}
       </div>
 
       {quoting && (
@@ -382,7 +289,7 @@ export function ShippingForm({ items, onChange }: ShippingFormProps) {
         </p>
       )}
 
-      {!quoting && options.length === 0 && postalValid && provinceCode && (
+      {!quoting && options.length === 0 && postalValid && provinceCode && !error && (
         <p className="mt-4 rounded-xl border border-line bg-background p-3 text-xs text-muted">
           Ingresá tu código postal para calcular el envío real.
         </p>

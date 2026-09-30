@@ -112,6 +112,8 @@ const SCHEMA = `
     shipped_at TEXT,
     shipping_label TEXT NOT NULL DEFAULT '',
     notified_at TEXT,
+    stock_alerted_at TEXT,
+    customer_notified_at TEXT,
     mp_payment_id TEXT,
     paid_at TEXT,
     created_at TEXT NOT NULL
@@ -260,6 +262,24 @@ async function migrate(database: Client) {
       `ALTER TABLE orders ADD COLUMN mp_payment_id TEXT;
        ALTER TABLE orders ADD COLUMN paid_at TEXT;`
     );
+  }
+
+  // Reclamos de aviso, uno por canal. TEXT nullable a proposito: los pedidos ya
+  // existentes quedan con NULL (= nadie los aviso todavia) y no se altera su
+  // estado ni se reenvia nada retroactivamente.
+  //
+  //  - stock_alerted_at:   aviso urgente de pedido cobrado sin stock.
+  //  - customer_notified_at: email de confirmacion enviado al comprador.
+  // Cada columna se comprueba por separado a proposito. Si las dos se agregaran
+  // juntas bajo un unico "if", una base que quedo a medio migrar (tiene
+  // stock_alerted_at pero todavia no customer_notified_at) nunca receberia la
+  // segunda, y el envio del email al cliente fallaria para siempre con un error
+  // de columna inexistente en el UPDATE.
+  if (!orderColumns.some((c) => c.name === "stock_alerted_at")) {
+    await database.execute("ALTER TABLE orders ADD COLUMN stock_alerted_at TEXT");
+  }
+  if (!orderColumns.some((c) => c.name === "customer_notified_at")) {
+    await database.execute("ALTER TABLE orders ADD COLUMN customer_notified_at TEXT");
   }
 
   const itemColumns = await tableColumns("supplier_purchase_items");
