@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/components/cart/CartProvider";
 
 declare global {
   interface Window {
@@ -92,9 +91,11 @@ export function PaymentBrick({
 }: PaymentBrickProps) {
   const containerId = "payment-brick-container";
   const containerRef = useRef<HTMLDivElement>(null);
+  // Último id de pago devuelto por /api/mercadopago/payment. onStatusChange no
+  // siempre lo trae, así que se guarda acá para poder armar la redirección.
+  const paymentIdRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { clear } = useCart();
   const router = useRouter();
 
   useEffect(() => {
@@ -123,6 +124,23 @@ export function PaymentBrick({
         if (typeof msg === "string" && msg) return msg;
       }
       return err instanceof Error ? err.message : "Error al procesar el pago";
+    };
+
+    // Arma la redirección al resultado CON payment_id. Ese parámetro es lo que
+    // permite a la página de resultado consultar /v1/payments/{id} en Mercado
+    // Pago y verificar el pago de verdad; sin él la página queda en
+    // "verificando" porque no tiene contra qué contrastar el pedido.
+    //
+    // El estado que viaja en la URL es solo una pista: la decisión real la toma
+    // el servidor tras verificar contra la API de MP.
+    const resultHref = (status: string) => {
+      const params = new URLSearchParams({
+        status,
+        external_reference: externalReference,
+      });
+      const paymentId = paymentIdRef.current;
+      if (paymentId) params.set("payment_id", paymentId);
+      return `/checkout/resultado?${params.toString()}`;
     };
 
     (async () => {
@@ -238,17 +256,19 @@ export function PaymentBrick({
                 // dispare onStatusChange. Devolvemos además {id, status,
                 // status_detail} para que el Payment Brick finalice su UI.
                 const st = String(data.status ?? "");
+                if (data.id !== undefined && data.id !== null && data.id !== "") {
+                  paymentIdRef.current = String(data.id);
+                }
+                // No se limpia el carrito acá: la página de resultado es la
+                // autoridad y solo vacía el carrito con un pago aprobado
+                // verificado en el servidor. Borrarlo desde el cliente con un
+                // "in_process" hacía perder el pedido aunque el pago quedara sin
+                // resolver.
                 if (!disposed) {
                   if (st === "approved") {
-                    clear();
-                    router.push(
-                      `/checkout/resultado?status=success&external_reference=${encodeURIComponent(externalReference)}`
-                    );
+                    router.push(resultHref("success"));
                   } else if (st === "pending" || st === "in_process") {
-                    clear();
-                    router.push(
-                      `/checkout/resultado?status=in_process&external_reference=${encodeURIComponent(externalReference)}`
-                    );
+                    router.push(resultHref("in_process"));
                   } else {
                     setError(
                       "El pago fue rechazado por el emisor. Probá con otro medio o intentá de nuevo."
@@ -295,15 +315,9 @@ export function PaymentBrick({
               if (disposed) return;
               const st = status?.status;
               if (st === "approved") {
-                clear();
-                router.push(
-                  `/checkout/resultado?status=success&external_reference=${encodeURIComponent(externalReference)}`
-                );
+                router.push(resultHref("success"));
               } else if (st === "pending" || st === "in_process") {
-                clear();
-                router.push(
-                  `/checkout/resultado?status=in_process&external_reference=${encodeURIComponent(externalReference)}`
-                );
+                router.push(resultHref("in_process"));
               }
             },
           },
@@ -326,7 +340,7 @@ export function PaymentBrick({
       clearTimeout(safetyTimer);
       brick?.unmount();
     };
-  }, [publicKey, externalReference, amount, clear, router]);
+  }, [publicKey, externalReference, amount, router]);
 
   return (
     <div>

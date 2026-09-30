@@ -4,44 +4,42 @@ import { LegalPage } from "@/components/LegalPage";
 export const metadata: Metadata = {
   title: "Política de Envíos — PIRATES",
   description:
-    "Modalidades, plazos y costos de envío de PIRATES: envíos a todo el país por Correo Argentino y retiro en sucursal.",
+    "Envíos gratis a todo el país por Correo Argentino. Plazos, seguimiento y datos de entrega.",
 };
 
 export default function EnviosPage() {
   return (
     <LegalPage
       title="Política de Envíos"
-      updated="15 de agosto de 2026"
+      updated="30 de septiembre de 2026"
       sections={[
         {
           heading: "1. Cobertura",
           paragraphs: [
-            "Realizamos envíos a todo el país a través de Correo Argentino, con dos modalidades disponibles: envío a domicilio y retiro en sucursal.",
+            "Realizamos envíos a todo el país a través de Correo Argentino, con envío a domicilio en todas las provincias.",
+            "No ofrecemos retiro en persona: todos los pedidos se despachan a la dirección que cargues en el checkout.",
           ],
         },
         {
           heading: "2. Costo de envío",
           bullets: [
-            "El costo del envío se calcula automáticamente durante el checkout según el destino, la modalidad elegida y el peso del pedido.",
-            "El envío es GRATIS para pedidos desde $80.000, sin importar el destino.",
-            "No se cobran costos de envío adicionales por retiro en sucursal.",
+            "El envío es GRATIS en todas las compras, sin mínimo de compra, a cualquier destino del país.",
+            "El costo de envío que ves en el checkout y en el resumen de tu pedido es siempre $0.",
           ],
         },
         {
           heading: "3. Plazos de entrega",
           paragraphs: [
-            "Los plazos indicados en el checkout son días hábiles y dependen de la provincia de destino. Despachamos los pedidos en un plazo de hasta 24/48 hs hábiles una vez confirmado el pago.",
+            "Despachamos los pedidos dentro de las 24/48 hs hábiles posteriores a la confirmación del pago. Los plazos de viaje dependen de la provincia de destino y comienzan a contar cuando Correo Argentino recibe el paquete.",
           ],
           bullets: [
-            "El plazo comienza a contar cuando el paquete es recibido por Correo Argentino.",
-            "En la página de seguimiento de tu pedido podés ver el estado real del envío en todo momento.",
             "Los plazos pueden extenderse por razones ajenas al correo o por condiciones climáticas.",
           ],
         },
         {
-          heading: "4. Retiro en sucursal",
+          heading: "4. Seguimiento",
           paragraphs: [
-            "Si elegís retiro en sucursal, te avisamos por WhatsApp cuando tu pedido esté disponible. Deberás retirarlo presentando el código de pedido y un documento, dentro del plazo que indique Correo Argentino.",
+            "Cuando despachamos tu pedido, cargamos el número de seguimiento de Correo Argentino y te avisamos por email. Desde la página de tu pedido podés ver el número, el enlace para consultar el estado y el estado actual del envío.",
           ],
         },
         {

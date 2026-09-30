@@ -10,8 +10,10 @@ import {
   CUSTOMER_SHIPPING_COST,
 } from "@/lib/shipping";
 import { provinceCodeFor, isValidPostalCode } from "@/lib/shipping/provinces";
+import { resolveDeliveryType } from "@/lib/shipping/pickup";
 import type { ShippingProvider } from "@/lib/shipping/types";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
+import { isValidEmail, normalizeEmail } from "@/lib/email-validation";
 import type { DeliveryType } from "@/lib/types";
 
 const SIZE_PRICE: Record<string, "price_30" | "price_50" | "price_100" | null> = {
@@ -40,16 +42,41 @@ function orderCode(): string {
   return `PIR-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
+// Protocolo publico real segun el proxy de confianza. Si no viene
+// x-forwarded-proto, se deduce de la propia URL de la request en vez de
+// forzar https: en desarrollo local el server corre por http y forzar https
+// rompia backUrls y notificationUrl.
+function forwardedProto(request: Request): "http" | "https" {
+  const raw = request.headers
+    .get("x-forwarded-proto")
+    ?.split(",")[0]
+    ?.trim()
+    .toLowerCase();
+  if (raw === "http" || raw === "https") return raw;
+  try {
+    return new URL(request.url).protocol === "http:" ? "http" : "https";
+  } catch {
+    return "https";
+  }
+}
+
 // URL base usada para backUrls / notificationUrl de Mercado Pago. NO se
 // confía en el header "Origin" del cliente (un atacante podría poner su
 // dominio y hacer que MP notifique/redirija ahí). Se usa SITE_URL, el host
-// real de la request o, en última instancia, el origin de la propia URL.
+// público que reporta el proxy de confianza, el host de la request o, en última
+// instancia, el origin de la propia URL.
 function appOrigin(request: Request): string {
   const fromEnv = (process.env.SITE_URL ?? "").trim().replace(/\/+$/, "");
   if (fromEnv) return fromEnv;
-  const host = request.headers.get("host");
-  if (host && /^[a-z0-9.-]+(:\d+)?$/i.test(host)) {
-    return `https://${host}`;
+
+  const candidates = [
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim(),
+    request.headers.get("host"),
+  ];
+  for (const candidate of candidates) {
+    if (candidate && /^[a-z0-9.-]+(:\d+)?$/i.test(candidate)) {
+      return `${forwardedProto(request)}://${candidate}`;
+    }
   }
   return new URL(request.url).origin;
 }
@@ -69,16 +96,15 @@ interface ShippingInput {
   number?: string;
   floor?: string;
   apartment?: string;
-  agencyCode?: string;
 }
 
 interface CheckoutRequest {
   items: CheckoutItemInput[];
   customer: {
     name: string;
-    phone: string;
-    email?: string;
-  };
+      phone: string;
+      email: string;
+    };
   shipping?: ShippingInput;
 }
 
@@ -113,7 +139,18 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
-  if (name.length > 120 || phone.length > 30 || (body.customer?.email ?? "").length > 160) {
+  // El email es OBLIGATORIO: es el único canal para mandarle la confirmación de
+  // compra al comprador. Sin el, el cliente no recibe el resumen de su pedido.
+  // Se valida con la misma regla que el formulario (email-validation.ts), para
+  // que el navegador no deje pasar una dirección que la API va a rechazar.
+  const email = normalizeEmail(body.customer?.email);
+  if (!isValidEmail(email)) {
+    return Response.json(
+      { error: "Ingresá un email válido" },
+      { status: 400 }
+    );
+  }
+  if (name.length > 120 || phone.length > 30) {
     return Response.json({ error: "Datos de contacto inválidos" }, { status: 400 });
   }
 
@@ -149,13 +186,23 @@ export async function POST(request: Request) {
   if (!provinceCode) {
     return Response.json({ error: "Provincia inválida" }, { status: 400 });
   }
-  const deliveryType: DeliveryType =
-    shipping.deliveryType === "S" ? "S" : "D";
+  // ÚNICA modalidad disponible: envío a domicilio. El retiro en persona está
+  // desactivado (ver lib/shipping/pickup.ts), así que un "S" enviado por un
+  // cliente guardado se rechaza acá en vez de crear un pedido que no se puede
+  // despachar ni mostrar.
+  const deliveryTypeResolution = resolveDeliveryType(shipping.deliveryType);
+  if (!deliveryTypeResolution.ok) {
+    return Response.json(
+      { error: deliveryTypeResolution.error },
+      { status: 400 }
+    );
+  }
+  const deliveryType: DeliveryType = deliveryTypeResolution.deliveryType;
 
   // Provider de envío. En el lanzamiento el envío es GRATIS para todos, así que
   // el provider NO se consulta para calcular el precio: se sigue resolviendo
-  // para persistir el proveedor/servicio en la orden y para las sucursales de
-  // retiro, pero un provider sin credenciales ya no bloquea el checkout.
+  // para persistir el proveedor/servicio en la orden, pero un provider sin
+  // credenciales ya no bloquea el checkout.
   const provider: ShippingProvider = getShippingProviderForOrder();
 
   // Localidad: el frontend la exige; el backend también valida que venga.
@@ -167,43 +214,10 @@ export async function POST(request: Request) {
     );
   }
 
-  const agencyCode = (shipping.agencyCode ?? "").trim();
-  if (deliveryType === "S") {
-    if (!agencyCode) {
-      return Response.json(
-        { error: "Seleccioná una sucursal de retiro" },
-        { status: 400 }
-      );
-    }
-    if (agencyCode.length > 40) {
-      return Response.json({ error: "Sucursal inválida" }, { status: 400 });
-    }
-    // La sucursal debe existir y pertenecer a la provincia elegida: un código
-    // inventado (o de otra provincia) se rechaza acá. Nunca se confía en el
-    // cliente para validar sucursales.
-    if (!provider.getAgencies) {
-      return Response.json(
-        { error: "El retiro en sucursal no está disponible para este proveedor" },
-        { status: 400 }
-      );
-    }
-    try {
-      const agencies = await provider.getAgencies(provinceCode);
-      const validAgency = agencies.some((a) => a.code === agencyCode);
-      if (!validAgency) {
-        return Response.json(
-          { error: "La sucursal seleccionada no pertenece a la provincia indicada" },
-          { status: 400 }
-        );
-      }
-    } catch (error) {
-      console.error("[checkout/agencies]", error instanceof Error ? error.message : error);
-      return Response.json(
-        { error: "No se pudieron verificar las sucursales. Intentalo de nuevo." },
-        { status: 502 }
-      );
-    }
-  }
+  // No hay retiro, así que no se guarda ni se valida ninguna sucursal. La columna
+  // `agency_code` se escribe vacía para no dejar un código interno suelto en la
+  // orden (los pedidos históricos con "S" la conservan: la base no se toca).
+  const agencyCode = "";
   if (deliveryType === "D" && !(shipping.street ?? "").trim()) {
     return Response.json(
       { error: "Completá la dirección de entrega" },
@@ -323,11 +337,15 @@ export async function POST(request: Request) {
     preference = await createPreference({
       items,
       externalReference: code,
-      payer: { name, phone, email: body.customer?.email },
+        payer: { name, phone, email },
       backUrls: {
-        success: `${origin}/checkout/resultado`,
-        pending: `${origin}/checkout/resultado`,
-        failure: `${origin}/checkout/resultado`,
+        // external_reference va explicito ademas de existir en la preferencia:
+        // la pagina de resultado necesita el codigo del pedido para verificar
+        // el pago contra Mercado Pago, y no puede depender de que MP lo anexe a
+        // la redireccion.
+        success: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
+        pending: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
+        failure: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
       },
       notificationUrl: `${origin}/api/mercadopago/webhook`,
     });
@@ -339,7 +357,7 @@ export async function POST(request: Request) {
   const now = new Date().toISOString();
   const customerResult = await db.execute({
     sql: "INSERT INTO customers (name, email, phone, province, created_at) VALUES (?, ?, ?, ?, ?)",
-    args: [name, body.customer?.email?.trim() || null, phone, province, now],
+      args: [name, email, phone, province, now],
   });
   const customerId = Number(customerResult.lastInsertRowid);
 

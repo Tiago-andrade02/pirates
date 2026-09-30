@@ -1,7 +1,7 @@
 import { getDb } from "@/lib/db";
 import { createPayment } from "@/lib/mercadopago";
 import { recordPaymentDiagnostic } from "@/lib/payment-diagnostics";
-import { finalizePaidOrderByCode } from "@/lib/checkout-finalize";
+import { attachPaymentToOrder, finalizePaidOrderByCode } from "@/lib/checkout-finalize";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
 
 const PAYMENT_MAX_ATTEMPTS = 60;
@@ -130,10 +130,7 @@ export async function POST(request: Request) {
     if (payment.status === "approved") {
       await finalizePaidOrderByCode(externalReference);
       try {
-        await db.execute({
-          sql: "UPDATE orders SET mp_payment_id = COALESCE(NULLIF(mp_payment_id, ''), ?), paid_at = COALESCE(paid_at, ?) WHERE code = ?",
-          args: [String(payment.id), new Date().toISOString(), externalReference],
-        });
+        await attachPaymentToOrder(externalReference, String(payment.id));
       } catch (error) {
         console.error(
           "[mercadopago/payment] Error persistiendo mp_payment_id/paid_at",

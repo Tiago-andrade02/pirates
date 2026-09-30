@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getOrderByCode } from "@/lib/admin-data";
+import { safeTrackingHref } from "@/lib/shipping/manual-tracking";
 import { formatARS, formatNumber } from "@/lib/format";
 import {
   ORDER_STATUS_LABELS,
@@ -93,7 +94,10 @@ export default async function PedidoPage({
   if (!order || !ORDER_STATUSES.includes(order.status)) notFound();
 
   const statusStyle = STATUS_STYLES[order.status];
-  const shipped = Boolean(order.shippingProvider);
+  const hasTracking = Boolean(order.trackingNumber);
+  // Enlace cargado a mano o, si no hay, el oficial. Si la URL guardada no es
+  // http/https (fila histórica/importada), queda null y NO se genera el enlace.
+  const trackingHref = safeTrackingHref(order.trackingUrl);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
@@ -126,15 +130,20 @@ export default async function PedidoPage({
           <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
             Este pedido fue cancelado. Si tenés dudas, escribinos por WhatsApp.
           </p>
-        ) : !shipped ? (
+        ) : order.status === "sin_stock" ? (
+          <p className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300">
+            No pudimos preparar este pedido porque un producto quedó sin stock. Te
+            escribimos por WhatsApp para resolverlo.
+          </p>
+        ) : !hasTracking ? (
           <div className="mt-4 rounded-xl border border-line bg-background p-4">
             <p className="text-sm leading-relaxed text-muted">
               {order.status === "pagado" || order.status === "preparando"
-                ? "Tu pago fue confirmado. Estamos preparando y despachando tu pedido; en cuanto Correo Argentino lo reciba te vamos a mostrar el seguimiento acá."
-                : "Estamos esperando la confirmación del pago para empezar a preparar tu pedido. Te avisaremos por WhatsApp cuando esté en camino."}
+                ? "Tu pago fue confirmado. Estamos preparando tu pedido; cuando lo despachemos te vamos a avisar por email con el número de seguimiento."
+                : "Estamos esperando la confirmación del pago para empezar a preparar tu pedido. Cuando lo despachemos te vamos a avisar por email con el número de seguimiento."}
             </p>
           </div>
-        ) : order.trackingNumber ? (
+        ) : (
           <div className="mt-4 space-y-5">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line bg-background px-4 py-3">
               <span className="text-xs uppercase tracking-widest text-faint">
@@ -143,31 +152,47 @@ export default async function PedidoPage({
               <span className="font-mono text-sm font-semibold text-white">
                 {order.trackingNumber}
               </span>
-              <a
-                href="https://www.correoargentino.com.ar/formularios/seguimiento"
-                target="_blank"
-                rel="noreferrer"
-                className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-gold hover:underline"
-              >
-                Seguimiento oficial <ArrowRightIcon className="h-3 w-3" />
-              </a>
+              {trackingHref && (
+                <a
+                  href={trackingHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-gold hover:underline"
+                >
+                  Seguimiento oficial <ArrowRightIcon className="h-3 w-3" />
+                </a>
+              )}
             </div>
+
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+              <span className="text-muted">
+                Estado:{" "}
+                <span className="font-medium text-white">
+                  {ORDER_STATUS_LABELS[order.status]}
+                </span>
+              </span>
+              {order.shippedAt && (
+                <span className="text-muted">
+                  Despachado:{" "}
+                  <span className="font-medium text-white">
+                    {new Date(order.shippedAt).toLocaleDateString("es-AR", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </span>
+                </span>
+              )}
+            </div>
+
             {order.trackingEvents.length > 0 ? (
               <Timeline events={order.trackingEvents} />
             ) : (
               <p className="text-sm text-muted">
-                Tu paquete ya fue entregado a Correo Argentino. Los movimientos del
-                envío aparecerán acá cuando estén disponibles.
+                Tu pedido ya fue despachado. Los movimientos del envío aparecerán
+                acá cuando estén disponibles.
               </p>
             )}
-          </div>
-        ) : (
-          <div className="mt-4 rounded-xl border border-line bg-background p-4">
-            <p className="text-sm leading-relaxed text-muted">
-              Tu pedido fue despachado con Correo Argentino. Estamos a la espera
-              del número de seguimiento para mostrártelo acá. Te avisaremos por
-              WhatsApp apenas esté disponible.
-            </p>
           </div>
         )}
       </section>
@@ -197,10 +222,12 @@ export default async function PedidoPage({
             <dd className="text-white">{formatARS(order.subtotal)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-muted">Envío</dt>
+            <dt className="text-muted">
+              {order.shipping === 0 ? "Envío gratis" : "Envío"}
+            </dt>
             <dd className="text-white">
               {order.shipping === 0 ? (
-                <span className="text-emerald-400">Gratis</span>
+                <span className="text-emerald-400">$0</span>
               ) : (
                 formatARS(order.shipping)
               )}
@@ -215,9 +242,6 @@ export default async function PedidoPage({
                 <MapPinIcon className="h-4 w-4 text-faint" />
               )}
               {DELIVERY_TYPE_LABELS[order.deliveryType]}
-              {order.deliveryType === "S" && order.agencyCode
-                ? ` · Suc. ${order.agencyCode}`
-                : ""}
             </dd>
           </div>
         </dl>

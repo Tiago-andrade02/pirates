@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getShippingProvider, getShippingProviderById } from "@/lib/shipping";
+import { buildPublicTrackingResponse } from "@/lib/shipping/public-tracking";
 import type { ShippingProviderId } from "@/lib/shipping/types";
 import type { TrackingEvent } from "@/lib/types";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
   const result = await db.execute({
     sql: `SELECT code, status, created_at, shipping_provider, shipping_service,
               tracking_number, tracking_url, tracking_events, shipped_at,
-              delivery_type, postal_code, locality
+              delivery_type
        FROM orders WHERE code = ?`,
     args: [code],
   });
@@ -56,8 +57,6 @@ export async function GET(request: Request) {
         tracking_events: string;
         shipped_at: string | null;
         delivery_type: string;
-        postal_code: string;
-        locality: string;
       }
     | undefined;
 
@@ -83,18 +82,21 @@ export async function GET(request: Request) {
     }
   }
 
-  return Response.json({
-    code: order.code,
-    status: order.status,
-    createdAt: order.created_at,
-    shippedAt: order.shipped_at,
-    deliveryType: order.delivery_type,
-    postalCode: order.postal_code,
-    locality: order.locality,
-    shippingProvider: order.shipping_provider,
-    shippingService: order.shipping_service,
-    trackingNumber: order.tracking_number,
-    trackingUrl: order.tracking_url,
-    events,
-  });
+  // Respuesta pública SIN datos de la dirección (postal_code / locality).
+  return Response.json(
+    buildPublicTrackingResponse(
+      {
+        code: order.code,
+        status: order.status,
+        createdAt: order.created_at,
+        shippedAt: order.shipped_at,
+        deliveryType: order.delivery_type,
+        shippingProvider: order.shipping_provider,
+        shippingService: order.shipping_service,
+        trackingNumber: order.tracking_number,
+        trackingUrl: order.tracking_url,
+      },
+      events
+    )
+  );
 }

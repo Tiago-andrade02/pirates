@@ -14,6 +14,7 @@ import {
   WalletIcon,
   ChartIcon,
   StoreIcon,
+  ShieldIcon,
   LogoutIcon,
 } from "@/components/icons";
 
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/admin/stock", label: "Stock", icon: BoxesIcon },
   { href: "/admin/caja", label: "Caja", icon: WalletIcon },
   { href: "/admin/estadisticas", label: "Estadísticas", icon: ChartIcon },
+  { href: "/admin/configuracion", label: "Configuración", icon: ShieldIcon },
 ] as const;
 
 export function AdminShell({ children }: { children: ReactNode }) {

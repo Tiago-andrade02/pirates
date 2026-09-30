@@ -1,27 +1,21 @@
+import { updateTrackingNumber, resendTrackingEmail } from "@/lib/shipping/actions";
 import {
-  createShipment,
-  refreshTracking,
-  updateTrackingNumber,
-  cancelShipment,
-} from "@/lib/shipping/actions";
-import { getShippingProvider, shippingProviderLabel } from "@/lib/shipping";
+  canManualTrack,
+  canNotifyDispatch,
+  safeTrackingHref,
+  MANUAL_TRACKING_BLOCKED_MESSAGE,
+} from "@/lib/shipping/manual-tracking";
 import {
   DELIVERY_TYPE_LABELS,
+  ORDER_STATUS_LABELS,
   type Order,
   type TrackingEvent,
 } from "@/lib/types";
 import { formatARS } from "@/lib/format";
-import { TruckIcon, BoxIcon, ArrowRightIcon } from "@/components/icons";
+import { TruckIcon, ArrowRightIcon } from "@/components/icons";
 
 const inputCls =
   "w-full rounded-lg border border-line bg-background px-3 py-2 text-sm text-white placeholder:text-faint focus:border-gold focus:outline-none";
-
-let activeProviderLabel = "el proveedor configurado";
-try {
-  activeProviderLabel = shippingProviderLabel(getShippingProvider().id);
-} catch {
-  activeProviderLabel = "el proveedor configurado";
-}
 
 function TrackingTimeline({ events }: { events: TrackingEvent[] }) {
   const sorted = [...events].sort((a, b) => (a.date > b.date ? -1 : 1));
@@ -49,11 +43,28 @@ function TrackingTimeline({ events }: { events: TrackingEvent[] }) {
   );
 }
 
-export function ShippingCard({ order }: { order: Order }) {
-  const notShipped = !order.shippingProvider;
-  const canDispatch =
-    notShipped && (order.status === "pagado" || order.status === "preparando");
+function formatDate(value: string | null): string {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
+export function ShippingCard({ order }: { order: Order }) {
+  const hasTracking = Boolean(order.trackingNumber);
+  // El enlace que ve el cliente: el cargado a mano o, si no hay, el oficial. Si
+  // la URL guardada no es http/https (fila histórica/importada), queda null y no
+  // se genera el enlace.
+  const trackingHref = safeTrackingHref(order.trackingUrl);
+  // Solo se puede cargar/corregir el seguimiento de un pedido que puede salir
+  // (pagado/preparando/enviado/entregado). Un pedido pendiente, cancelado o sin
+  // stock no admite seguimiento ni aviso de despacho.
+  const allowTracking = canManualTrack(order.status);
+  const allowResend = canNotifyDispatch(order.status);
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-line bg-surface p-5">
@@ -71,46 +82,30 @@ export function ShippingCard({ order }: { order: Order }) {
           </div>
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Provincia</dt>
-            <dd className="text-right capitalize text-white">{order.province}</dd>
-          </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-muted">Proveedor</dt>
             <dd className="text-right capitalize text-white">
-              {order.shippingProvider
-                ? shippingProviderLabel(order.shippingProvider)
-                : "—"}
+              {order.province || "—"}
             </dd>
           </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">Dirección</dt>
+            <dd className="text-right text-white">
+              {[order.addressStreet, order.addressNumber].filter(Boolean).join(" ") ||
+                "—"}
+              {order.addressFloor ? ` · Piso ${order.addressFloor}` : ""}
+              {order.addressApartment ? ` · Dpto ${order.addressApartment}` : ""}
+            </dd>
+          </div>
+          {order.locality && (
+            <div className="flex justify-between gap-3">
+              <dt className="text-muted">Localidad</dt>
+              <dd className="text-right text-white">{order.locality}</dd>
+            </div>
+          )}
           {order.postalCode && (
             <div className="flex justify-between gap-3">
               <dt className="text-muted">CP</dt>
               <dd className="text-right text-white">{order.postalCode}</dd>
             </div>
-          )}
-          {order.deliveryType === "S" ? (
-            <div className="flex justify-between gap-3">
-              <dt className="text-muted">Sucursal</dt>
-              <dd className="text-right font-mono text-white">
-                {order.agencyCode || "—"}
-              </dd>
-            </div>
-          ) : (
-            <>
-              <div className="flex justify-between gap-3">
-                <dt className="text-muted">Dirección</dt>
-                <dd className="text-right text-white">
-                  {order.addressStreet} {order.addressNumber}
-                  {order.addressFloor ? ` · Piso ${order.addressFloor}` : ""}
-                  {order.addressApartment ? ` · Dpto ${order.addressApartment}` : ""}
-                </dd>
-              </div>
-              {order.locality && (
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted">Localidad</dt>
-                  <dd className="text-right text-white">{order.locality}</dd>
-                </div>
-              )}
-            </>
           )}
           <div className="flex justify-between gap-3">
             <dt className="text-muted">Costo</dt>
@@ -122,134 +117,130 @@ export function ShippingCard({ order }: { order: Order }) {
       </div>
 
       <div className="rounded-2xl border border-line bg-surface p-5">
-        <h2 className="mb-4 font-serif text-lg text-white">Despacho</h2>
+        <h2 className="mb-4 font-serif text-lg text-white">Seguimiento</h2>
 
-        {notShipped ? (
-          <div className="space-y-3">
-            <p className="rounded-xl border border-line bg-background p-3 text-xs leading-relaxed text-muted">
-              El pedido todavía no fue despachado. Cuando el pago esté confirmado
-              y el paquete esté armado, generá el envío con {activeProviderLabel}.
-            </p>
-            {canDispatch ? (
-              <form action={createShipment}>
-                <input type="hidden" name="id" value={order.id} />
-                <button className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-black transition hover:bg-neutral-200">
-                  <BoxIcon className="h-4 w-4" />
-                  Despachar con {activeProviderLabel}
-                </button>
-              </form>
-            ) : (
-              <p className="text-xs text-faint">
-                El despacho se habilita cuando el pedido está pagado o en preparación.
-              </p>
-            )}
-          </div>
-        ) : (
+        {hasTracking ? (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
               <span className="text-muted">
-                Servicio:{" "}
+                Estado del envío:{" "}
                 <span className="font-medium text-white">
-                  {order.shippingService || "—"}
+                  {ORDER_STATUS_LABELS[order.status]}
                 </span>
               </span>
-              {order.shippedAt && (
-                <span className="text-muted">
-                  Despachado:{" "}
-                  <span className="font-medium text-white">
-                    {new Date(order.shippedAt).toLocaleString("es-AR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
+              <span className="text-muted">
+                Despachado:{" "}
+                <span className="font-medium text-white">
+                  {formatDate(order.shippedAt)}
                 </span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-xl border border-line bg-background px-3 py-2.5">
+              <span className="text-xs uppercase tracking-widest text-faint">
+                Tracking
+              </span>
+              <span className="font-mono text-sm font-semibold text-white">
+                {order.trackingNumber}
+              </span>
+              {trackingHref && (
+                <a
+                  href={trackingHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="ml-auto inline-flex items-center gap-1 text-xs text-gold hover:underline"
+                >
+                  Seguir en la web <ArrowRightIcon className="h-3 w-3" />
+                </a>
               )}
             </div>
 
-            {order.trackingNumber ? (
-              <div className="flex items-center gap-3 rounded-xl border border-line bg-background px-3 py-2.5">
-                <span className="text-xs uppercase tracking-widest text-faint">
-                  Tracking
-                </span>
-                <span className="font-mono text-sm font-semibold text-white">
-                  {order.trackingNumber}
-                </span>
-                {order.trackingUrl && (
-                  <a
-                    href={order.trackingUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="ml-auto inline-flex items-center gap-1 text-xs text-gold hover:underline"
-                  >
-                    Seguir en la web <ArrowRightIcon className="h-3 w-3" />
-                  </a>
-                )}
-              </div>
-) : (
-                <form action={updateTrackingNumber} className="space-y-2">
-                  <p className="text-xs text-muted">
-                    El proveedor asigna el número de seguimiento en su panel.
-                    Registralo acá para poder consultar el estado.
-                  </p>
-                <div className="flex gap-2">
-                  <input
-                    type="hidden"
-                    name="id"
-                    value={order.id}
-                  />
-                  <input
-                    name="tracking_number"
-                    required
-                    placeholder="Ej: 123456789AR"
-                    className={inputCls}
-                  />
-                  <button className="h-10 shrink-0 rounded-xl border border-line px-4 text-sm font-semibold text-white transition hover:bg-line/40">
-                    Guardar
-                  </button>
-                </div>
+            {allowResend && (
+              <form action={resendTrackingEmail}>
+                <input type="hidden" name="id" value={order.id} />
+                <button className="h-10 rounded-xl border border-line px-4 text-sm font-semibold text-white transition hover:bg-line/40">
+                  Reenviar aviso de despacho
+                </button>
               </form>
             )}
 
-            <div className="flex flex-wrap gap-2">
-              {order.trackingNumber && (
-                <form action={refreshTracking}>
+            {allowTracking ? (
+              <details className="rounded-xl border border-line bg-background p-3">
+                <summary className="cursor-pointer text-xs font-semibold text-white">
+                  Editar número / URL de seguimiento
+                </summary>
+                <form action={updateTrackingNumber} className="mt-3 space-y-2">
                   <input type="hidden" name="id" value={order.id} />
-                  <button className="inline-flex h-10 items-center rounded-xl border border-line px-4 text-sm font-medium text-white transition hover:bg-line/40">
-                    Actualizar seguimiento
+                  <input
+                    name="tracking_number"
+                    required
+                    defaultValue={order.trackingNumber}
+                    placeholder="Ej: 123456789AR"
+                    className={inputCls}
+                  />
+                  <input
+                    name="tracking_url"
+                    type="url"
+                    defaultValue={order.trackingUrl}
+                    placeholder="URL de seguimiento (opcional)"
+                    className={inputCls}
+                  />
+                  <p className="text-[11px] leading-relaxed text-faint">
+                    Si la dejás vacía se usa el enlace oficial de Correo Argentino.
+                    Recién guardado, si el número cambia se le avisa al cliente por
+                    email; si es el mismo, no se reenvía nada.
+                  </p>
+                  <button className="h-10 rounded-xl border border-line px-4 text-sm font-semibold text-white transition hover:bg-line/40">
+                    Guardar seguimiento
                   </button>
                 </form>
-              )}
-              {order.trackingNumber && order.shippingProvider === "paq_ar" && (
-                <a
-                  href={`/api/shipping/label?code=${encodeURIComponent(order.code)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-line px-4 text-sm font-medium text-white transition hover:bg-line/40"
-                >
-                  <BoxIcon className="h-4 w-4" />
-                  Descargar rótulo (PDF)
-                </a>
-              )}
-              <form action={cancelShipment}>
-                <input type="hidden" name="id" value={order.id} />
-                <button className="inline-flex h-10 items-center rounded-xl border border-red-500/30 px-4 text-sm font-medium text-red-300 transition hover:bg-red-500/10">
-                  Cancelar envío
-                </button>
-              </form>
-            </div>
+              </details>
+            ) : (
+              <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-300">
+                {MANUAL_TRACKING_BLOCKED_MESSAGE}
+              </p>
+            )}
 
             {order.trackingEvents.length > 0 && (
               <div className="rounded-xl border border-line bg-background p-4">
                 <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-faint">
-                  Seguimiento del paquete
+                  Historial del envío
                 </h3>
                 <TrackingTimeline events={order.trackingEvents} />
               </div>
             )}
           </div>
+        ) : allowTracking ? (
+          <form action={updateTrackingNumber} className="space-y-3">
+            <input type="hidden" name="id" value={order.id} />
+            <p className="rounded-xl border border-line bg-background p-3 text-xs leading-relaxed text-muted">
+              Cargá a mano el número de seguimiento de Correo Argentino. Al
+              guardarlo, el pedido queda marcado como despachado, se registra la
+              fecha y se agrega el evento de despacho al historial. Si el número es
+              nuevo, se le avisa al cliente por email.
+            </p>
+            <div className="space-y-2">
+              <input
+                name="tracking_number"
+                required
+                placeholder="Ej: 123456789AR"
+                className={inputCls}
+              />
+              <input
+                name="tracking_url"
+                type="url"
+                placeholder="URL de seguimiento (opcional)"
+                className={inputCls}
+              />
+              <button className="h-10 w-full rounded-xl bg-white px-4 text-sm font-semibold text-black transition hover:bg-neutral-200">
+                Guardar seguimiento
+              </button>
+            </div>
+          </form>
+        ) : (
+          <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-300">
+            {MANUAL_TRACKING_BLOCKED_MESSAGE}
+          </p>
         )}
       </div>
     </div>

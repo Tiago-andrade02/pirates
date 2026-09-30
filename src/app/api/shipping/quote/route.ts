@@ -4,6 +4,7 @@ import {
   CUSTOMER_SHIPPING_COST,
 } from "@/lib/shipping";
 import { isValidPostalCode, provinceCodeFor } from "@/lib/shipping/provinces";
+import { filterAllowedOptions, resolveDeliveryType } from "@/lib/shipping/pickup";
 import type { QuoteOption, ShippingProvider } from "@/lib/shipping/types";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
 import type { DeliveryType } from "@/lib/types";
@@ -63,13 +64,17 @@ export async function POST(request: Request) {
     );
   }
 
-  const deliveryType = body.deliveryType as DeliveryType | undefined;
-  if (deliveryType && deliveryType !== "D" && deliveryType !== "S") {
-    return Response.json(
-      { error: "Modalidad de entrega inválida" },
-      { status: 400 }
-    );
+  // El retiro en persona está desactivado: si el cliente lo pide explícitamente
+  // se rechaza acá y no se cotiza, para que la respuesta nunca ofrezca una
+  // modalidad que el checkout no va a aceptar.
+  const requested = resolveDeliveryType(body.deliveryType);
+  if (!requested.ok) {
+    return Response.json({ error: requested.error }, { status: 400 });
   }
+  // Se pasa la modalidad al provider solo si el cliente la pidió explícitamente.
+  const deliveryType: DeliveryType | undefined = body.deliveryType
+    ? requested.deliveryType
+    : undefined;
 
   for (const item of body.items) {
     if (
@@ -114,7 +119,11 @@ export async function POST(request: Request) {
     );
   }
 
-  if (options.length === 0) {
+  // Última barrera antes de responder: aunque un provider devuelva la modalidad
+  // de retiro, acá se descarta. Así ninguna cotización puede ofrecer retiro en
+  // persona mientras esté desactivado.
+  const permitted = filterAllowedOptions(options);
+  if (permitted.length === 0) {
     return Response.json(
       { error: "No hay servicios de envío disponibles para ese destino" },
       { status: 404 }
@@ -124,7 +133,7 @@ export async function POST(request: Request) {
   // El precio al cliente es 0 sin importar la cotización: se fuerza acá para
   // que el frontend nunca muestre un cargo, aunque el provider devuelva precio.
   // El precio real que se cobra lo recalcula el backend en /api/checkout.
-  const freeOptions = options.map((o) => ({ ...o, price: CUSTOMER_SHIPPING_COST }));
+  const freeOptions = permitted.map((o) => ({ ...o, price: CUSTOMER_SHIPPING_COST }));
 
   return Response.json({
     options: freeOptions,
