@@ -4,7 +4,9 @@ import {
   createPreference,
   getPublicKey,
   hasCredentials,
+  type PreferenceResult,
 } from "@/lib/mercadopago";
+import { isCheckoutTestModeEnabled } from "@/lib/checkout-test-mode";
 import {
   getShippingProviderForOrder,
   CUSTOMER_SHIPPING_COST,
@@ -300,7 +302,12 @@ export async function POST(request: Request) {
   const productType = "CP";
   const total = subtotal + shippingCost;
 
-  if (!hasCredentials()) {
+  // Modo de prueba: crea el pedido 'pendiente' sin tocar Mercado Pago. Sólo se
+  // habilita server-side en una Preview de Vercel o en desarrollo local
+  // (ver src/lib/checkout-test-mode.ts). Nunca en producción.
+  const testMode = isCheckoutTestModeEnabled();
+
+  if (!testMode && !hasCredentials()) {
     return Response.json(
       {
         error:
@@ -313,45 +320,50 @@ export async function POST(request: Request) {
   const code = orderCode();
   const origin = appOrigin(request);
 
-  let preference;
-  try {
-    const items = orderItems.map((item) => ({
-      id: `${item.perfumeId}-${item.size}`,
-      title: `${item.name} ${item.size} ml`,
-      quantity: item.qty,
-      unit_price: item.price,
-    }));
-    if (shippingCost > 0) {
-      items.push({
-        id: "envio",
-        title:
-          provider.id === "paq_ar"
-            ? "Envío PAQ.AR"
-            : provider.id === "correo_argentino"
-              ? "Envío Correo Argentino"
-              : "Envío",
-        quantity: 1,
-        unit_price: shippingCost,
-      });
-    }
-    preference = await createPreference({
-      items,
-      externalReference: code,
+  // En modo de prueba NO se crea preferencia ni se llama a Mercado Pago: el
+  // pedido se persiste 'pendiente' y la respuesta se marca testMode para que la
+  // UI no monte el Payment Brick.
+  let preference: PreferenceResult | null = null;
+  if (!testMode) {
+    try {
+      const items = orderItems.map((item) => ({
+        id: `${item.perfumeId}-${item.size}`,
+        title: `${item.name} ${item.size} ml`,
+        quantity: item.qty,
+        unit_price: item.price,
+      }));
+      if (shippingCost > 0) {
+        items.push({
+          id: "envio",
+          title:
+            provider.id === "paq_ar"
+              ? "Envío PAQ.AR"
+              : provider.id === "correo_argentino"
+                ? "Envío Correo Argentino"
+                : "Envío",
+          quantity: 1,
+          unit_price: shippingCost,
+        });
+      }
+      preference = await createPreference({
+        items,
+        externalReference: code,
         payer: { name, phone, email },
-      backUrls: {
-        // external_reference va explicito ademas de existir en la preferencia:
-        // la pagina de resultado necesita el codigo del pedido para verificar
-        // el pago contra Mercado Pago, y no puede depender de que MP lo anexe a
-        // la redireccion.
-        success: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
-        pending: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
-        failure: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
-      },
-      notificationUrl: `${origin}/api/mercadopago/webhook`,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Error creando preferencia de pago";
-    return Response.json({ error: message }, { status: 500 });
+        backUrls: {
+          // external_reference va explicito ademas de existir en la preferencia:
+          // la pagina de resultado necesita el codigo del pedido para verificar
+          // el pago contra Mercado Pago, y no puede depender de que MP lo anexe a
+          // la redireccion.
+          success: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
+          pending: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
+          failure: `${origin}/checkout/resultado?external_reference=${encodeURIComponent(code)}`,
+        },
+        notificationUrl: `${origin}/api/mercadopago/webhook`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Error creando preferencia de pago";
+      return Response.json({ error: message }, { status: 500 });
+    }
   }
 
   const now = new Date().toISOString();
@@ -397,6 +409,25 @@ export async function POST(request: Request) {
       sql: "INSERT INTO order_items (order_id, perfume_id, name, size, price, qty) VALUES (?, ?, ?, ?, ?, ?)",
       args: [orderId, item.perfumeId, item.name, item.size, item.price, item.qty],
     });
+  }
+
+  if (testMode) {
+    // Pedido de prueba: queda 'pendiente', sin mp_payment_id ni paid_at. No
+    // descuenta stock ni dispara finalización/pago/notificación (esos viven en
+    // el flujo de pago confirmado). Se devuelve sin preferencia ni initPoint
+    // para que la UI no monte el Payment Brick ni redirija a Mercado Pago.
+    return Response.json({
+      testMode: true,
+      code,
+      total,
+      subtotal,
+      shipping: shippingCost,
+    });
+  }
+
+  if (!preference) {
+    // Defensivo: fuera de modo de prueba la preferencia siempre se crea arriba.
+    return Response.json({ error: "No se pudo iniciar el pago." }, { status: 500 });
   }
 
   return Response.json({
