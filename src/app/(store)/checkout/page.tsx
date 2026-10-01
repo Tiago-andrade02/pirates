@@ -31,6 +31,8 @@ export default function CheckoutPage() {
     initPoint: string;
   } | null>(null);
   const [cardChosen, setCardChosen] = useState(false);
+  // Modo de prueba (CHECKOUT_TEST_MODE): pedido creado sin Mercado Pago.
+  const [testOrder, setTestOrder] = useState<{ code: string } | null>(null);
 
   const shippingCost = shipping?.price ?? 0;
   const total = subtotal + shippingCost;
@@ -86,9 +88,25 @@ export default function CheckoutPage() {
         initPoint?: string;
         sandboxInitPoint?: string;
         total?: number;
+        testMode?: boolean;
         error?: string;
       };
-      if (!res.ok || (!data.preferenceId && !data.initPoint)) {
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo iniciar el pago.");
+        setLoading(false);
+        return;
+      }
+
+      // Modo de prueba: el pedido se creó sin Mercado Pago. No se monta el
+      // Payment Brick ni se redirige a Mercado Pago; solo se avisa que no hubo
+      // cobro.
+      if (data.testMode && data.code) {
+        setTestOrder({ code: data.code });
+        setLoading(false);
+        return;
+      }
+
+      if (!data.preferenceId && !data.initPoint) {
         setError(data.error ?? "No se pudo iniciar el pago.");
         setLoading(false);
         return;
@@ -218,7 +236,26 @@ export default function CheckoutPage() {
             </p>
           )}
 
-          {payment ? (
+          {testOrder ? (
+            <section className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 sm:rounded-2xl sm:p-5">
+              <h2 className="font-serif text-base text-white sm:text-xl">
+                Pedido de prueba creado
+              </h2>
+              <p className="mt-1 text-xs leading-relaxed text-amber-200 sm:text-sm">
+                Pedido de prueba creado. No está pagado y no se procesó ningún cobro.
+              </p>
+              <p className="mt-2 text-xs text-muted sm:text-sm">
+                Código del pedido:{" "}
+                <span className="font-semibold text-white">{testOrder.code}</span>
+              </p>
+              <Link
+                href={`/pedido/${encodeURIComponent(testOrder.code)}`}
+                className="mt-3 inline-flex text-xs font-medium text-gold hover:underline"
+              >
+                Ver estado y seguimiento del pedido
+              </Link>
+            </section>
+          ) : payment ? (
             cardChosen ? (
               <section className="rounded-xl border border-line bg-surface p-3.5 sm:rounded-2xl sm:p-5">
                 <h2 className="font-serif text-base text-white sm:text-xl">Pago con tarjeta</h2>
