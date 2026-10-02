@@ -25,8 +25,26 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = (await request.json()) as AssistantRequest;
-  const { aromas, occasions, intensity, budget } = body;
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return Response.json({ error: "Body inválido" }, { status: 400 });
+  }
+
+  // Validacion defensiva: un body vacio/malformado (p.ej. {}) rompia con
+  // "Cannot read properties of undefined (reading 'length')" y el endpoint
+  // publico devolvia 500. Ahora cualquier campo ausente o de tipo incorrecto
+  // degrada a un valor vacio y la consulta sigue siendo valida.
+  const body = (raw ?? {}) as Partial<AssistantRequest>;
+  const aromas = Array.isArray(body.aromas)
+    ? body.aromas.filter((a): a is string => typeof a === "string" && a.length > 0)
+    : [];
+  const occasions = Array.isArray(body.occasions)
+    ? body.occasions.filter((o): o is string => typeof o === "string" && o.length > 0)
+    : [];
+  const intensity = typeof body.intensity === "string" ? body.intensity : "";
+  const budget = typeof body.budget === "string" ? body.budget : "";
 
   const db = await getDb();
 

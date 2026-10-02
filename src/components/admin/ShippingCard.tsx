@@ -12,6 +12,8 @@ import {
   type TrackingEvent,
 } from "@/lib/types";
 import { formatARS } from "@/lib/format";
+import { dispatchMessageText, waMeLink } from "@/lib/shipping/dispatch-message";
+import { hasWhatsAppDispatchConfig } from "@/lib/notify";
 import { TruckIcon, ArrowRightIcon } from "@/components/icons";
 
 const inputCls =
@@ -65,6 +67,21 @@ export function ShippingCard({ order }: { order: Order }) {
   // stock no admite seguimiento ni aviso de despacho.
   const allowTracking = canManualTrack(order.status);
   const allowResend = canNotifyDispatch(order.status);
+  // Aviso de despacho por WhatsApp listo para mandar a mano. Funciona sin
+  // credenciales: es un link wa.me con el mensaje ya escrito. Si el teléfono no
+  // es válido o no hay seguimiento, queda null y solo se ofrece el email.
+  const dispatchHref = hasTracking
+    ? waMeLink(
+        order.customerPhone ?? "",
+        dispatchMessageText({
+          customerName: order.customerName,
+          code: order.code,
+          trackingNumber: order.trackingNumber,
+          trackingUrl: trackingHref ?? "",
+        })
+      )
+    : null;
+  const whatsappAuto = hasWhatsAppDispatchConfig();
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-line bg-surface p-5">
@@ -86,15 +103,24 @@ export function ShippingCard({ order }: { order: Order }) {
               {order.province || "—"}
             </dd>
           </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-muted">Dirección</dt>
-            <dd className="text-right text-white">
-              {[order.addressStreet, order.addressNumber].filter(Boolean).join(" ") ||
-                "—"}
-              {order.addressFloor ? ` · Piso ${order.addressFloor}` : ""}
-              {order.addressApartment ? ` · Dpto ${order.addressApartment}` : ""}
-            </dd>
-          </div>
+          {order.deliveryType === "S" ? (
+            <div className="flex justify-between gap-3">
+              <dt className="text-muted">Sucursal preferida</dt>
+              <dd className="text-right text-white">
+                {order.preferredBranch || "A coordinar por WhatsApp"}
+              </dd>
+            </div>
+          ) : (
+            <div className="flex justify-between gap-3">
+              <dt className="text-muted">Dirección</dt>
+              <dd className="text-right text-white">
+                {[order.addressStreet, order.addressNumber].filter(Boolean).join(" ") ||
+                  "—"}
+                {order.addressFloor ? ` · Piso ${order.addressFloor}` : ""}
+                {order.addressApartment ? ` · Dpto ${order.addressApartment}` : ""}
+              </dd>
+            </div>
+          )}
           {order.locality && (
             <div className="flex justify-between gap-3">
               <dt className="text-muted">Localidad</dt>
@@ -156,12 +182,31 @@ export function ShippingCard({ order }: { order: Order }) {
             </div>
 
             {allowResend && (
-              <form action={resendTrackingEmail}>
-                <input type="hidden" name="id" value={order.id} />
-                <button className="h-10 rounded-xl border border-line px-4 text-sm font-semibold text-white transition hover:bg-line/40">
-                  Reenviar aviso de despacho
-                </button>
-              </form>
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <form action={resendTrackingEmail}>
+                    <input type="hidden" name="id" value={order.id} />
+                    <button className="h-10 rounded-xl border border-line px-4 text-sm font-semibold text-white transition hover:bg-line/40">
+                      Reenviar aviso de despacho
+                    </button>
+                  </form>
+                  {dispatchHref && (
+                    <a
+                      href={dispatchHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-10 items-center rounded-xl border border-line px-4 text-sm font-semibold text-white transition hover:bg-line/40"
+                    >
+                      Avisar por WhatsApp
+                    </a>
+                  )}
+                </div>
+                <p className="text-[11px] leading-relaxed text-faint">
+                  {whatsappAuto
+                    ? "El aviso automático por WhatsApp está configurado: al guardar el seguimiento se le envía al cliente con el código y el enlace."
+                    : "El envío automático por WhatsApp no está configurado. Usá «Avisar por WhatsApp» para mandarle a mano el código y el enlace."}
+                </p>
+              </div>
             )}
 
             {allowTracking ? (
@@ -188,7 +233,8 @@ export function ShippingCard({ order }: { order: Order }) {
                   <p className="text-[11px] leading-relaxed text-faint">
                     Si la dejás vacía se usa el enlace oficial de Correo Argentino.
                     Recién guardado, si el número cambia se le avisa al cliente por
-                    email; si es el mismo, no se reenvía nada.
+                    email y, si WhatsApp está configurado, también por WhatsApp; si
+                    es el mismo, no se reenvía nada.
                   </p>
                   <button className="h-10 rounded-xl border border-line px-4 text-sm font-semibold text-white transition hover:bg-line/40">
                     Guardar seguimiento
@@ -217,7 +263,8 @@ export function ShippingCard({ order }: { order: Order }) {
               Cargá a mano el número de seguimiento de Correo Argentino. Al
               guardarlo, el pedido queda marcado como despachado, se registra la
               fecha y se agrega el evento de despacho al historial. Si el número es
-              nuevo, se le avisa al cliente por email.
+              nuevo, se le avisa al cliente por email y, si WhatsApp está
+              configurado, también por WhatsApp.
             </p>
             <div className="space-y-2">
               <input

@@ -33,6 +33,21 @@ const SIZE_STOCK: Record<string, "stock_30" | "stock_50" | "stock_100" | null> =
   "100": "stock_100",
 };
 
+// Límites de los campos de texto libre que escribe el cliente (sucursal
+// preferida y observaciones). Se guardan enteros en la base y llegan al panel y
+// al aviso de WhatsApp, así que no tienen sentido ilimitados.
+const MAX_BRANCH_CHARS = 120;
+const MAX_NOTES_CHARS = 500;
+
+// Normaliza texto libre del cliente: recorta, quita caracteres de control y
+// colapsa espacios. Devuelve null si el valor no es un string (tipo incorrecto),
+// para que el llamador lo rechaze en vez de guardar "undefined".
+function normalizeFreeText(raw: unknown): string | null {
+  if (raw === undefined || raw === null) return "";
+  if (typeof raw !== "string") return null;
+  return raw.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, " ").trim();
+}
+
 // Límite de pedidos por IP: evita que un bot genere órdenes y preferencias
 // de pago en bucle.
 const CHECKOUT_MAX_ATTEMPTS = 20;
@@ -98,6 +113,9 @@ interface ShippingInput {
   number?: string;
   floor?: string;
   apartment?: string;
+  // Texto libre opcional con la sucursal de Correo Argentino que el cliente
+  // prefiere. No es un código de agencia y no se valida contra ningún padrón.
+  preferredBranch?: string;
 }
 
 interface CheckoutRequest {
@@ -106,6 +124,7 @@ interface CheckoutRequest {
     name: string;
       phone: string;
       email: string;
+      notes?: string;
     };
   shipping?: ShippingInput;
 }
@@ -188,10 +207,11 @@ export async function POST(request: Request) {
   if (!provinceCode) {
     return Response.json({ error: "Provincia inválida" }, { status: 400 });
   }
-  // ÚNICA modalidad disponible: envío a domicilio. El retiro en persona está
-  // desactivado (ver lib/shipping/pickup.ts), así que un "S" enviado por un
-  // cliente guardado se rechaza acá en vez de crear un pedido que no se puede
-  // despachar ni mostrar.
+  // Dos modalidades y nada más: envío a domicilio (D) o envío a sucursal de
+  // Correo Argentino (S). La fuente de verdad es resolveDeliveryType (lib/
+  // shipping/pickup.ts): si el interruptor maestro está apagado, un "S" enviado
+  // por un cliente guardado se rechaza acá en vez de crear un pedido que no se
+  // puede despachar.
   const deliveryTypeResolution = resolveDeliveryType(shipping.deliveryType);
   if (!deliveryTypeResolution.ok) {
     return Response.json(
@@ -216,10 +236,30 @@ export async function POST(request: Request) {
     );
   }
 
-  // No hay retiro, así que no se guarda ni se valida ninguna sucursal. La columna
-  // `agency_code` se escribe vacía para no dejar un código interno suelto en la
-  // orden (los pedidos históricos con "S" la conservan: la base no se toca).
+  // No hay selector de sucursales ni padrón de agencias, así que `agency_code`
+  // se escribe SIEMPRE vacía: es para códigos internos de agencia y un texto
+  // libre del cliente no es un código. Los pedidos históricos con "S" la
+  // conservan (la base no se toca). La sucursal que el cliente prefiere va en su
+  // propia columna, como texto.
   const agencyCode = "";
+  const preferredBranch = normalizeFreeText(shipping.preferredBranch);
+  if (preferredBranch === null || preferredBranch.length > MAX_BRANCH_CHARS) {
+    return Response.json(
+      { error: "La sucursal preferida es demasiado larga" },
+      { status: 400 }
+    );
+  }
+  // Observaciones del cliente: mismo criterio, texto libre y opcional.
+  const customerNotes = normalizeFreeText(body.customer?.notes);
+  if (customerNotes === null || customerNotes.length > MAX_NOTES_CHARS) {
+    return Response.json(
+      { error: "Las observaciones son demasiado largas" },
+      { status: 400 }
+    );
+  }
+
+  // La dirección solo se exige para envío a domicilio: en la modalidad sucursal
+  // no hay a dónde entregar y el cliente no debe completar campos que no aplican.
   if (deliveryType === "D" && !(shipping.street ?? "").trim()) {
     return Response.json(
       { error: "Completá la dirección de entrega" },
@@ -240,6 +280,14 @@ export async function POST(request: Request) {
   }
 
   const db = await getDb();
+
+  // En la modalidad sucursal no hay dirección de entrega: aunque el cliente
+  // haya enviado los campos (navegador con autocomplete), se guardan vacíos para
+  // no dejar una dirección que nadie va a usar.
+  const street = deliveryType === "D" ? (shipping.street ?? "").trim() : "";
+  const streetNumber = deliveryType === "D" ? (shipping.number ?? "").trim() : "";
+  const floor = deliveryType === "D" ? (shipping.floor ?? "").trim() : "";
+  const apartment = deliveryType === "D" ? (shipping.apartment ?? "").trim() : "";
 
   const orderItems: { perfumeId: number; name: string; size: number; price: number; qty: number }[] = [];
   let subtotal = 0;
@@ -378,8 +426,9 @@ export async function POST(request: Request) {
          code, customer_id, status, subtotal, shipping, total, payment_method,
          province, postal_code, locality, address_street, address_number,
          address_floor, address_apartment, delivery_type, agency_code,
+         preferred_branch, customer_notes,
          shipping_provider, shipping_service, created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       code,
       customerId,
@@ -391,12 +440,14 @@ export async function POST(request: Request) {
       province,
       postalCode,
       locality,
-      (shipping.street ?? "").trim(),
-      (shipping.number ?? "").trim(),
-      (shipping.floor ?? "").trim(),
-      (shipping.apartment ?? "").trim(),
+      street,
+      streetNumber,
+      floor,
+      apartment,
       deliveryType,
       agencyCode,
+      preferredBranch,
+      customerNotes,
       provider.id,
       productType,
       now,

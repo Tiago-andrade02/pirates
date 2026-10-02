@@ -17,7 +17,9 @@ import {
 import {
   hasEmailConfig,
   hasSmtpConfig,
+  hasWhatsAppConfig,
   sendOrderEmail,
+  sendWhatsAppOrderNotification,
   sendCustomerOrderEmail,
   sendStockAlertEmail,
   canNotifyCustomer,
@@ -468,6 +470,44 @@ export async function resendOrderEmail(formData: FormData) {
   redirect(`/admin/pedidos/${id}?ok=email-enviado`);
 }
 
+// Reenvio manual del aviso de pedido nuevo por WhatsApp.
+//
+// Es la válvula de escape del aviso al celular del negocio: si el envio automatico
+// se perdio (credenciales caidas, limite de la API), el admin lo recupera desde
+// el panel sin volver a cobrar ni tocar el pedido.
+//
+// No se informa exito si la API no confirmo: sendWhatsAppOrderNotification lanza
+// con cualquier respuesta no-2xx de Graph API y recien ahi se muestra el error.
+export async function resendOrderWhatsApp(formData: FormData) {
+  await requireAdmin();
+  const id = int(formData.get("id"));
+  if (id === null) redirect("/admin/pedidos");
+
+  const order = await getOrderById(id);
+  if (!order) redirect("/admin/pedidos");
+  if (!hasWhatsAppConfig()) {
+    redirect(`/admin/pedidos/${id}?error=whatsapp-no-configurado`);
+  }
+
+  // El texto anuncia una venta cobrada. No se manda para un pedido pendiente,
+  // cancelado o sin stock: sería un aviso falso en el celular del negocio.
+  if (order.status !== "pagado" && order.status !== "preparando") {
+    redirect(`/admin/pedidos/${id}?error=whatsapp-aviso-no-permitido`);
+  }
+
+  try {
+    await sendWhatsAppOrderNotification(order);
+  } catch {
+    // El motivo queda en los logs del servidor (Graph API devuelve el detalle y a
+    // veces el token); al admin se le muestra un mensaje genérico.
+    console.error("[notify] Error reenviando el aviso de pedido por WhatsApp");
+    redirect(`/admin/pedidos/${id}?error=whatsapp-fallo`);
+  }
+
+  revalidatePath("/admin/pedidos");
+  redirect(`/admin/pedidos/${id}?ok=whatsapp-enviado`);
+}
+
 export async function resendCustomerEmail(formData: FormData) {
   await requireAdmin();
   const id = int(formData.get("id"));
@@ -561,28 +601,38 @@ export async function createPurchase(formData: FormData) {
 
   const totalCost = entries.reduce((acc, e) => acc + e.unitCost * e.qty, 0);
 
-  await db.executeMultiple("BEGIN");
+  // IMPORTANTE (Turso/LibSQL): no se usan BEGIN/COMMIT/ROLLBACK con
+  // db.executeMultiple(): en la base remota cada statement puede ir por una
+  // conexion distinta, asi que el ROLLBACK del catch corre sin transaccion
+  // activa y enmascara el error real. Se usa db.transaction("write").
+  const tx = await db.transaction("write");
   try {
-    const result = await db.execute({
+    const result = await tx.execute({
       sql: "INSERT INTO supplier_purchases (supplier, total_cost, date, note) VALUES (?, ?, ?, ?)",
       args: [supplier, totalCost, date, note],
     });
     const purchaseId = Number(result.lastInsertRowid);
 
     for (const entry of entries) {
-      await db.execute({
+      await tx.execute({
         sql: "INSERT INTO supplier_purchase_items (purchase_id, perfume_id, qty, unit_cost, size) VALUES (?, ?, ?, ?, ?)",
         args: [purchaseId, entry.perfumeId, entry.qty, entry.unitCost, entry.size],
       });
       const col = `stock_${entry.size}`;
-      await db.execute({
+      await tx.execute({
         sql: `UPDATE perfumes SET ${col} = ${col} + ?, stock = stock + ? WHERE id = ?`,
         args: [entry.qty, entry.qty, entry.perfumeId],
       });
     }
-    await db.executeMultiple("COMMIT");
+    await tx.commit();
   } catch (error) {
-    await db.executeMultiple("ROLLBACK");
+    if (!tx.closed) {
+      try {
+        await tx.rollback();
+      } catch {
+        console.error("[admin] rollback fallido en createPurchase");
+      }
+    }
     throw error;
   }
 
@@ -602,20 +652,26 @@ export async function deletePurchase(formData: FormData) {
     args: [id],
   });
   const items = itemsResult.rows as unknown as { perfume_id: number; qty: number; size: number }[];
-  await db.executeMultiple("BEGIN");
+  const tx = await db.transaction("write");
   try {
     for (const item of items) {
       const size = parseSize(String(item.size));
-      await db.execute({
+      await tx.execute({
         sql: `UPDATE perfumes SET stock_${size} = MAX(0, stock_${size} - ?), stock = MAX(0, stock - ?) WHERE id = ?`,
         args: [item.qty, item.qty, item.perfume_id],
       });
     }
-    await db.execute({ sql: "DELETE FROM supplier_purchase_items WHERE purchase_id = ?", args: [id] });
-    await db.execute({ sql: "DELETE FROM supplier_purchases WHERE id = ?", args: [id] });
-    await db.executeMultiple("COMMIT");
+    await tx.execute({ sql: "DELETE FROM supplier_purchase_items WHERE purchase_id = ?", args: [id] });
+    await tx.execute({ sql: "DELETE FROM supplier_purchases WHERE id = ?", args: [id] });
+    await tx.commit();
   } catch (error) {
-    await db.executeMultiple("ROLLBACK");
+    if (!tx.closed) {
+      try {
+        await tx.rollback();
+      } catch {
+        console.error("[admin] rollback fallido en deletePurchase");
+      }
+    }
     throw error;
   }
   revalidatePath("/admin/mayorista");
@@ -667,17 +723,23 @@ export async function restockLow(formData: FormData) {
   });
   const ids = idsResult.rows as unknown as { id: number }[];
 
-  await db.executeMultiple("BEGIN");
+  const tx = await db.transaction("write");
   try {
     for (const row of ids) {
-      await db.execute({
+      await tx.execute({
         sql: "UPDATE perfumes SET stock_30 = stock_30 + ?, stock_50 = stock_50 + ?, stock_100 = stock_100 + ?, stock = (stock_30 + ?) + (stock_50 + ?) + (stock_100 + ?) WHERE id = ?",
         args: [r30, r50, r100, r30, r50, r100, row.id],
       });
     }
-    await db.executeMultiple("COMMIT");
+    await tx.commit();
   } catch (error) {
-    await db.executeMultiple("ROLLBACK");
+    if (!tx.closed) {
+      try {
+        await tx.rollback();
+      } catch {
+        console.error("[admin] rollback fallido en restockLow");
+      }
+    }
     throw error;
   }
 

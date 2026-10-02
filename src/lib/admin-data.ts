@@ -33,6 +33,10 @@ interface OrderRow {
   address_apartment: string;
   delivery_type: string;
   agency_code: string;
+  //Pueden faltar en una base todavia no migrada: se leen como "" en vez de
+  // reventar toda la lista de pedidos por una columna que todavia no existe.
+  preferred_branch?: string;
+  customer_notes?: string;
   shipping_provider: string;
   shipping_service: string;
   tracking_number: string;
@@ -92,6 +96,8 @@ function mapOrder(row: OrderRow, items: OrderItemRow[]): Order {
     addressApartment: row.address_apartment,
     deliveryType: (row.delivery_type === "S" ? "S" : "D") as DeliveryType,
     agencyCode: row.agency_code,
+    preferredBranch: row.preferred_branch ?? "",
+    customerNotes: row.customer_notes ?? "",
     shippingProvider: row.shipping_provider,
     shippingService: row.shipping_service,
     trackingNumber: row.tracking_number,

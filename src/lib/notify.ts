@@ -5,7 +5,12 @@ import type { Order } from "./types.ts";
 import { ORDER_STATUS_LABELS, DELIVERY_TYPE_LABELS } from "./types.ts";
 import { planNotifications, type NotificationPlan } from "./notification-plan.ts";
 import { isValidEmail } from "./email-validation.ts";
+import { adminOrderMessageParams } from "./order-message.ts";
 import { OFFICIAL_CORREO_ARGENTINO_TRACKING_URL } from "./shipping/manual-tracking.ts";
+import {
+  dispatchMessageParams,
+  normalizeWhatsAppPhone,
+} from "./shipping/dispatch-message.ts";
 
 function money(value: number): string {
   return "$" + Math.round(value).toLocaleString("es-AR");
@@ -26,9 +31,14 @@ function escapeHtml(value: unknown): string {
 
 function deliveryLabel(order: Order): string {
   // Nunca se imprime el código interno de agencia: no es una sucursal real y
-  // confunde al comprador. Solo se informa a dónde va el pedido.
+  // confunde al comprador. Para la modalidad sucursal sí se muestra la sucursal
+  // que el propio cliente escribió (texto libre), o se avisa que hay que
+  // coordinarla.
   if (order.deliveryType === "S") {
-    return DELIVERY_TYPE_LABELS.S;
+    const branch = (order.preferredBranch ?? "").trim();
+    return branch
+      ? `${DELIVERY_TYPE_LABELS.S}: ${branch}`
+      : `${DELIVERY_TYPE_LABELS.S} (a coordinar por WhatsApp)`;
   }
   const street = [order.addressStreet, order.addressNumber]
     .filter(Boolean)
@@ -602,21 +612,30 @@ export function hasWhatsAppConfig(): boolean {
   );
 }
 
-// WhatsApp Business Platform / Cloud API de Meta: un unico POST a Graph API,
-// sin SDK. Los mensajes iniciados por el negocio requieren una plantilla
-// aprobada (WHATSAPP_TEMPLATE_NAME) con estas 7 variables en el cuerpo:
-// {{1}} pedido, {{2}} cliente, {{3}} telefono, {{4}} total, {{5}} productos,
-// {{6}} envio, {{7}} enlace al pedido.
-export async function sendWhatsAppOrderNotification(order: Order): Promise<void> {
-  if (!hasWhatsAppConfig()) {
-    console.warn(
-      "[notify] WhatsApp no configurado (WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID/WHATSAPP_TO)."
-    );
-    return;
-  }
+// Unico POST a Graph API para los tres avisos salientes.
+//
+// Antes cada aviso repetia el mismo fetch con los mismos headers y el mismo
+// manejo de `if (!res.ok) throw`, y solo cambiaban el destinatario, la plantilla
+// y los parametros. Ademas, el numero emisor era `WHATSAPP_PHONE_NUMBER_ID` en
+// los tres: la cuenta tiene un segundo numero (WHATSAPP_PHONE_NUMBER_ID_2) que
+// hoy solo recibe. Al recibir el id como parametro, enviar desde el segundo es
+// cambiar un argumento, no reescribir el request.
+//
+// Lanza con el status de Graph API en cualquier respuesta no-2xx: nunca se
+// informa un envio que la API no confirmo.
+async function sendWhatsAppTemplate(input: {
+  // Si se omite, usa el numero primario (el de siempre).
+  phoneNumberId?: string;
+  to: string;
+  template: string;
+  // Posicionales, en el orden de la plantilla aprobada en Meta.
+  params: string[];
+  // Solo para el log interno de errores.
+  label: string;
+}): Promise<void> {
+  const phoneNumberId =
+    input.phoneNumberId?.trim() || process.env.WHATSAPP_PHONE_NUMBER_ID!;
 
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
-  const template = process.env.WHATSAPP_TEMPLATE_NAME || "nueva_orden_pirates";
   const res = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
     method: "POST",
     headers: {
@@ -625,23 +644,15 @@ export async function sendWhatsAppOrderNotification(order: Order): Promise<void>
     },
     body: JSON.stringify({
       messaging_product: "whatsapp",
-      to: process.env.WHATSAPP_TO,
+      to: input.to,
       type: "template",
       template: {
-        name: template,
+        name: input.template,
         language: { code: "es" },
         components: [
           {
             type: "body",
-            parameters: [
-              { type: "text", text: order.code },
-              { type: "text", text: order.customerName },
-              { type: "text", text: order.customerPhone || "-" },
-              { type: "text", text: money(order.total) },
-              { type: "text", text: productsSummary(order) },
-              { type: "text", text: deliveryLabel(order) },
-              { type: "text", text: orderUrl(order) },
-            ],
+            parameters: input.params.map((text) => ({ type: "text", text })),
           },
         ],
       },
@@ -649,11 +660,52 @@ export async function sendWhatsAppOrderNotification(order: Order): Promise<void>
   });
 
   if (!res.ok) {
-    // Solo el status: el cuerpo de Graph API trae el detalle del rechazo y a
-    // veces el token, y no debe terminar en los logs. El status alcanza para
-    // diagnosticar (401 = token, 429 = limite, 4xx = plantilla/rechazo).
-    throw Object.assign(new Error("WhatsApp Cloud API error"), { status: res.status });
+    throw Object.assign(new Error(`WhatsApp ${input.label} error`), {
+      status: res.status,
+    });
   }
+}
+
+// Aviso de pedido nuevo para el WhatsApp DEL NEGOCIO (no el del cliente): el
+// destinatario es WHATSAPP_TO, el numero del admin.
+//
+// WhatsApp Business Platform / Cloud API de Meta: un unico POST a Graph API, sin
+// SDK. Meta exige una plantilla APROBADA para que el negocio inicie la
+// conversacion (WHATSAPP_TEMPLATE_NAME), con 5 variables en el cuerpo, en este
+// orden:
+//   {{1}} cliente   {{2}} contacto (telefono + email)   {{3}} pedido (codigo,
+//   productos, cantidades, precios y total)   {{4}} envio (modalidad, CP,
+//   localidad/provincia y direccion o sucursal preferida)   {{5}} observaciones
+//
+// El contenido y el orden se arman en order-message.ts para poder testearlos sin
+// llamar a la API. Si la plantilla no coincide, Meta devuelve 4xx y se lanza:
+// nunca se informa un envio que la API no confirmo.
+export async function sendWhatsAppOrderNotification(order: Order): Promise<void> {
+  if (!hasWhatsAppConfig()) {
+    console.warn(
+      "[notify] WhatsApp no configurado (WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID/WHATSAPP_TO)."
+    );
+    return;
+  }
+
+  const template = process.env.WHATSAPP_TEMPLATE_NAME || "nueva_orden_pirates";
+  const params = adminOrderMessageParams(order);
+  const link = orderUrl(order);
+
+  await sendWhatsAppTemplate({
+    to: process.env.WHATSAPP_TO!,
+    template,
+    label: "order",
+    params: [
+      params.customer,
+      params.contact,
+      params.order,
+      params.shipping,
+      // El enlace va pegado al bloque de notas: asi son 5 variables en total y no
+      // hace falta una sexta solo para la URL.
+      link ? `${params.notes}\n${link}` : params.notes,
+    ],
+  });
 }
 
 // Aviso urgente de pedido cobrado sin stock. Usa la plantilla configurada en
@@ -672,7 +724,6 @@ export async function sendWhatsAppStockAlert(order: Order): Promise<void> {
     return;
   }
 
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
   const template =
     process.env.WHATSAPP_STOCK_ALERT_TEMPLATE_NAME || process.env.WHATSAPP_TEMPLATE_NAME;
   if (!template) {
@@ -682,40 +733,87 @@ export async function sendWhatsAppStockAlert(order: Order): Promise<void> {
     return;
   }
 
-  const res = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}/messages`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN!}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: process.env.WHATSAPP_TO,
-      type: "template",
-      template: {
-        name: template,
-        language: { code: "es" },
-        components: [
-          {
-            type: "body",
-            parameters: [
-              { type: "text", text: order.code },
-              { type: "text", text: money(order.total) },
-              { type: "text", text: productsSummary(order) },
-              { type: "text", text: deliveryLabel(order) },
-              { type: "text", text: statusLabel(order) },
-              { type: "text", text: order.customerName },
-              { type: "text", text: order.customerPhone || "-" },
-            ],
-          },
-        ],
-      },
-    }),
+  await sendWhatsAppTemplate({
+    to: process.env.WHATSAPP_TO!,
+    template,
+    label: "stock alert",
+    params: [
+      order.code,
+      money(order.total),
+      productsSummary(order),
+      deliveryLabel(order),
+      statusLabel(order),
+      order.customerName,
+      order.customerPhone || "-",
+    ],
   });
+}
 
-  if (!res.ok) {
-    throw Object.assign(new Error("WhatsApp stock alert error"), { status: res.status });
+// ---------------------------------------------------------------------------
+// Aviso de despacho al cliente (WhatsApp)
+// ---------------------------------------------------------------------------
+
+// Plantilla de WhatsApp para avisar el despacho. NO tiene fallback: si no esta
+// definida no se envia. Mandar el aviso con la plantilla equivocada (p.ej. la
+// de nueva orden) le llega al cliente un mensaje que no corresponde.
+export function dispatchTemplateName(): string {
+  return (process.env.WHATSAPP_DISPATCH_TEMPLATE_NAME ?? "").trim();
+}
+
+// El aviso de despacho usa el mismo numero emisor que el resto de los avisos,
+// pero el destinatario es el TELEFONO DEL CLIENTE, no WHATSAPP_TO (que es el
+// numero del admin). Por eso ademas de la config de WhatsApp hace falta que la
+// plantilla de despacho este definida.
+export function hasWhatsAppDispatchConfig(): boolean {
+  return hasWhatsAppConfig() && Boolean(dispatchTemplateName());
+}
+
+// Aviso al cliente de que su pedido fue despachado, con codigo y enlace de
+// seguimiento. Plantilla con 4 variables: {{1}} nombre, {{2}} pedido,
+// {{3}} seguimiento, {{4}} enlace.
+//
+// Si WhatsApp o la plantilla no estan configurados, o el pedido no tiene un
+// telefono/seguimiento validos, se OMITE con un warn y NO lanza: el despacho ya
+// quedo guardado y el aviso por email sigue existiendo. El admin siempre puede
+// avisar a mano con el link wa.me del panel.
+export async function sendWhatsAppDispatchNotification(order: Order): Promise<void> {
+  if (!hasWhatsAppConfig()) {
+    console.warn("[notify] Aviso de despacho por WhatsApp omitido: WhatsApp no configurado.");
+    return;
   }
+  const template = dispatchTemplateName();
+  if (!template) {
+    console.warn(
+      "[notify] Aviso de despacho por WhatsApp omitido: falta WHATSAPP_DISPATCH_TEMPLATE_NAME."
+    );
+    return;
+  }
+  const phone = normalizeWhatsAppPhone(order.customerPhone);
+  if (!phone) {
+    console.warn(
+      "[notify] Aviso de despacho por WhatsApp omitido: el pedido no tiene un teléfono válido."
+    );
+    return;
+  }
+  if (!order.trackingNumber) {
+    console.warn(
+      "[notify] Aviso de despacho por WhatsApp omitido: el pedido no tiene código de seguimiento."
+    );
+    return;
+  }
+
+  const params = dispatchMessageParams({
+    customerName: order.customerName,
+    code: order.code,
+    trackingNumber: order.trackingNumber,
+    trackingUrl: order.trackingUrl,
+  });
+  await sendWhatsAppTemplate({
+    to: phone,
+    template,
+    label: "dispatch",
+    params: [params.name, params.code, params.tracking, params.link],
+  });
 }
 
 // ---------------------------------------------------------------------------

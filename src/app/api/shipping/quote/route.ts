@@ -64,9 +64,10 @@ export async function POST(request: Request) {
     );
   }
 
-  // El retiro en persona está desactivado: si el cliente lo pide explícitamente
-  // se rechaza acá y no se cotiza, para que la respuesta nunca ofrezca una
-  // modalidad que el checkout no va a aceptar.
+  // La modalidad se resuelve contra el interruptor maestro: si el envío a
+  // sucursal estuviera apagado, un "S" explícito se rechaza acá y no se cotiza,
+  // para que la respuesta nunca ofrezca una modalidad que el checkout no vaya a
+  // aceptar.
   const requested = resolveDeliveryType(body.deliveryType);
   if (!requested.ok) {
     return Response.json({ error: requested.error }, { status: 400 });
@@ -119,9 +120,9 @@ export async function POST(request: Request) {
     );
   }
 
-  // Última barrera antes de responder: aunque un provider devuelva la modalidad
-  // de retiro, acá se descarta. Así ninguna cotización puede ofrecer retiro en
-  // persona mientras esté desactivado.
+  // Última barrera antes de responder: si el provider devuelve una modalidad que
+  // no está habilitada, acá se descarta. Así ninguna cotización puede ofrecer
+  // algo que el checkout no vaya a aceptar.
   const permitted = filterAllowedOptions(options);
   if (permitted.length === 0) {
     return Response.json(

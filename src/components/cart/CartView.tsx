@@ -142,7 +142,8 @@ export function CartView() {
 
           <p className="mt-3 flex items-start gap-2 rounded-lg border border-line bg-background p-2.5 text-[11px] text-muted sm:rounded-xl sm:text-xs">
             <TruckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-faint sm:h-4 sm:w-4" />
-            Envío gratis a todo el país, sin mínimo de compra.
+            Envío gratis a todo el país por Correo Argentino, a domicilio o a
+            sucursal. Te enviamos el seguimiento por WhatsApp.
           </p>
 
           <Link

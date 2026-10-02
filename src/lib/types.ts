@@ -162,6 +162,12 @@ export interface Order {
   addressApartment: string;
   deliveryType: DeliveryType;
   agencyCode: string;
+  // Sucursal de Correo Argentino que el cliente PREFIERE, escrita a mano. Texto
+  // libre y opcional: no hay lista de sucursales ni validación contra un padrón,
+  // así que puede estar vacía aunque la modalidad sea "S".
+  preferredBranch: string;
+  // Observaciones que dejó el cliente en el checkout (opcional).
+  customerNotes: string;
   shippingProvider: string;
   shippingService: string;
   trackingNumber: string;
@@ -180,12 +186,12 @@ export interface TrackingEvent {
 
 export type DeliveryType = "D" | "S";
 
-// El retiro en persona está desactivado: la única modalidad nueva es "D".
-// "S" se conserva para los pedidos históricos y se etiqueta sin nombrar ninguna
-// sucursal ni código interno de agencia.
+// Modalidades de entrega. "S" es el envío a sucursal de Correo Argentino, que se
+// coordina por WhatsApp (ver src/lib/shipping/pickup.ts, la única fuente de
+// verdad de qué modalidades están habilitadas).
 export const DELIVERY_TYPE_LABELS: Record<DeliveryType, string> = {
   D: "Envío a domicilio",
-  S: "Retirada en persona",
+  S: "Envío a sucursal de Correo Argentino",
 };
 
 export interface SupplierPurchase {
