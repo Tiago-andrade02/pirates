@@ -16,7 +16,7 @@ export default function PrivacidadPage() {
         {
           heading: "1. Datos que recopilamos",
           paragraphs: [
-            "Al realizar un pedido recopilamos los datos necesarios para procesarlo: nombre y apellido, teléfono/WhatsApp, email, provincia y los datos de envío que completás (código postal, localidad, dirección o sucursal de retiro).",
+            "Al realizar un pedido recopilamos los datos necesarios para procesarlo: nombre y apellido, teléfono/WhatsApp, email, provincia y los datos de envío que completás (código postal, localidad, y la dirección de entrega si elegís envío a domicilio, o la sucursal de Correo Argentino que preferís si elegís esa modalidad). Las observaciones que dejes son opcionales.",
           ],
         },
         {

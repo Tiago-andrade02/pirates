@@ -16,8 +16,9 @@ export const dynamic = "force-dynamic";
 const BENEFITS = [
   {
     icon: TruckIcon,
-    title: "Envío gratis desde $80.000",
-    description: "Recibí tu perfume donde estés. Envío gratis en compras superiores a $80.000.",
+    title: "Envío gratis a todo el país",
+    description:
+      "A domicilio o a una sucursal de Correo Argentino, sin mínimo de compra. Te enviamos el seguimiento por WhatsApp.",
   },
   {
     icon: CreditCardIcon,

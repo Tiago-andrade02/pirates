@@ -8,10 +8,70 @@ import { StatusSelect } from "@/components/admin/StatusSelect";
 import { ShippingCard } from "@/components/admin/ShippingCard";
 import {
   resendOrderEmail,
+  resendOrderWhatsApp,
   resendCustomerEmail,
   resendStockAlert,
   requireAdminPage,
 } from "@/app/admin/actions";
+
+// Mensajes de las server actions, indexados por el código que viaja en la URL.
+// Un mapa y no una cadena de ternarios: son muchos códigos y anidarlos dejaba el
+// bloque ilegible.
+const MESSAGES: Record<string, string> = {
+  // Éxitos
+  "email-enviado": "Detalle enviado por email.",
+  "whatsapp-enviado": "Aviso del pedido enviado por WhatsApp.",
+  "email-cliente-enviado": "Confirmación reenviada al cliente.",
+  "alerta-enviada": "Alerta de pedido sin stock reenviada.",
+  "tracking-guardado":
+    "Seguimiento guardado. Si el número es nuevo, se le avisó al cliente por email.",
+  "tracking-sin-cambios":
+    "El número de seguimiento es el mismo que ya estaba guardado y el enlace no cambió: no se modificó nada ni se reenvió el aviso.",
+  "aviso-seguimiento-enviado": "Aviso de despacho reenviado al cliente.",
+  // Errores de seguimiento
+  "tracking-no-pagado":
+    "No se cargó el seguimiento: el pago del pedido todavía no está confirmado.",
+  "tracking-cancelado":
+    "No se cargó el seguimiento: el pedido ya no va a salir.",
+  "tracking-sin-stock":
+    "No se cargó el seguimiento: el pedido ya no va a salir.",
+  "tracking-estado-invalido":
+    "No se puede cargar el seguimiento en el estado actual del pedido.",
+  "tracking-invalido":
+    "El número de seguimiento no es válido. Usá letras, números y guiones (máx. 40 caracteres).",
+  "tracking-url-invalida":
+    "La URL de seguimiento no es válida. Usá un enlace http/https o dejalo vacío.",
+  "sin-tracking":
+    "Este pedido no tiene número de seguimiento, así que no hay aviso de despacho para reenviar.",
+  // Errores del aviso por WhatsApp
+  "whatsapp-no-configurado":
+    "WhatsApp no configurado. Cargá WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID y WHATSAPP_TO en .env.local.",
+  "whatsapp-aviso-no-permitido":
+    "Este pedido no se puede anunciar como venta cobrada por WhatsApp: solo se avisa de pedidos pagos o en preparación.",
+  "whatsapp-fallo":
+    "No se pudo enviar el aviso por WhatsApp. La API no lo confirmó: puede ser credenciales, plantilla no aprobada o límite de la API. El pedido no se modificó.",
+  // Errores de despacho con courier
+  "sucursal-manual":
+    "Este pedido va a una sucursal de Correo Argentino: no se genera el envío online. Coordiná la sucursal por WhatsApp con el cliente y cargá el tracking a mano.",
+  "aviso-no-permitido":
+    "No se puede enviar el aviso de despacho en el estado actual del pedido.",
+  "aviso-seguimiento-fallido":
+    "El seguimiento quedó guardado, pero no se pudo avisar al cliente por email. Revisá las credenciales SMTP: el código y la fecha no se perdieron.",
+  "aviso-reenvio-fallido":
+    "No se pudo reenviar el aviso de despacho. Revisá las credenciales SMTP y volvé a intentar.",
+  // Errores de email
+  "email-no-configurado":
+    "Email no configurado. Cargá SMTP_HOST, SMTP_USER, SMTP_PASS y ORDER_NOTIFY_TO en .env.local.",
+  "smtp-no-configurado":
+    "Email no configurado. Cargá SMTP_HOST, SMTP_USER y SMTP_PASS en .env.local.",
+  "email-fallo": "No se pudo enviar el email. Revisá las credenciales SMTP.",
+  "cliente-sin-email":
+    "Este pedido no tiene email de cliente, así que no se le puede escribir.",
+  "cliente-no-pagado":
+    "Solo se envía la confirmación al cliente cuando el pedido está pagado.",
+  "pedido-no-sin-stock":
+    "Este pedido no quedó sin stock, así que no hay alerta que reenviar.",
+};
 
 export default async function DetallePedidoPage({
   params,
@@ -26,50 +86,7 @@ export default async function DetallePedidoPage({
   const order = await getOrderById(Number(id));
   if (!order) notFound();
 
-  const message =
-    sp.ok === "email-enviado"
-      ? "Detalle enviado por email."
-      : sp.ok === "email-cliente-enviado"
-        ? "Confirmación reenviada al cliente."
-        : sp.ok === "alerta-enviada"
-          ? "Alerta de pedido sin stock reenviada."
-          : sp.ok === "tracking-guardado"
-            ? "Seguimiento guardado. Si el número es nuevo, se le avisó al cliente por email."
-            : sp.ok === "tracking-sin-cambios"
-              ? "El número de seguimiento es el mismo que ya estaba guardado y el enlace no cambió: no se modificó nada ni se reenvió el aviso."
-              : sp.ok === "aviso-seguimiento-enviado"
-                ? "Aviso de despacho reenviado al cliente."
-                : sp.error === "tracking-no-pagado"
-                  ? "No se cargó el seguimiento: el pago del pedido todavía no está confirmado."
-                  : sp.error === "tracking-cancelado" || sp.error === "tracking-sin-stock"
-                    ? "No se cargó el seguimiento: el pedido ya no va a salir."
-                    : sp.error === "tracking-estado-invalido"
-                      ? "No se puede cargar el seguimiento en el estado actual del pedido."
-                      : sp.error === "sin-tracking"
-                        ? "Este pedido no tiene número de seguimiento, así que no hay aviso de despacho para reenviar."
-                        : sp.error === "aviso-no-permitido"
-                          ? "No se puede enviar el aviso de despacho en el estado actual del pedido."
-                          : sp.error === "email-no-configurado"
-                ? "Email no configurado. Cargá SMTP_HOST, SMTP_USER, SMTP_PASS y ORDER_NOTIFY_TO en .env.local."
-                : sp.error === "smtp-no-configurado"
-                  ? "Email no configurado. Cargá SMTP_HOST, SMTP_USER y SMTP_PASS en .env.local."
-                  : sp.error === "cliente-sin-email"
-                    ? "Este pedido no tiene email de cliente, así que no se le puede escribir."
-                    : sp.error === "cliente-no-pagado"
-                      ? "Solo se envía la confirmación al cliente cuando el pedido está pagado."
-                      : sp.error === "pedido-no-sin-stock"
-                        ? "Este pedido no quedó sin stock, así que no hay alerta que reenviar."
-                        : sp.error === "email-fallo"
-                          ? "No se pudo enviar el email. Revisá las credenciales SMTP."
-                          : sp.error === "tracking-invalido"
-                            ? "El número de seguimiento no es válido. Usá letras, números y guiones (máx. 40 caracteres)."
-                            : sp.error === "tracking-url-invalida"
-                              ? "La URL de seguimiento no es válida. Usá un enlace http/https o dejalo vacío."
-                               : sp.error === "aviso-seguimiento-fallido"
-                                 ? "El seguimiento quedó guardado, pero no se pudo avisar al cliente por email. Revisá las credenciales SMTP: el código y la fecha no se perdieron."
-                                 : sp.error === "aviso-reenvio-fallido"
-                                   ? "No se pudo reenviar el aviso de despacho. Revisá las credenciales SMTP y volvé a intentar."
-                                   : null;
+  const message = MESSAGES[sp.ok ?? ""] ?? MESSAGES[sp.error ?? ""] ?? null;
 
   const detail = [
     { label: "Cliente", value: order.customerName },
@@ -83,14 +100,27 @@ export default async function DetallePedidoPage({
       label: "Modalidad",
       value: DELIVERY_TYPE_LABELS[order.deliveryType],
     },
-    {
-      label: "Destino",
-      value:
-        order.deliveryType === "S"
-          ? "Retirada en persona"
-          : [order.addressStreet, order.addressNumber].filter(Boolean).join(" ") ||
-            "—",
-    },
+    // En la modalidad sucursal el destino NO es una dirección: es la sucursal que
+    // el cliente prefiere, si escribió alguna, o un recordatorio de que hay que
+    // coordinarla por WhatsApp.
+    ...(order.deliveryType === "S"
+      ? [
+          {
+            label: "Sucursal preferida",
+            value: order.preferredBranch || "No escribió ninguna — a coordinar por WhatsApp",
+          },
+        ]
+      : [
+          {
+            label: "Destino",
+            value:
+              [order.addressStreet, order.addressNumber].filter(Boolean).join(" ") ||
+              "—",
+          },
+        ]),
+    ...(order.customerNotes
+      ? [{ label: "Observaciones del cliente", value: order.customerNotes }]
+      : []),
     { label: "Método de pago", value: order.paymentMethod },
     { label: "Fecha", value: new Date(order.createdAt).toLocaleString("es-AR") },
   ];
@@ -198,6 +228,16 @@ export default async function DetallePedidoPage({
                 className="block w-full rounded-xl bg-gold px-4 py-2.5 text-center text-sm font-semibold text-black transition hover:bg-gold/90"
               >
                 Reenviar detalle al admin
+              </button>
+            </form>
+            <form action={resendOrderWhatsApp}>
+              <input type="hidden" name="id" value={order.id} />
+              <button
+                type="submit"
+                disabled={order.status !== "pagado" && order.status !== "preparando"}
+                className="block w-full rounded-xl border border-line px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Reenviar aviso por WhatsApp
               </button>
             </form>
             <form action={resendCustomerEmail}>

@@ -78,9 +78,155 @@ en un entorno remoto, usá el endpoint protegido `GET /api/mercadopago/diagnosti
 
 ### "Envío gratis" — una sola fuente
 
-El mínimo para envío gratis NO está hardcodeado en el frontend. La fuente
-única es `NEXT_PUBLIC_SHIPPING_FREE_MIN` (con alias `SHIPPING_FREE_MIN`, ambos
-default `80000`). Se recomienda definir `NEXT_PUBLIC_SHIPPING_FREE_MIN` una vez:
-el server (`src/lib/shipping/index.ts`) y el cliente (`AddToCart`, `CartView`,
-checkout) leen el mismo valor, así el banner de "te faltan X" coincide siempre
-con lo que cobra el backend, incluso si el operador lo cambia en producción.
+El envío es **gratis siempre, sin mínimo**. No existen variables de entorno para
+configurarlo (`NEXT_PUBLIC_SHIPPING_FREE_MIN` / `SHIPPING_FREE_MIN` están
+ignoradas: si las tenías, borralas). El costo que se le cobra al cliente está
+fijado en el código como `CUSTOMER_SHIPPING_COST` en
+`src/lib/shipping/free-shipping.ts` (re-exportado por `src/lib/shipping/index.ts`),
+de modo que el server y el cliente usan siempre el mismo valor.
+
+Hay **dos modalidades, ambas gratuitas**: envío a domicilio o envío a sucursal de
+Correo Argentino. La política vive en `src/lib/shipping/pickup.ts`, con un
+interruptor maestro (`PICKUP_ENABLED`) que, puesto en `false`, deja solamente
+domicilio sin tocar ningún otro archivo.
+
+La modalidad de sucursal **no tiene selector ni catálogo**. No existe un padrón
+de sucursales contra el cual validar, así que no se consulta la API de agencias
+(`/api/shipping/agencies` responde `410`) y `agency_code` se deja siempre vacío.
+Lo que hace el cliente es escribir en texto libre, opcional, qué sucursal prefiere
+(`orders.preferred_branch`, hasta 120 caracteres); si no escribe nada, el negocio
+lo coordina por WhatsApp. En esta modalidad no se pide ni se guarda dirección.
+
+Para el cliente, "sucursal" es una modalidad real pero **manual**: apenas
+confirma el pedido se escribe al WhatsApp del negocio y ahí se acuerda la sucursal
+con el cliente. Por eso `createShipment()` corta los pedidos a sucursal con el error
+`sucursal-manual`: sin código de agencia no se puede generar el envío en la API del
+courier, así que el admin carga el tracking a mano. La provincia, el CP y la
+localidad siguen siendo obligatorios en las dos modalidades: son los que definen
+si hay servicio para esa zona.
+
+### Aviso de pedido nuevo por WhatsApp
+
+Cuando el pedido se finaliza (o sea, con el pago confirmado), se envía al
+WhatsApp del negocio (`WHATSAPP_TO`) el detalle completo: cliente, teléfono y
+email, código de pedido, productos con cantidades y precios, total, envío,
+modalidad, destino (dirección o sucursal preferida), observaciones del cliente y
+el enlace al pedido en el panel.
+
+El aviso es best-effort: si WhatsApp falla, el pedido **igual queda guardado y
+cobrado** (solo se pierde el aviso). En el detalle del pedido hay un botón
+**"Reenviar aviso por WhatsApp"** para recuperarlo; muestra éxito únicamente si la
+API de Meta confirmó el envío. No se manda para pedidos pendientes, cancelados o
+sin stock: el texto anuncia una venta cobrada.
+
+El contenido y el orden de las variables viven en `src/lib/order-message.ts` y la
+plantilla `WHATSAPP_TEMPLATE_NAME` debe estar aprobada con **5 variables
+agrupadas** en ese orden:
+
+| # | Contenido |
+|---|-----------|
+| `{{1}}` | cliente |
+| `{{2}}` | teléfono y email de contacto |
+| `{{3}}` | pedido: código, productos, cantidades, precios, total y envío |
+| `{{4}}` | envío: modalidad, CP, localidad, provincia, dirección o sucursal |
+| `{{5}}` | observaciones del cliente y enlace al pedido |
+
+Los datos van agrupados y no uno por variable a propósito: las plantillas usan
+variables posicionales y con muchas variables un `{{n}}` corrido manda el teléfono
+donde debería ir el total. Si Meta ya tiene aprobada una versión de 7 variables,
+hay que reemplazarla.
+
+### Despacho y aviso al cliente
+
+El seguimiento se carga a mano en el panel (`src/components/admin/ShippingCard.tsx`,
+acción `updateTrackingNumber` en `src/lib/shipping/actions.ts`). Al guardar un
+número nuevo, el pedido queda `enviado` y se avisa al cliente **por email**
+(siempre) y **por WhatsApp** (si el canal está configurado). El aviso por WhatsApp
+es best-effort: si falla, el seguimiento ya quedó guardado.
+
+El botón **"Avisar por WhatsApp"** del panel abre `wa.me` con el mensaje ya escrito
+(código + enlace). Funciona sin ninguna credencial, así que sirve aunque el canal
+automático esté apagado.
+
+Para el aviso automático hacen falta las credenciales de WhatsApp Business
+(`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_TO`) **y** una
+plantilla aprobada `WHATSAPP_DISPATCH_TEMPLATE_NAME` con estas 4 variables en este
+orden: `{{1}}` nombre, `{{2}}` pedido, `{{3}}` seguimiento, `{{4}}` enlace. Sin
+esa plantilla no se envía nada (nunca se manda el aviso con la plantilla de "nueva
+orden", que es un mensaje distinto). El texto y el orden de las variables viven en
+`src/lib/shipping/dispatch-message.ts`.
+
+### Webhook entrante (recibir mensajes de los clientes)
+
+Hasta ahora todo lo de WhatsApp era **salida**. Con el webhook en
+`src/app/api/whatsapp/webhook/route.ts` también se **guarda** lo que escriben los
+clientes, para los dos números de la cuenta.
+
+Es solo recepción: **no contesta ni reenvía nada**. Nadie recibe una respuesta
+automática y no hay riesgo de bucle con Meta. Los mensajes quedan en la tabla
+`whatsapp_messages` (columna `body`, `from_number`, `status`, `wamid`, etc.).
+
+Variables nuevas (se documentan también en `.env.example`, sección 6):
+
+| Variable | Para qué |
+| --- | --- |
+| `WHATSAPP_VERIFY_TOKEN` | Token de suscripción. Lo inventás vos: es el mismo string que ponés en Meta y en esta variable. |
+| `WHATSAPP_APP_SECRET` | App Secret de la app de Meta (WhatsApp Manager → Configuration → Webhooks → Developer). Valida la firma de cada POST. **Distinto** de `WHATSAPP_ACCESS_TOKEN` y más sensible. |
+| `WHATSAPP_PHONE_NUMBER_ID_2` | ID del segundo número, para distinguir a cuál llegó cada mensaje. Opcional: si la cuenta tiene uno solo, vacía. |
+
+La salida **sigue yendo por el primario** (`WHATSAPP_PHONE_NUMBER_ID`); el segundo
+número por ahora solo recibe.
+
+#### Configuración en Meta (una sola vez)
+
+En WhatsApp Manager → Configuration → Webhooks:
+
+1. **Callback URL**: `https://piratesarg.com/api/whatsapp/webhook`
+2. **Verify token**: el mismo valor que `WHATSAPP_VERIFY_TOKEN`.
+3. Suscribirse al campo **`messages`** (ahí llegan los mensajes y también los
+   cambios de estado de los enviados).
+4. Guardar. Meta hace un `GET` de prueba con el desafío: si el token coincide, el
+   panel marca la suscripción como verificada.
+
+El callback se registra **una sola vez por app/WABA**, no por número: si los dos
+números están en la misma WABA, los dos llegan al mismo endpoint. Si el panel
+queda en "pendiente de verificar", el problema casi siempre es que
+`WHATSAPP_VERIFY_TOKEN` no coincide con lo puesto en Meta.
+
+#### Qué hace el endpoint
+
+- **`GET` (verificación de Meta)**: compara `hub.verify_token` con
+  `WHATSAPP_VERIFY_TOKEN` en tiempo constante y devuelve `hub.challenge`. Token
+  incorrecto → `403`.
+- **`POST` (eventos)**: valida `X-Hub-Signature-256` (HMAC SHA-256) contra el
+  cuerpo **crudo** antes de parsear. Firma inválida → `401`.
+
+Falla cerrado en ambos: sin `WHATSAPP_VERIFY_TOKEN` el `GET` devuelve `503` y sin
+`WHATSAPP_APP_SECRET` el `POST` devuelve `503`, así que un despliegue a medio
+configurar no acepta nada en silencio.
+
+Cuando un evento es válido, la ruta espera a escribirlo en Turso antes de responder
+`200`. Si la base falla, responde `500` para que Meta reintente: es preferible un
+mensaje duplicado a perder uno. Los reintentos de Meta no duplican filas porque
+cada evento tiene clave única:
+
+| Tipo de evento | `dedupe_key` |
+| --- | --- |
+| Mensaje de un cliente | su `wamid` (`wamid.XXX`) |
+| Cambio de estado de un mensaje enviado | `wamid:estado` (`wamid.XXX:delivered`) |
+
+El estado va en la clave a propósito: un mismo `wamid` pasa por `sent` →
+`delivered` → `read` y esas transiciones se conservan, mientras que un reenvío
+exacto del mismo estado se ignora. Un `phone_number_id` que no figure en las
+variables se guarda igual, marcado `numero-desconocido`, y la ruta avisa por log:
+así no se pierde un mensaje si Meta agrega un número a la cuenta.
+
+### Modo de prueba del checkout (solo Preview)
+
+Con `CHECKOUT_TEST_MODE=true` en una Preview de Vercel, el checkout crea un
+pedido **real pero no pago** (estado `pendiente`) sin llamar a Mercado Pago, para
+verificar el formulario y el envío gratis. En producción (`VERCEL_ENV=production`)
+nunca se activa. Ver la advertencia sobre la base de datos en `.env.example`
+(sección 8): el pedido de prueba se escribe en la base que apunte
+`TURSO_DATABASE_URL`.
+

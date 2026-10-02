@@ -104,6 +104,8 @@ const SCHEMA = `
     address_apartment TEXT NOT NULL DEFAULT '',
     delivery_type TEXT NOT NULL DEFAULT 'D',
     agency_code TEXT NOT NULL DEFAULT '',
+    preferred_branch TEXT NOT NULL DEFAULT '',
+    customer_notes TEXT NOT NULL DEFAULT '',
     shipping_provider TEXT NOT NULL DEFAULT '',
     shipping_service TEXT NOT NULL DEFAULT '',
     tracking_number TEXT NOT NULL DEFAULT '',
@@ -188,6 +190,34 @@ const SCHEMA = `
     window_start TEXT NOT NULL
   );
 
+  -- Mensajes que ENTRAN por el webhook de WhatsApp de Meta.
+  --
+  --  - wamid: identificador del mensaje (wamid.Id). No es unique por si solo:
+  --    un mismo mensaje genera varios eventos de estado distintos.
+  --  - dedupe_key: UNIQUE y es la garantia real de no duplicar. Un mensaje
+  --    entrante vale su wamid; un evento de estado vale "wamid:status", para
+  --    que el reenvio exacto de Meta caiga en la misma clave pero cada
+  --    transicion real (sent/delivered/read) se guarde.
+  --  - our_number_label: numero-1 / numero-2 / desconocido. Se guarda la
+  --    etiqueta junto al ID crudo para poder separar los dos numeros al leer,
+  --    sin depender de las variables de entorno en ese momento.
+  -- No se guarda el cuerpo crudo del evento a proposito: trae datos personales
+  -- del contacto que no hacen falta para leer el mensaje.
+  CREATE TABLE IF NOT EXISTS whatsapp_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    wamid TEXT NOT NULL DEFAULT '',
+    dedupe_key TEXT NOT NULL,
+    event_type TEXT NOT NULL DEFAULT '',
+    our_phone_number_id TEXT NOT NULL DEFAULT '',
+    our_number_label TEXT NOT NULL DEFAULT '',
+    from_number TEXT NOT NULL DEFAULT '',
+    to_number TEXT NOT NULL DEFAULT '',
+    message_type TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_perfumes_brand ON perfumes(brand_id);
   CREATE INDEX IF NOT EXISTS idx_perfumes_gender ON perfumes(gender);
   CREATE INDEX IF NOT EXISTS idx_perfumes_aroma ON perfumes(aroma);
@@ -196,6 +226,15 @@ const SCHEMA = `
   CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
   CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id);
   CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+
+  -- Dedupe del webhook de WhatsApp. La columna dedupe_key NO tiene UNIQUE inline:
+  -- la garantia de no duplicar la da Este indice, que es lo que permite el
+  -- "ON CONFLICT(dedupe_key) DO NOTHING" del INSERT. Si el indice faltara, el
+  -- INSERT fallaria con error en vez de duplicar en silencio, que es el fallo
+  -- que conviene: el indice tiene que estar en el mismo lote que la tabla.
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_whatsapp_messages_dedupe ON whatsapp_messages(dedupe_key);
+  -- Para leer los mensajes de un número en orden cronológico.
+  CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_created ON whatsapp_messages(created_at);
 `;
 
 async function createSchema(database: Client) {
@@ -280,6 +319,28 @@ async function migrate(database: Client) {
   }
   if (!orderColumns.some((c) => c.name === "customer_notified_at")) {
     await database.execute("ALTER TABLE orders ADD COLUMN customer_notified_at TEXT");
+  }
+
+  // Modalidad sucursal de Correo Argentino y observaciones del cliente.
+  //
+  //  - preferred_branch: texto libre con la sucursal que el cliente prefiere. NO
+  //    es un código de agencia (eso es `agency_code`, que las nuevas órdenes
+  //    siguen dejando vacío): no hay padron de sucursales contra el que validar,
+  //    asi que se guarda tal cual y se coordina por WhatsApp.
+  //  - customer_notes: observaciones del cliente en el checkout.
+  //
+  // Se comprueban por separado a proposito (mismo criterio que arriba): si se
+  // agregaran juntas bajo un unico "if", una base a medio migrar se quedaria sin
+  // la segunda columna para siempre y el INSERT del checkout fallaria siempre.
+  if (!orderColumns.some((c) => c.name === "preferred_branch")) {
+    await database.execute(
+      "ALTER TABLE orders ADD COLUMN preferred_branch TEXT NOT NULL DEFAULT ''"
+    );
+  }
+  if (!orderColumns.some((c) => c.name === "customer_notes")) {
+    await database.execute(
+      "ALTER TABLE orders ADD COLUMN customer_notes TEXT NOT NULL DEFAULT ''"
+    );
   }
 
   const itemColumns = await tableColumns("supplier_purchase_items");

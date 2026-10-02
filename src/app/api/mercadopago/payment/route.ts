@@ -3,6 +3,7 @@ import { createPayment } from "@/lib/mercadopago";
 import { recordPaymentDiagnostic } from "@/lib/payment-diagnostics";
 import { attachPaymentToOrder, finalizePaidOrderByCode } from "@/lib/checkout-finalize";
 import { clientIp, rateLimitConsume } from "@/lib/rate-limit";
+import { isOrderFinalized, type OrderStatus } from "@/lib/types";
 
 const PAYMENT_MAX_ATTEMPTS = 60;
 const PAYMENT_WINDOW_MS = 10 * 60 * 1000;
@@ -93,13 +94,32 @@ export async function POST(request: Request) {
 
   const db = await getDb();
   const orderResult = await db.execute({
-    sql: "SELECT total FROM orders WHERE code = ?",
+    sql: "SELECT total, status FROM orders WHERE code = ?",
     args: [externalReference],
   });
-  const order = orderResult.rows[0] as unknown as { total: number } | undefined;
+  const order = orderResult.rows[0] as unknown as
+    | { total: number; status: OrderStatus }
+    | undefined;
   if (!order) {
     await recordDiag("error", "Pedido no encontrado");
     return Response.json({ error: "Pedido no encontrado" }, { status: 404 });
+  }
+
+  // Guarda anti-doble-cobro: si el pedido ya esta finalizado (pagado,
+  // preparando, enviado, entregado o sin_stock) NUNCA se crea otro pago. El
+  // Brick puede reintentar (red, doble click) o el cliente puede reabrir el
+  // checkout de un pedido ya pagado; sin este corte cada reintento generaria un
+  // cobro nuevo en Mercado Pago. La confirmacion final la hace el webhook/la
+  // pagina de resultado, que son idempotentes.
+  if (isOrderFinalized(order.status)) {
+    await recordDiag("error", "Pedido ya finalizado; no se crea un nuevo pago");
+    return Response.json(
+      {
+        error: "El pedido ya fue procesado.",
+        status: order.status,
+      },
+      { status: 409 }
+    );
   }
 
   const transactionAmount = Number(order.total);

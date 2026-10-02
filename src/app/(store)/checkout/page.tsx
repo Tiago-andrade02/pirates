@@ -15,11 +15,14 @@ import { isValidEmail, MAX_EMAIL_LENGTH } from "@/lib/email-validation";
 const inputCls =
   "w-full rounded-lg border border-line bg-background px-3.5 py-3 text-sm text-white placeholder:text-faint outline-none transition-colors focus:border-white/40 sm:rounded-xl sm:px-4";
 
+const MAX_NOTES_LENGTH = 500;
+
 export default function CheckoutPage() {
   const { items, subtotal, count } = useCart();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [notes, setNotes] = useState("");
   const [shipping, setShipping] = useState<ShippingSelection | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +51,9 @@ export default function CheckoutPage() {
       setError("Completá provincia y código postal para elegir la entrega.");
       return;
     }
-    // Única modalidad: envío a domicilio. No hay sucursal ni retiro que validar.
-    if (!shipping.street || !shipping.number) {
+    // La dirección solo es obligatoria para envío a domicilio: en la modalidad
+    // de sucursal se retira en la sucursal y la dirección ni siquiera se pide.
+    if (shipping.deliveryType === "D" && (!shipping.street || !shipping.number)) {
       setError("Completá la dirección de entrega.");
       return;
     }
@@ -68,9 +72,10 @@ export default function CheckoutPage() {
             name,
             email,
             phone,
+            notes,
           },
           shipping: {
-            deliveryType: "D",
+            deliveryType: shipping.deliveryType,
             postalCode: shipping.postalCode,
             province: shipping.province,
             locality: shipping.locality,
@@ -78,6 +83,7 @@ export default function CheckoutPage() {
             number: shipping.number,
             floor: shipping.floor,
             apartment: shipping.apartment,
+            preferredBranch: shipping.preferredBranch,
           },
         }),
       });
@@ -216,6 +222,22 @@ export default function CheckoutPage() {
                 />
                 <span className="mt-1 block text-[11px] text-faint">
                   Te enviamos la confirmación de tu compra a este correo.
+                </span>
+              </label>
+              <label className="block sm:col-span-2">
+                <span className="mb-1 block text-[11px] text-muted sm:text-xs">
+                  Observaciones (opcional)
+                </span>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  maxLength={MAX_NOTES_LENGTH}
+                  rows={2}
+                  placeholder="Ej: retirar por la mañana, o avisar antes de llegar"
+                  className={inputCls}
+                />
+                <span className="mt-1 block text-[11px] text-faint">
+                  Horario de entrega, forma de pago, o lo que necesites que sepamos.
                 </span>
               </label>
             </div>
@@ -363,13 +385,26 @@ export default function CheckoutPage() {
           </div>
           {shipping && (
             <p className="mt-3 rounded-lg border border-line bg-background p-2.5 text-[11px] text-muted sm:rounded-xl sm:text-xs">
-              Envío a domicilio
-              {shipping.street ? ` · ${shipping.street} ${shipping.number}` : ""}
-              {shipping.deliveryTimeMin && shipping.deliveryTimeMax
+              {shipping.deliveryType === "S"
+                ? "Envío gratis a sucursal de Correo Argentino"
+                : `Envío gratis a domicilio por Correo Argentino${
+                    shipping.street ? ` · ${shipping.street} ${shipping.number}` : ""
+                  }`}
+              {shipping.deliveryType === "D" &&
+              shipping.deliveryTimeMin &&
+              shipping.deliveryTimeMax
                 ? ` · ${shipping.deliveryTimeMin}-${shipping.deliveryTimeMax} días hábiles`
+                : ""}
+              {shipping.deliveryType === "S" && shipping.preferredBranch
+                ? ` · sucursal preferida: ${shipping.preferredBranch}`
                 : ""}
             </p>
           )}
+          <p className="mt-2 text-[11px] leading-relaxed text-faint sm:text-xs">
+            {shipping?.deliveryType === "S"
+              ? "Te escribimos por WhatsApp para coordinar la sucursal. Te mandamos el código de seguimiento cuando despachemos."
+              : "Te enviamos el código de seguimiento por WhatsApp cuando despachemos."}
+          </p>
         </aside>
       </div>
     </div>

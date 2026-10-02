@@ -16,7 +16,11 @@ import {
   normalizeTrackingNumber,
   resolveTrackingUrlInput,
 } from "./manual-tracking";
-import { canNotifyCustomer, sendCustomerTrackingEmail } from "@/lib/notify";
+import {
+  canNotifyCustomer,
+  sendCustomerTrackingEmail,
+  sendWhatsAppDispatchNotification,
+} from "@/lib/notify";
 import type { ShippingProvider, ShippingProviderId } from "./types";
 import type { DeliveryType, OrderStatus, TrackingEvent } from "@/lib/types";
 
@@ -114,6 +118,16 @@ export async function createShipment(formData: FormData) {
     redirect(`/admin/pedidos?error=pago-no-confirmado&id=${id}`);
   }
 
+  const deliveryType: DeliveryType = order.delivery_type === "S" ? "S" : "D";
+
+  // Un pedido a sucursal NO se genera online: no hay código de agencia porque no
+  // publicamos el padrón de sucursales, la elección se coordina por WhatsApp con
+  // el cliente. Si esto llegara a la API del courier, mandaría un envío sin
+  // destino válido. Se corta acá y el admin carga el tracking a mano.
+  if (deliveryType === "S") {
+    redirect(`/admin/pedidos/${id}?error=sucursal-manual`);
+  }
+
   const provinceCode = provinceCodeFor(order.province);
   if (!provinceCode) {
     redirect(`/admin/pedidos?error=provincia-invalida&id=${id}`);
@@ -143,9 +157,7 @@ export async function createShipment(formData: FormData) {
     sql: "SELECT name, email, phone FROM customers WHERE id = ?",
     args: [order.customer_id],
   });
-  const customer = customerResult.rows[0] as unknown as { name: string; email: string | null; phone: string | null } | undefined;
-
-  const deliveryType: DeliveryType = order.delivery_type === "S" ? "S" : "D";
+const customer = customerResult.rows[0] as unknown as { name: string; email: string | null; phone: string | null } | undefined;
 
   let provider;
   try {
@@ -166,19 +178,17 @@ export async function createShipment(formData: FormData) {
         email: customer?.email ?? "",
       },
       deliveryType,
-      agencyCode: deliveryType === "S" ? order.agency_code || undefined : undefined,
-      address:
-        deliveryType === "D"
-          ? {
-              streetName: order.address_street,
-              streetNumber: order.address_number,
-              floor: order.address_floor,
-              apartment: order.address_apartment,
-              city: order.locality || order.province,
-              provinceCode,
-              postalCode: order.postal_code,
-            }
-          : undefined,
+      // Sin agencyCode: a esta altura solo llegan envíos a domicilio (los de
+      // sucursal se cortaron más arriba). La columna queda siempre vacía.
+      address: {
+        streetName: order.address_street,
+        streetNumber: order.address_number,
+        floor: order.address_floor,
+        apartment: order.address_apartment,
+        city: order.locality || order.province,
+        provinceCode,
+        postalCode: order.postal_code,
+      },
       package: pkg,
       declaredValue: Math.round(order.subtotal),
       productType: order.shipping_service || "CP",
@@ -333,6 +343,17 @@ export async function updateTrackingNumber(formData: FormData) {
   } catch (error) {
     logError("updateTrackingNumber/notify", error);
     redirect(`/admin/pedidos/${id}?error=aviso-seguimiento-fallido`);
+  }
+
+  // Aviso por WhatsApp al cliente: best-effort y DESPUÉS del commit. Si no hay
+  // credenciales o plantilla configurada, sendWhatsAppDispatchNotification no
+  // hace nada (solo warn). Un fallo de WhatsApp no revierte el seguimiento ni
+  // bloquea la pantalla: el admin puede reintentar con el link wa.me del panel.
+  try {
+    const fullOrder = await getOrderById(id);
+    if (fullOrder) await sendWhatsAppDispatchNotification(fullOrder);
+  } catch (error) {
+    logError("updateTrackingNumber/whatsapp", error);
   }
 
   redirect(`/admin/pedidos/${id}?ok=tracking-guardado`);
