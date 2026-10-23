@@ -11,7 +11,10 @@ import {
   TruckIcon,
 } from "@/components/icons";
 
-export const dynamic = "force-dynamic";
+// ISR (Etapa 1): la home se sirve desde caché y se regenera como máximo cada
+// 60 s. Las acciones del admin que cambian productos/precios/stock la purgan de
+// inmediato con revalidatePublicCatalog (src/app/admin/actions.ts).
+export const revalidate = 60;
 
 const BENEFITS = [
   {

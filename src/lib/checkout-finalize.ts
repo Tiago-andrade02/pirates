@@ -1,6 +1,12 @@
 import { getDb } from "@/lib/db";
 import { getOrderById } from "@/lib/admin-data";
-import { notifyNewOrder } from "@/lib/notify";
+import { revalidatePublicCatalog } from "@/lib/catalog-revalidation";
+import {
+  notifyNewOrder,
+  customerEmailDelivered,
+  customerWhatsappDelivered,
+} from "@/lib/notify";
+import { markCustomerChannels } from "@/lib/customer-notification";
 import { planNotifications, type NotificationPlan } from "@/lib/notification-plan";
 import { ATTACH_PAYMENT_SQL } from "@/lib/order-payment-link";
 import type { OrderStatus } from "@/lib/types";
@@ -41,8 +47,14 @@ export async function attachPaymentToOrder(
 // depende de leer el pedido por fuera (esa lectura puede estar desactualizada)
 // sino del write lock: "write" abre BEGIN IMMEDIATE y toma el lock de escritura
 // de entrada, asi que solo una transaccion de escritura puede estar activa. La
-// segunda ve el estado ya final y los reclamos de aviso ya puestos, y sale como
-// no-op sin enviar nada.
+// segunda ve el estado ya final y sale como no-op sin enviar nada.
+//
+// Los reclamos al admin (notified_at / stock_alerted_at) se escriben dentro de
+// la transaccion. Los reclamos de la fase al cliente (customer_email_notified_at
+// / customer_whatsapp_notified_at) NO: cada canal se marca recien despues de que
+// el proveedor confirme SU envio, por separado, para no dejarlo marcado como
+// enviado si falla. La columna legada customer_notified_at no se escribe mas:
+// solo se lee, como reclamo de los pedidos historicos.
 export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
   const db = await getDb();
 
@@ -76,8 +88,11 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
       sql: `SELECT o.status,
                    o.notified_at,
                    o.stock_alerted_at,
+                   o.customer_email_notified_at,
+                   o.customer_whatsapp_notified_at,
                    o.customer_notified_at,
-                   c.email AS customer_email
+                   c.email AS customer_email,
+                   c.phone AS customer_phone
             FROM orders o
             LEFT JOIN customers c ON c.id = o.customer_id
             WHERE o.id = ?`,
@@ -88,8 +103,11 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
           status: OrderStatus;
           notified_at: string | null;
           stock_alerted_at: string | null;
+          customer_email_notified_at: string | null;
+          customer_whatsapp_notified_at: string | null;
           customer_notified_at: string | null;
           customer_email: string | null;
+          customer_phone: string | null;
         }
       | undefined;
 
@@ -149,29 +167,37 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
       stockShortage,
       adminOrderNotifiedAt: current?.notified_at ?? null,
       stockAlertedAt: current?.stock_alerted_at ?? null,
-      customerNotifiedAt: current?.customer_notified_at ?? null,
+      customerEmailNotifiedAt: current?.customer_email_notified_at ?? null,
+      customerWhatsappNotifiedAt: current?.customer_whatsapp_notified_at ?? null,
+      legacyCustomerNotifiedAt: current?.customer_notified_at ?? null,
       hasCustomerEmail: Boolean(current?.customer_email?.trim()),
+      hasCustomerPhone: Boolean(current?.customer_phone?.trim()),
     });
 
-    // Reclama atomicamente los avisos que el plan dice enviar y fija el estado.
-    // COALESCE en las tres columnas: un reclamo ya puesto no se pisa. Si el plan
-    // no pide un aviso, la columna queda como estaba (CASE), para que un
+    // Reclama atomicamente los avisos AL ADMIN y la alerta urgente, y fija el
+    // estado. COALESCE en esas columnas: un reclamo ya puesto no se pisa. Si el
+    // plan no pide un aviso, la columna queda como estaba (CASE), para que un
     // pedido sin stock no ensucie el reclamo de la orden normal.
+    //
+    // Los reclamos de la confirmacion al comprador (customer_email_notified_at /
+    // customer_whatsapp_notified_at) NO se escriben aca: cada canal puede salir
+    // por su cuenta y recien se marca DESPUES de que el proveedor confirme su
+    // envio (ver markCustomerChannels). Asi el exito parcial se representa bien y
+    // una falla de un canal no deja marcado al otro. La deduplicacion de la
+    // finalizacion no depende de estas columnas: la garantiza el lock de
+    // escritura + la relectura de estado.
     const claimedAt = new Date().toISOString();
     await tx.execute({
       sql: `UPDATE orders
             SET status = ?,
                 notified_at = CASE WHEN ? THEN COALESCE(notified_at, ?) ELSE notified_at END,
-                stock_alerted_at = CASE WHEN ? THEN COALESCE(stock_alerted_at, ?) ELSE stock_alerted_at END,
-                customer_notified_at = CASE WHEN ? THEN COALESCE(customer_notified_at, ?) ELSE customer_notified_at END
+                stock_alerted_at = CASE WHEN ? THEN COALESCE(stock_alerted_at, ?) ELSE stock_alerted_at END
             WHERE id = ?`,
       args: [
         stockShortage ? "sin_stock" : "pagado",
         plan.adminNewOrder ? 1 : 0,
         claimedAt,
         plan.adminStockAlert ? 1 : 0,
-        claimedAt,
-        plan.customerConfirmation ? 1 : 0,
         claimedAt,
         order.id,
       ],
@@ -206,12 +232,28 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
 
   // Los avisos salen DESPUES del commit. Si el envio fallara, el pedido ya esta
   // pagado y el stock ya descontado, y eso no se revierte: un correo caido nunca
-  // puede deshacer una compra. Los reclamos ya quedaron escritos en la
+  // puede deshacer una compra. Los reclamos al admin quedaron escritos en la
   // transaccion, asi que el panel admin puede reenviar a mano.
   if (stockShortage) {
     console.warn(
       `[checkout-finalize] Pedido ${code} marcado 'sin_stock' (pago cobrado, stock insuficiente)`
     );
+  }
+
+  // El stock ya se descontó en el commit: la vitrina cacheada (ISR) muestra la
+  // disponibilidad vieja. Se purga SOLO acá, una única vez, porque esta rama la
+  // corre únicamente la transacción que ganó el lock e hizo el descuento (un
+  // webhook reentregado sale antes por isOrderFinalized). Si no hubo descuento
+  // (sin_stock) no se purga: nada cambió. Una falla al purgar NO debe afectar la
+  // confirmación del pago, que ya quedó firme en la base.
+  if (!stockShortage) {
+    try {
+      revalidatePublicCatalog();
+    } catch {
+      console.error(
+        `[checkout-finalize] Pedido ${code}: no se pudo purgar la caché del catálogo`
+      );
+    }
   }
 
   const fullOrder = await getOrderById(order.id);
@@ -223,11 +265,23 @@ export async function finalizePaidOrderByCode(code: string): Promise<boolean> {
       ? {
           adminNewOrder: false,
           adminStockAlert: plan.adminStockAlert,
-          customerConfirmation: false,
+          customerEmail: false,
+          customerWhatsapp: false,
         }
       : plan;
 
-    notifyNewOrder(fullOrder, planForSend).catch(() => {
+    // Cada canal de la confirmacion al comprador se marca como enviado RECIEN
+    // despues de que el proveedor (SMTP / Graph API) confirme SU envio. Se marcan
+    // por separado: si el email sale y el WhatsApp falla, solo queda marcado el
+    // email, y el panel puede reenviar el WhatsApp sin volver a mandar el email.
+    notifyNewOrder(fullOrder, planForSend, {
+      onResults: async (results) => {
+        await markCustomerChannels(order.id, {
+          email: customerEmailDelivered(results),
+          whatsapp: customerWhatsappDelivered(results),
+        });
+      },
+    }).catch(() => {
       // notifyNewOrder ya registro que canal fallo. Aca solo se deja constancia
       // de que el pedido quedo pagado con un aviso pendiente, sin volcar el error
       // (puede traer datos del servidor SMTP).

@@ -1,20 +1,32 @@
-import Link from "next/link";
+"use client";
 
 export interface FilterOption {
   value: string;
   label: string;
-  href: string;
   active: boolean;
+}
+
+// Definición de un grupo de filtros, tal como la arma el catálogo. `field`
+// indica qué filtro del estado toca cada opción (ver FilterField).
+export interface FilterGroupDef {
+  label: string;
+  field: string;
+  options: FilterOption[];
+  allowClear?: boolean;
 }
 
 export function FilterGroup({
   label,
   options,
   allowClear,
+  onSelect,
+  onClear,
 }: {
   label: string;
   options: FilterOption[];
   allowClear?: boolean;
+  onSelect: (value: string) => void;
+  onClear?: () => void;
 }) {
   const anyActive = options.some((o) => o.active);
   return (
@@ -23,21 +35,23 @@ export function FilterGroup({
         <h3 className="text-xs font-semibold uppercase tracking-widest text-white">
           {label}
         </h3>
-        {anyActive && allowClear && (
-          <Link
-            href={options.find((o) => o.active)?.href ?? ""}
+        {anyActive && allowClear && onClear && (
+          <button
+            type="button"
+            onClick={onClear}
             className="text-xs text-faint transition-colors hover:text-white"
           >
             Limpiar
-          </Link>
+          </button>
         )}
       </div>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (
-          <Link
+          <button
             key={option.value}
-            href={option.href}
-            aria-current={option.active ? "true" : undefined}
+            type="button"
+            onClick={() => onSelect(option.value)}
+            aria-pressed={option.active}
             className={`mi-chip rounded-full border px-3.5 py-1.5 text-sm ${
               option.active
                 ? "border-white bg-white font-medium text-black"
@@ -45,7 +59,7 @@ export function FilterGroup({
             }`}
           >
             {option.label}
-          </Link>
+          </button>
         ))}
       </div>
     </div>

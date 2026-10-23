@@ -3,7 +3,9 @@ import Link from "next/link";
 import { getBrandsWithCounts } from "@/lib/data";
 import { ArrowRightIcon } from "@/components/icons";
 
-export const dynamic = "force-dynamic";
+// ISR (Etapa 1): caché con regeneración máxima cada 60 s. Se purga al instante
+// desde el admin cuando cambian productos/marcas (revalidatePublicCatalog).
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Marcas",

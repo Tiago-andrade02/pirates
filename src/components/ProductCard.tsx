@@ -1,19 +1,15 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Perfume } from "@/lib/types";
-import { formatARS } from "@/lib/format";
-import { productImageUrl } from "@/lib/images";
+import { hasAnyBuyable } from "@/lib/variants";
+import { ProductImage } from "./ProductImage";
+import { ProductCardActions } from "./ProductCardActions";
 import { StarIcon } from "./icons";
 
-function referencePrice(p: Perfume): number | null {
-  return p.prices["50"] ?? p.prices["100"] ?? p.prices["30"];
-}
-
 export function ProductCard({ perfume }: { perfume: Perfume }) {
-  const price = referencePrice(perfume);
-  const price50 = perfume.prices["50"];
-  const displayPrice = price50 ?? price;
-  const outOfStock = perfume.stock <= 0;
+  // El conjunto de variantes comprables (precio + stock por tamaño) decide el
+  // cartel "Agotado": es la misma regla que valida el checkout. `perfume.stock`
+  // es el total y puede estar en una talla sin precio, por eso no se usa acá.
+  const outOfStock = !hasAnyBuyable(perfume.prices, perfume.stockBySize);
   const hasReviews = perfume.reviewCount > 0;
 
   return (
@@ -24,8 +20,8 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
     >
       <Link href={`/perfumes/${perfume.slug}`} className="block">
         <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-b from-surface-2 to-background">
-          <Image
-            src={productImageUrl(perfume.image)}
+          <ProductImage
+            image={perfume.image}
             alt={perfume.name}
             fill
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
@@ -84,43 +80,14 @@ export function ProductCard({ perfume }: { perfume: Perfume }) {
           )}
         </Link>
 
-        <div className="mt-auto pt-2">
-          {outOfStock ? (
-            <p className="text-xs font-semibold text-red-400 sm:text-sm">Sin stock</p>
-          ) : (
-            <>
-              <div>
-                {price50 !== null ? (
-                  <>
-                    <p className="text-[8px] uppercase tracking-wider text-faint sm:text-[10px]">Desde 50 ml</p>
-                    <p className="text-sm font-bold text-white sm:text-base">
-                      {formatARS(price50)}
-                    </p>
-                  </>
-                ) : price !== null ? (
-                  <p className="text-sm font-bold text-white sm:text-base">
-                    {formatARS(price)}
-                  </p>
-                ) : (
-                  <p className="text-xs text-faint sm:text-sm">Consultar</p>
-                )}
-              </div>
-              {displayPrice !== null && (
-                <div className="mt-0.5">
-                  <p className="text-[9px] text-muted sm:text-[11px]">
-                    3 cuotas sin interés
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-          <Link
-            href={`/perfumes/${perfume.slug}`}
-            className="mi-btn mt-2 block w-full rounded-lg bg-white py-1.5 text-center text-[11px] font-semibold uppercase tracking-wider text-black transition-colors hover:bg-gold hover:text-black sm:py-2 sm:text-xs"
-          >
-            Ver perfume
-          </Link>
-        </div>
+        <ProductCardActions
+          slug={perfume.slug}
+          name={perfume.name}
+          brandName={perfume.brand.name}
+          image={perfume.image}
+          prices={perfume.prices}
+          stockBySize={perfume.stockBySize}
+        />
       </div>
     </div>
   );

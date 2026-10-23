@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPerfumeBySlug, getRelated } from "@/lib/data";
-import { formatARS } from "@/lib/format";
+import { getPerfumeBySlug, getRelated, getPerfumeSlugs } from "@/lib/data";
 import type { Aroma, Occasion, Season } from "@/lib/types";
 import { Gallery } from "@/components/Gallery";
 import { AddToCart } from "@/components/AddToCart";
@@ -10,7 +9,18 @@ import { ProductCard } from "@/components/ProductCard";
 import { Meter, Stars } from "@/components/Stars";
 import { ArrowRightIcon } from "@/components/icons";
 
-export const dynamic = "force-dynamic";
+// ISR (Etapa 1): ficha de producto desde caché, regeneración máxima cada 60 s.
+// El stock/precio del servidor sigue siendo la fuente de verdad en el checkout,
+// así que una ficha cacheada no puede vender una variante agotada.
+export const revalidate = 60;
+
+// Prerenderiza las fichas conocidas y deja el resto (productos nuevos) para
+// generación on-demand (dynamicParams por defecto). El admin purga cada slug
+// puntual vía revalidatePublicCatalog.
+export async function generateStaticParams() {
+  const slugs = await getPerfumeSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 const GENDER_LABELS: Record<string, string> = {
   hombre: "Hombre",
@@ -74,7 +84,6 @@ export default async function PerfumePage(props: PerfumePageProps) {
   if (!perfume) notFound();
 
   const related = await getRelated(perfume, 4);
-  const basePrice = perfume.prices["50"] ?? perfume.prices["100"] ?? perfume.prices["30"];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-6 lg:px-8">
@@ -133,12 +142,6 @@ export default async function PerfumePage(props: PerfumePageProps) {
             <span className="h-3.5 w-px bg-line" />
             <span>{perfume.reviewCount} reseñas</span>
           </div>
-
-          {basePrice !== null && (
-            <p className="mt-2.5 font-serif text-xl text-white sm:mt-4 sm:text-2xl lg:text-3xl">
-              {formatARS(basePrice)}
-            </p>
-          )}
 
           <div className="mt-3 sm:mt-4">
             <AddToCart

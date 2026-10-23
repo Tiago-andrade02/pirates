@@ -1,22 +1,23 @@
 import { getDb } from "@/lib/db";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const q = (searchParams.get("q") ?? "").trim();
-  if (q.length < 2) return Response.json([]);
+// Índice del buscador. Antes este handler consultaba Turso en cada petición
+// (una por tecla tipeada). Ahora es estático: se prerenderiza en el build, se
+// sirve desde la caché de Vercel y se revalida cada 60 s o al instante cuando el
+// admin cambia el catálogo (catalogPaths incluye /api/search). El cliente baja
+// la lista una vez y filtra en el navegador, así tipear no ejecuta funciones.
+export const dynamic = "force-static";
+export const revalidate = 60;
 
-  const like = `%${q}%`;
+export async function GET() {
   const db = await getDb();
-  const result = await db.execute({
-    sql: `SELECT p.slug, p.name, p.image, b.name AS brand_name,
-              COALESCE(p.price_50, p.price_100, p.price_30) AS price
-       FROM perfumes p
-       JOIN brands b ON b.id = p.brand_id
-       WHERE p.name LIKE ? OR b.name LIKE ? OR p.inspired_by LIKE ?
-       ORDER BY (p.name LIKE ?) DESC, p.rating DESC, p.review_count DESC
-       LIMIT 8`,
-    args: [like, like, like, `%${q}%`],
-  });
+  const result = await db.execute(
+    `SELECT p.slug, p.name, p.image, p.inspired_by,
+            b.name AS brand_name,
+            COALESCE(p.price_50, p.price_100, p.price_30) AS price
+     FROM perfumes p
+     JOIN brands b ON b.id = p.brand_id
+     ORDER BY p.name ASC`
+  );
 
   return Response.json(result.rows);
 }

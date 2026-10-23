@@ -51,9 +51,10 @@ hardcodeada en código. Para arrancar un entorno nuevo:
 | --- | --- |
 | `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN` | Base de datos remota (Turso). Sin SQLite local en producción. |
 | `MERCADO_PAGO_ACCESS_TOKEN` | Token LIVE de Mercado Pago (empieza con `APP_USR-`). |
-| `MERCADO_PAGO_PUBLIC_KEY` + `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` | Misma clave pública, servidor y Payment Brick. |
+| `MERCADO_PAGO_PUBLIC_KEY` | Clave pública de Mercado Pago (lado servidor). El Payment Brick la recibe en la respuesta de `POST /api/checkout`; **no** se usa ninguna `NEXT_PUBLIC_*`. |
 | `MERCADO_PAGO_WEBHOOK_SECRET` | Firma para validar webhooks de Mercado Pago. |
 | `ADMIN_PASSWORD` | Panel de administración. |
+| `SITE_URL` | URL pública del sitio, **sin barra final**. Debe ser exactamente `https://piratesarg.com`: se usa en los enlaces de los correos (admin y cliente), la metadata/robots/sitemap y las `backUrls`/`notificationUrl` que se le pasan a Mercado Pago. Si falta, los correos salen sin enlace y MP usa el host de la request. |
 
 ### Diagnóstico de pagos — solo local
 
@@ -136,6 +137,17 @@ variables posicionales y con muchas variables un `{{n}}` corrido manda el teléf
 donde debería ir el total. Si Meta ya tiene aprobada una versión de 7 variables,
 hay que reemplazarla.
 
+### Alerta urgente: pedido cobrado sin stock
+
+Si al finalizar el pago el stock no alcanza, el pedido queda `sin_stock` y se
+manda al número del negocio (`WHATSAPP_TO`) una **alerta urgente** por la
+plantilla `WHATSAPP_STOCK_ALERT_TEMPLATE_NAME` (7 variables, ver `.env.example`).
+Si esa variable está vacía se reutiliza `WHATSAPP_TEMPLATE_NAME`, que **no** es lo
+mismo: esa anuncia una venta; la alerta anuncia plata cobrada que no se puede
+cumplir. Si no hay ninguna de las dos, el canal de WhatsApp se omite (el pedido
+queda igual y el aviso se recupera desde el panel con el botón de reenvío de la
+alerta).
+
 ### Despacho y aviso al cliente
 
 El seguimiento se carga a mano en el panel (`src/components/admin/ShippingCard.tsx`,
@@ -155,6 +167,43 @@ orden: `{{1}}` nombre, `{{2}}` pedido, `{{3}}` seguimiento, `{{4}}` enlace. Sin
 esa plantilla no se envía nada (nunca se manda el aviso con la plantilla de "nueva
 orden", que es un mensaje distinto). El texto y el orden de las variables viven en
 `src/lib/shipping/dispatch-message.ts`.
+
+### Confirmación de compra al cliente por WhatsApp
+
+Cuando el pago se aprueba (estado `pagado`), además del email al cliente se le
+puede mandar un WhatsApp de confirmación al **teléfono del comprador**.
+
+El email y el WhatsApp son **dos intentos independientes**: una falla del email
+no impide el WhatsApp ni al revés. El WhatsApp solo necesita el **teléfono** del
+comprador (no depende de que haya un email válido); el email solo necesita el
+**email**. Cada canal tiene su **propio reclamo de deduplicación**
+(`customer_email_notified_at` / `customer_whatsapp_notified_at`), así que un
+**éxito parcial** (salió el email pero falló el WhatsApp, o al revés) marca solo
+el canal que de verdad salió y el otro se puede reintentar. Cada marca se escribe
+**recién después** de que el proveedor confirma SU envío, nunca antes. Los pedidos
+históricos que todavía tienen la columna legada `customer_notified_at` se tratan
+como si **ambos** canales ya estuvieran reclamados, para no reenviarles nada.
+
+Es best-effort y opcional: se dispara solo si la plantilla
+`WHATSAPP_ORDER_CONFIRM_TEMPLATE_NAME` está definida y aprobada. Sin plantilla no
+se manda nada (y el email al cliente igual sale). Si el envío falla, el pedido
+**no se modifica**: el pago ya está confirmado y el stock descontado; el panel
+tiene el botón **"Reenviar confirmación por WhatsApp"** para recuperarlo.
+
+Solo aplica a pedidos **pagados**: el texto confirma que el pago fue recibido y
+nunca se envía antes de la aprobación, ni para pedidos cancelados o sin stock
+(esos obedecen a la alerta urgente, otro mensaje).
+
+La plantilla debe estar aprobada en Meta con **4 variables en este orden**:
+
+| # | Contenido |
+|---|-----------|
+| `{{1}}` | nombre del cliente |
+| `{{2}}` | código del pedido |
+| `{{3}}` | total |
+| `{{4}}` | enlace de seguimiento |
+
+El contenido y el orden viven en `src/lib/order-confirmation-message.ts`.
 
 ### Webhook entrante (recibir mensajes de los clientes)
 
@@ -229,4 +278,102 @@ verificar el formulario y el envío gratis. En producción (`VERCEL_ENV=producti
 nunca se activa. Ver la advertencia sobre la base de datos en `.env.example`
 (sección 8): el pedido de prueba se escribe en la base que apunte
 `TURSO_DATABASE_URL`.
+
+### Base de datos separada para Preview
+
+En producción la app usa Turso vía `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`.
+En Vercel esas dos variables están cargadas con scope **"Production, Preview"**:
+la Preview **comparte la misma base** que producción. Eso significa que cualquier
+prueba en una Preview (incluido `CHECKOUT_TEST_MODE`) escribe en la base real.
+
+Para que la Preview no toque producción hay que darle una base propia:
+
+1. Crear una base separada solo para Preview, por ejemplo:
+   `turso db create pirates-preview`
+2. Pedir el token de acceso de esa base:
+   `turso db tokens create pirates-preview`
+3. En Vercel, cargar **solo para el entorno "Preview"** las dos variables
+   apuntando a la base nueva:
+   - `vercel env add TURSO_DATABASE_URL Preview`
+   - `vercel env add TURSO_AUTH_TOKEN Preview`
+4. Dejar **sin cambios** los valores de Production: el objetivo es que queden dos
+   filas por variable (una por entorno) en vez de una compartida.
+5. La app crea el esquema y la semilla sola al primer arranque de la Preview
+   (migraciones automáticas), así que la base nueva arranca vacía sin pasos
+   extra.
+
+Mientras `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` sigan con scope combinado
+("Production, Preview"), las pruebas sobre una Preview se aplican a producción.
+
+### Costos por presentación (pendiente de migración)
+
+Hoy el costo del catálogo vive en **una sola columna**: `perfumes.cost`. No
+distingue 30/50/100 ml, y el valor que tiene cargado es un número por perfume
+(cuando está vacío, la migración lo autogenera como 45% de un precio). Por eso no
+se puede calcular la rentabilidad real de cada presentación: el mismo `cost` se
+usaría para las tres tallas aunque su costo de compra sea distinto.
+
+Sí existen costos reales **por presentación** en `supplier_purchase_items`
+(`unit_cost` + `size`), pero solo para las compras registradas.
+
+**Cambio de modelo propuesto (aditivo, no destructivo, sin ejecutar todavía):**
+
+1. Agregar tres columnas anulables a `perfumes`: `cost_30`, `cost_50`,
+   `cost_100`. La migración sigue el patrón ya usado en `db.ts` (chequear
+   `tableColumns` y hacer `ALTER TABLE ... ADD COLUMN`), así que **no toca ni
+   reescribe** el `cost` existente.
+2. Dejar las columnas nuevas en `NULL`. **No** autocompletarlas desde `cost`:
+   cada talla se carga a mano con su costo real.
+3. En el formulario de admin (`ProductForm.tsx`) agregar los tres campos y, en
+   `admin-data.ts`, valorizar el inventario por talla con
+   `COALESCE(cost_<size>, cost)`: los productos viejos siguen valuándose con el
+   `cost` actual y los nuevos usan su costo por talla.
+4. Mantener `supplier_purchase_items` como fuente histórica del costo real de
+   compra; la última compra de cada `(perfume, size)` puede precargar la columna
+   correspondiente cuando el admin lo confirme (nunca automático).
+
+Preservación de datos: ninguna operación borra ni sobrescribe `cost` ni los
+precios/stock. Todo es agregado de columnas anulables con lectura de respaldo
+(`COALESCE`), así que una base a medio migrar sigue funcionando igual.
+
+### Idempotencia de avisos por canal
+
+La confirmación al comprador dejó de usar una única columna compartida
+(`orders.customer_notified_at`) y ahora registra **cada canal por separado** en
+`orders.customer_email_notified_at` y `orders.customer_whatsapp_notified_at`.
+
+Ambas columnas son `TEXT` nullable y se crean de forma **aditiva**: no borran ni
+reescriben datos y dejan la columna legada intacta (los pedidos históricos no se
+renotifican). Hay **dos vías**, y son equivalentes e idempotentes entre sí:
+
+1. **Automática (cableada en el código):** `src/lib/db.ts` las agrega en su
+   `migrate()` con el mismo patrón que el resto del esquema (`PRAGMA table_info`
+   + `ALTER TABLE ... ADD COLUMN`, cada columna chequeada por separado). Se aplica
+   sola la primera vez que un proceso llama a `getDb()` contra la base.
+2. **Manual (`migrations/001_customer_channel_notifications.sql`):** el mismo
+   `ALTER TABLE` como script de una sola corrida, para quien prefiera dejar las
+   columnas migradas antes de desplegar. SQLite/libSQL no soporta
+   `ADD COLUMN IF NOT EXISTS`: si una columna ya existe, el motor devuelve
+   `duplicate column name` (señal de que ya se aplicó; no hay nada más que hacer).
+
+**Qué ocurre en cada caso:**
+
+| Base | `createSchema` (base nueva) | `migrate()` (base existente) |
+| --- | --- | --- |
+| SQLite local nueva (`file:./data/pirates.db`) | Crea `orders` ya con las dos columnas | Nada (ya están) |
+| SQLite local existente | `CREATE TABLE IF NOT EXISTS` = no-op | Detecta que faltan y las agrega |
+| Turso nueva | Crea `orders` con las dos columnas | Nada (ya están) |
+| Turso existente (producción) | No-op | Las agrega **cuando corra este código** |
+
+La columna legada `customer_notified_at` no se elimina ni se migra: se sigue
+leyendo como reclamo de los pedidos históricos (equivale a "ambos canales ya
+avisados", ver `src/lib/notification-plan.ts`).
+
+> **Importante:** modificar `db.ts` **no** cambia una base por sí solo. Las
+> columnas se agregan recién cuando **este código** se ejecuta contra esa base
+> (un deploy nuevo, o `npm run dev` contra la base local). La base de producción
+> actual no tiene las columnas hasta que se despliegue esta versión o se corra el
+> script manual. Orden seguro recomendado: **columnas primero, código después**
+> (el script manual antes del deploy); con `db.ts` cableado el propio código
+> también las crea al inicializar, así que el script pasa a ser opcional.
 

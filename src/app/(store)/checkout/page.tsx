@@ -10,6 +10,7 @@ import {
   type ShippingSelection,
 } from "@/components/checkout/ShippingForm";
 import { PaymentBrick } from "@/components/checkout/PaymentBrick";
+import { ProductImage } from "@/components/ProductImage";
 import { isValidEmail, MAX_EMAIL_LENGTH } from "@/lib/email-validation";
 
 const inputCls =
@@ -352,8 +353,20 @@ export default function CheckoutPage() {
           <h2 className="font-serif text-base text-white sm:text-xl">Tu pedido</h2>
           <ul className="mt-3 space-y-2 sm:mt-4 sm:space-y-2.5">
             {items.map((item) => (
-              <li key={`${item.slug}-${item.size}`} className="flex items-start justify-between gap-2 text-sm">
-                <div className="min-w-0">
+              <li
+                key={`${item.slug}-${item.size}`}
+                className="flex items-start gap-3 text-sm"
+              >
+                <ProductImage
+                  image={item.image}
+                  alt={item.name}
+                  className="h-14 w-14 shrink-0 rounded-lg border border-line bg-background object-cover sm:h-16 sm:w-16"
+                  sizes="(min-width: 640px) 64px, 56px"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[9px] uppercase tracking-widest text-faint sm:text-[10px]">
+                    {item.brandName}
+                  </p>
                   <p className="truncate text-white">{item.name}</p>
                   <p className="text-[10px] text-faint sm:text-xs">
                     {item.size} ml · {item.qty} × {formatARS(item.price)}

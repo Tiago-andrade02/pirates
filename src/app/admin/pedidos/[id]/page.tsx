@@ -10,6 +10,7 @@ import {
   resendOrderEmail,
   resendOrderWhatsApp,
   resendCustomerEmail,
+  resendCustomerWhatsAppConfirmation,
   resendStockAlert,
   requireAdminPage,
 } from "@/app/admin/actions";
@@ -22,6 +23,8 @@ const MESSAGES: Record<string, string> = {
   "email-enviado": "Detalle enviado por email.",
   "whatsapp-enviado": "Aviso del pedido enviado por WhatsApp.",
   "email-cliente-enviado": "Confirmación reenviada al cliente.",
+  "confirm-whatsapp-enviado":
+    "Confirmación por WhatsApp reenviada al cliente.",
   "alerta-enviada": "Alerta de pedido sin stock reenviada.",
   "tracking-guardado":
     "Seguimiento guardado. Si el número es nuevo, se le avisó al cliente por email.",
@@ -50,6 +53,12 @@ const MESSAGES: Record<string, string> = {
     "Este pedido no se puede anunciar como venta cobrada por WhatsApp: solo se avisa de pedidos pagos o en preparación.",
   "whatsapp-fallo":
     "No se pudo enviar el aviso por WhatsApp. La API no lo confirmó: puede ser credenciales, plantilla no aprobada o límite de la API. El pedido no se modificó.",
+  "confirm-whatsapp-no-configurado":
+    "La confirmación por WhatsApp al cliente no está configurada: falta WHATSAPP_ORDER_CONFIRM_TEMPLATE_NAME (además de WHATSAPP_ACCESS_TOKEN, WHATSAPP_PHONE_NUMBER_ID y WHATSAPP_TO).",
+  "confirm-whatsapp-sin-telefono":
+    "Este pedido no tiene un teléfono de cliente válido, así que no se le puede mandar la confirmación por WhatsApp.",
+  "confirm-whatsapp-fallo":
+    "No se pudo enviar la confirmación por WhatsApp. La API no lo confirmó: puede ser credenciales, plantilla no aprobada o límite de la API. El pedido no se modificó.",
   // Errores de despacho con courier
   "sucursal-manual":
     "Este pedido va a una sucursal de Correo Argentino: no se genera el envío online. Coordiná la sucursal por WhatsApp con el cliente y cargá el tracking a mano.",
@@ -248,6 +257,16 @@ export default async function DetallePedidoPage({
                 className="block w-full rounded-xl border border-line px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Reenviar confirmación al cliente
+              </button>
+            </form>
+            <form action={resendCustomerWhatsAppConfirmation}>
+              <input type="hidden" name="id" value={order.id} />
+              <button
+                type="submit"
+                disabled={order.status !== "pagado"}
+                className="block w-full rounded-xl border border-line px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:border-white/40 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Reenviar confirmación por WhatsApp
               </button>
             </form>
             {order.status === "sin_stock" && (

@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { getDb } from "@/lib/db";
 import { getOrderById } from "@/lib/admin-data";
+import { revalidatePublicCatalog } from "@/lib/catalog-revalidation";
 import {
   clientIp,
   rateLimitAllowed,
@@ -18,12 +19,16 @@ import {
   hasEmailConfig,
   hasSmtpConfig,
   hasWhatsAppConfig,
+  hasWhatsAppOrderConfirmConfig,
   sendOrderEmail,
   sendWhatsAppOrderNotification,
   sendCustomerOrderEmail,
+  sendWhatsAppOrderConfirmation,
   sendStockAlertEmail,
   canNotifyCustomer,
 } from "@/lib/notify";
+import { normalizeWhatsAppPhone } from "@/lib/shipping/dispatch-message";
+import { markCustomerChannelNotified } from "@/lib/customer-notification";
 import {
   ORDER_STATUSES_WITH_STOCK_TAKEN,
   type OrderStatus,
@@ -293,7 +298,7 @@ export async function createProduct(formData: FormData) {
 
   ensureProductImages(slug, name, brandName);
   revalidatePath("/admin/productos");
-  revalidatePath("/perfumes");
+  revalidatePublicCatalog(slug);
   redirect(`/admin/productos?ok=creado&id=${Number(result.lastInsertRowid)}`);
 }
 
@@ -361,8 +366,7 @@ export async function updateProduct(formData: FormData) {
 
   ensureProductImages(row.slug, name, brandRow?.name ?? "PIRATES");
   revalidatePath("/admin/productos");
-  revalidatePath("/perfumes");
-  revalidatePath(`/perfumes/${row.slug}`);
+  revalidatePublicCatalog(row.slug);
   redirect(`/admin/productos?ok=editado&id=${id}`);
 }
 
@@ -388,7 +392,7 @@ export async function deleteProduct(formData: FormData) {
     }
   }
   revalidatePath("/admin/productos");
-  revalidatePath("/perfumes");
+  revalidatePublicCatalog(row?.slug);
   redirect("/admin/productos?ok=eliminado");
 }
 
@@ -401,12 +405,15 @@ export async function updateProductStock(formData: FormData) {
   const s100 = int(formData.get("stock_100")) ?? 0;
   const stockTotal = s30 + s50 + s100;
   const db = await getDb();
+  const slugResult = await db.execute({ sql: "SELECT slug FROM perfumes WHERE id = ?", args: [id] });
+  const slug = (slugResult.rows[0] as unknown as { slug: string } | undefined)?.slug;
   await db.execute({
     sql: "UPDATE perfumes SET stock = ?, stock_30 = ?, stock_50 = ?, stock_100 = ? WHERE id = ?",
     args: [stockTotal, s30, s50, s100, id],
   });
   revalidatePath("/admin/stock");
   revalidatePath("/admin/productos");
+  revalidatePublicCatalog(slug);
   redirect("/admin/stock?ok=1");
 }
 
@@ -429,6 +436,7 @@ export async function updateOrderStatus(formData: FormData) {
   // (pagado/preparando/enviado/entregado). Las órdenes 'pendiente' o
   // 'sin_stock' nunca descontaron stock en el cierre, así que reponerlo sería
   // sumar unidades de más.
+  let restocked = false;
   if (status === "cancelado" && ORDER_STATUSES_WITH_STOCK_TAKEN.includes(previous.status)) {
     const itemsResult = await db.execute({ sql: "SELECT perfume_id, qty, size FROM order_items WHERE order_id = ?", args: [id] });
     const items = itemsResult.rows as unknown as { perfume_id: number | null; qty: number; size: number }[];
@@ -439,12 +447,16 @@ export async function updateOrderStatus(formData: FormData) {
           sql: `UPDATE perfumes SET stock_${size} = stock_${size} + ?, stock = stock + ? WHERE id = ?`,
           args: [item.qty, item.qty, item.perfume_id],
         });
+        restocked = true;
       }
     }
   }
 
   revalidatePath("/admin/pedidos");
   revalidatePath("/admin");
+  // Solo al reponer stock la vitrina cambia; un cambio de estado (pagado, enviado)
+  // no toca precios ni disponibilidad pública.
+  if (restocked) revalidatePublicCatalog();
   redirect(`/admin/pedidos?ok=estado&id=${id}`);
 }
 
@@ -528,8 +540,9 @@ export async function resendCustomerEmail(formData: FormData) {
     redirect(`/admin/pedidos/${id}?error=cliente-no-pagado`);
   }
 
+  let sent = false;
   try {
-    await sendCustomerOrderEmail(order);
+    sent = await sendCustomerOrderEmail(order);
   } catch {
     // El motivo queda en los logs del servidor; al admin se le muestra un
     // mensaje generico para no exponerle detalles de SMTP.
@@ -537,8 +550,64 @@ export async function resendCustomerEmail(formData: FormData) {
     redirect(`/admin/pedidos/${id}?error=email-fallo`);
   }
 
+  // Solo se registra el canal si el proveedor confirmo el envio. Un reenvio
+  // manual exitoso deja la misma marca que el envio automatico (idempotencia
+  // por canal), pero no pisa una marca previa.
+  if (sent) {
+    await markCustomerChannelNotified(order.id, "email");
+  }
+
   revalidatePath("/admin/pedidos");
   redirect(`/admin/pedidos/${id}?ok=email-cliente-enviado`);
+}
+
+// Reenvio manual de la confirmacion de compra por WhatsApp al cliente. Es la
+// valvula de escape del aviso que confirma el pago: si el envio automatico se
+// perdio (credenciales caidas, plantilla recien aprobada), el admin lo recupera
+// desde el panel sin volver a cobrar ni tocar el pedido. La deduplicacion es
+// INDEPENDIENTE por canal: este reenvio marca customer_whatsapp_notified_at, no
+// la columna del email.
+export async function resendCustomerWhatsAppConfirmation(formData: FormData) {
+  await requireAdmin();
+  const id = int(formData.get("id"));
+  if (id === null) redirect("/admin/pedidos");
+
+  const order = await getOrderById(id);
+  if (!order) redirect("/admin/pedidos");
+  if (!hasWhatsAppOrderConfirmConfig()) {
+    redirect(`/admin/pedidos/${id}?error=confirm-whatsapp-no-configurado`);
+  }
+
+  // Solo con el pedido pagado: el texto confirma que el pago fue recibido.
+  if (order.status !== "pagado") {
+    redirect(`/admin/pedidos/${id}?error=cliente-no-pagado`);
+  }
+
+  // Sin telefono valido no hay destinatario: si lo dejamos pasar,
+  // sendWhatsAppOrderConfirmation omitiria en silencio y mostrariamos un exito
+  // falso.
+  if (!normalizeWhatsAppPhone(order.customerPhone)) {
+    redirect(`/admin/pedidos/${id}?error=confirm-whatsapp-sin-telefono`);
+  }
+
+  let sent = false;
+  try {
+    sent = await sendWhatsAppOrderConfirmation(order);
+  } catch {
+    // El motivo queda en los logs del servidor (Graph API devuelve el detalle y
+    // a veces el token); al admin se le muestra un mensaje genérico.
+    console.error("[notify] Error reenviando la confirmación por WhatsApp al cliente");
+    redirect(`/admin/pedidos/${id}?error=confirm-whatsapp-fallo`);
+  }
+
+  // Solo se registra el canal si la API confirmo el envio (idempotencia por
+  // canal, sin pisar una marca previa).
+  if (sent) {
+    await markCustomerChannelNotified(order.id, "whatsapp");
+  }
+
+  revalidatePath("/admin/pedidos");
+  redirect(`/admin/pedidos/${id}?ok=confirm-whatsapp-enviado`);
 }
 
 // Reenvio manual de la alerta urgente de pedido cobrado sin stock. Es la
@@ -639,6 +708,9 @@ export async function createPurchase(formData: FormData) {
   revalidatePath("/admin/mayorista");
   revalidatePath("/admin/stock");
   revalidatePath("/admin");
+  // Suma stock a varios productos: se purga la vitrina; las fichas puntuales
+  // self-heal dentro del TTL de 60 s.
+  revalidatePublicCatalog();
   redirect(`/admin/mayorista?ok=cargada`);
 }
 
@@ -676,6 +748,7 @@ export async function deletePurchase(formData: FormData) {
   }
   revalidatePath("/admin/mayorista");
   revalidatePath("/admin/stock");
+  revalidatePublicCatalog();
   redirect("/admin/mayorista?ok=borrada");
 }
 
@@ -745,5 +818,6 @@ export async function restockLow(formData: FormData) {
 
   revalidatePath("/admin/stock");
   revalidatePath("/admin/productos");
+  revalidatePublicCatalog();
   redirect("/admin/stock?ok=restock");
 }

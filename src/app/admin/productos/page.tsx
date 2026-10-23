@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { getAdminProducts } from "@/lib/admin-data";
-import { productImageUrl } from "@/lib/images";
 import { deleteProduct, requireAdminPage } from "../actions";
 import { formatARS } from "@/lib/format";
 import { PageHeader, Th, Td } from "@/components/admin/ui";
+import { ProductImage } from "@/components/ProductImage";
 import { PlusIcon, EditIcon, TrashIcon } from "@/components/icons";
 
 function sizeBadge(price: number | null, size: string) {
@@ -85,10 +85,11 @@ export default async function AdminProductosPage({
                         href={`/admin/productos/${p.id}`}
                         className="flex items-center gap-3"
                       >
-                        <img
-                          src={productImageUrl(p.image)}
+                        <ProductImage
+                          image={p.image}
                           alt=""
                           className="h-10 w-10 shrink-0 rounded-lg border border-line bg-background object-cover"
+                          sizes="40px"
                         />
                         <span className="min-w-0">
                           <span className="block truncate font-medium text-white hover:text-gold">
