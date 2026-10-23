@@ -1,7 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 const OPTIONS = [
   { value: "", label: "Recomendados" },
   { value: "ventas", label: "Más vendidos" },
@@ -12,28 +10,15 @@ const OPTIONS = [
 ];
 
 export function SortSelect({
-  baseParams,
-  current,
+  value,
+  onChange,
 }: {
-  baseParams: string;
-  current: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
-  const router = useRouter();
-
-  function onChange(value: string) {
-    const params = new URLSearchParams(baseParams);
-    if (value) {
-      params.set("orden", value);
-    } else {
-      params.delete("orden");
-    }
-    const qs = params.toString();
-    router.push(qs ? `/perfumes?${qs}` : "/perfumes");
-  }
-
   return (
     <select
-      value={current}
+      value={value}
       onChange={(e) => onChange(e.target.value)}
       className="h-10 min-w-0 rounded-full border border-line bg-surface px-3 text-xs text-white outline-none transition-colors focus:border-white/40 sm:shrink-0 sm:px-4 sm:text-sm"
       aria-label="Ordenar productos"

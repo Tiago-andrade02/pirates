@@ -1,32 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { CloseIcon, FilterIcon } from "./icons";
-import { FilterGroup, type FilterOption } from "./FilterGroup";
+import { FilterGroup, type FilterGroupDef } from "./FilterGroup";
 
 interface FilterDrawerProps {
-  brandOptions: FilterOption[];
-  sizeOptions: FilterOption[];
-  priceOptions: FilterOption[];
-  genderOptions: FilterOption[];
-  aromaOptions: FilterOption[];
-  seasonOptions: FilterOption[];
-  occasionOptions: FilterOption[];
-  extraGroups: { label: string; options: FilterOption[] }[];
+  groups: FilterGroupDef[];
   activeCount: number;
+  onSelect: (field: string, value: string) => void;
+  onClearGroup: (field: string) => void;
+  onClearAll: () => void;
 }
 
 export function FilterDrawer({
-  brandOptions,
-  sizeOptions,
-  priceOptions,
-  genderOptions,
-  aromaOptions,
-  seasonOptions,
-  occasionOptions,
-  extraGroups,
+  groups,
   activeCount,
+  onSelect,
+  onClearGroup,
+  onClearAll,
 }: FilterDrawerProps) {
   const [open, setOpen] = useState(false);
 
@@ -73,31 +64,27 @@ export function FilterDrawer({
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-2">
-              <FilterGroup label="Marca" options={brandOptions} allowClear />
-              <FilterGroup label="Tamaño" options={sizeOptions} allowClear />
-              <FilterGroup label="Precio" options={priceOptions} allowClear />
-              <FilterGroup label="Tipo" options={genderOptions} allowClear />
-              <FilterGroup label="Aroma" options={aromaOptions} allowClear />
-              <FilterGroup label="Estación" options={seasonOptions} allowClear />
-              <FilterGroup label="Ocasión" options={occasionOptions} allowClear />
-              {extraGroups.map((group) => (
+              {groups.map((group) => (
                 <FilterGroup
                   key={group.label}
                   label={group.label}
                   options={group.options}
+                  allowClear={group.allowClear}
+                  onSelect={(value) => onSelect(group.field, value)}
+                  onClear={() => onClearGroup(group.field)}
                 />
               ))}
             </div>
 
             <div className="flex gap-3 border-t border-line px-5 py-4">
               {activeCount > 0 && (
-                <Link
-                  href="/perfumes"
-                  onClick={() => setOpen(false)}
+                <button
+                  type="button"
+                  onClick={onClearAll}
                   className="mi-btn flex h-11 flex-1 items-center justify-center rounded-full border border-line text-sm text-muted hover:border-white/40 hover:text-white"
                 >
                   Limpiar ({activeCount})
-                </Link>
+                </button>
               )}
               <button
                 type="button"

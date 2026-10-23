@@ -1,14 +1,27 @@
 import { getDb } from "./db";
+import { PRICE_RANGES } from "./catalog-options.ts";
 import type {
+  Aroma,
   Brand,
   CatalogFilters,
+  Gender,
   Occasion,
   Perfume,
   Prices,
   Season,
-  Aroma,
-  Gender,
 } from "./types";
+
+// Las opciones de filtrado se movieron a un módulo client-safe
+// (src/lib/catalog-options.ts) para que el filtrado en el navegador no arrastre
+// la DB. Se re-exportan acá para conservar los importadores existentes.
+export {
+  AROMA_OPTIONS,
+  GENDER_OPTIONS,
+  OCCASION_OPTIONS,
+  PRICE_RANGES,
+  SEASON_OPTIONS,
+  SIZE_OPTIONS,
+} from "./catalog-options.ts";
 
 interface PerfumeRow {
   id: number;
@@ -50,15 +63,6 @@ interface PerfumeRow {
   brand_description: string;
 }
 
-export const PRICE_RANGES: { key: string; label: string; min: number; max: number }[] = [
-  { key: "bajo", label: "Hasta $40.000", min: 0, max: 40000 },
-  { key: "medio", label: "$40.000 – $60.000", min: 40000, max: 60000 },
-  { key: "alto", label: "$60.000 – $90.000", min: 60000, max: 90000 },
-  { key: "premium", label: "Más de $90.000", min: 90000, max: Infinity },
-];
-
-export const SIZE_OPTIONS = ["30", "50", "100"] as const;
-
 // Whitelist estricta de tallas para construir columnas SQL: el valor de la URL
 // NUNCA se interpola directo. Solo se permite pasar si está en este mapa.
 const SIZE_COLUMNS: Record<string, "price_30" | "price_50" | "price_100"> = {
@@ -66,34 +70,6 @@ const SIZE_COLUMNS: Record<string, "price_30" | "price_50" | "price_100"> = {
   "50": "price_50",
   "100": "price_100",
 };
-export const GENDER_OPTIONS: { value: Gender; label: string }[] = [
-  { value: "hombre", label: "Hombre" },
-  { value: "mujer", label: "Mujer" },
-  { value: "unisex", label: "Unisex" },
-];
-export const AROMA_OPTIONS: { value: Aroma; label: string }[] = [
-  { value: "dulce", label: "Dulce" },
-  { value: "fresco", label: "Fresco" },
-  { value: "citrico", label: "Cítrico" },
-  { value: "amaderado", label: "Amaderado" },
-  { value: "ambar", label: "Ámbar" },
-  { value: "vainilla", label: "Vainilla" },
-  { value: "floral", label: "Floral" },
-];
-export const SEASON_OPTIONS: { value: Season; label: string }[] = [
-  { value: "verano", label: "Verano" },
-  { value: "invierno", label: "Invierno" },
-  { value: "primavera", label: "Primavera" },
-  { value: "otono", label: "Otoño" },
-  { value: "todo-el-ano", label: "Todo el año" },
-];
-export const OCCASION_OPTIONS: { value: Occasion; label: string }[] = [
-  { value: "oficina", label: "Oficina" },
-  { value: "noche", label: "Noche" },
-  { value: "citas", label: "Citas" },
-  { value: "diario", label: "Diario" },
-  { value: "fiesta", label: "Fiesta" },
-];
 
 const SELECT_PERFUME = `
   SELECT p.*,
@@ -217,6 +193,12 @@ export async function getPerfumeBySlug(slug: string): Promise<Perfume | null> {
   });
   const row = result.rows[0];
   return row ? mapPerfume(row) : null;
+}
+
+export async function getPerfumeSlugs(): Promise<string[]> {
+  const db = await getDb();
+  const result = await db.execute("SELECT slug FROM perfumes");
+  return (result.rows as unknown as { slug: string }[]).map((row) => row.slug);
 }
 
 export async function getPerfumesByIds(ids: number[]): Promise<Perfume[]> {

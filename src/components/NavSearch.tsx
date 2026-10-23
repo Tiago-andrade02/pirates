@@ -11,8 +11,38 @@ interface SearchResult {
   slug: string;
   name: string;
   image: string;
+  inspired_by: string | null;
   brand_name: string;
   price: number | null;
+}
+
+// El índice completo se baja una sola vez por sesión (endpoint estático y
+// cacheado) y luego se filtra en memoria: tipear no dispara peticiones ni
+// ejecuta funciones en el servidor.
+let searchIndexPromise: Promise<SearchResult[]> | null = null;
+
+function loadSearchIndex(): Promise<SearchResult[]> {
+  if (!searchIndexPromise) {
+    searchIndexPromise = fetch("/api/search")
+      .then((res) => (res.ok ? (res.json() as Promise<SearchResult[]>) : []))
+      .catch(() => []);
+  }
+  return searchIndexPromise;
+}
+
+function filterIndex(index: SearchResult[], q: string): SearchResult[] {
+  const needle = q.toLowerCase();
+  return index
+    .filter((item) => {
+      const haystack = [item.name, item.brand_name, item.inspired_by ?? ""];
+      return haystack.some((value) => value.toLowerCase().includes(needle));
+    })
+    .sort((a, b) => {
+      const aMatch = a.name.toLowerCase().includes(needle) ? 0 : 1;
+      const bMatch = b.name.toLowerCase().includes(needle) ? 0 : 1;
+      return aMatch - bMatch || a.name.localeCompare(b.name);
+    })
+    .slice(0, 8);
 }
 
 interface NavSearchProps {
@@ -69,15 +99,12 @@ export function NavSearch({
     setLoading(true);
     searchTimer.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
-        const data = (await res.json()) as SearchResult[];
-        setResults(data);
-      } catch {
-        setResults([]);
+        const index = await loadSearchIndex();
+        setResults(filterIndex(index, q));
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, 120);
   }
 
   function closeMobile() {
@@ -135,6 +162,7 @@ export function NavSearch({
                     image={r.image}
                     alt={r.name}
                     className="h-full w-full object-contain"
+                    sizes="48px"
                   />
                 </span>
                 <span className="min-w-0 flex-1">

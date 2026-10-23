@@ -12,24 +12,46 @@ const claims = (over: Partial<NotificationClaims> = {}): NotificationClaims => (
   stockShortage: false,
   adminOrderNotifiedAt: null,
   stockAlertedAt: null,
-  customerNotifiedAt: null,
+  customerEmailNotifiedAt: null,
+  customerWhatsappNotifiedAt: null,
+  legacyCustomerNotifiedAt: null,
   hasCustomerEmail: true,
+  hasCustomerPhone: true,
   ...over,
 });
 
 describe("planNotifications — pedido pagado", () => {
-  test("avisa al admin y al cliente", () => {
+  test("avisa al admin y al cliente por email y WhatsApp", () => {
     assert.deepEqual(planNotifications(claims()), {
       adminNewOrder: true,
       adminStockAlert: false,
-      customerConfirmation: true,
+      customerEmail: true,
+      customerWhatsapp: true,
     });
   });
 
-  test("sin email de cliente, solo se avisa al admin", () => {
+  test("sin email del cliente, el WhatsApp se manda igual", () => {
+    // El punto de la desacoplacion: el WhatsApp al comprador NO depende de que
+    // haya email ni de que el email se pueda enviar.
     const plan = planNotifications(claims({ hasCustomerEmail: false }));
     assert.equal(plan.adminNewOrder, true);
-    assert.equal(plan.customerConfirmation, false);
+    assert.equal(plan.customerEmail, false);
+    assert.equal(plan.customerWhatsapp, true);
+  });
+
+  test("sin teléfono del cliente, el email se manda igual", () => {
+    const plan = planNotifications(claims({ hasCustomerPhone: false }));
+    assert.equal(plan.customerEmail, true);
+    assert.equal(plan.customerWhatsapp, false);
+  });
+
+  test("sin email ni teléfono no hay confirmación al cliente", () => {
+    const plan = planNotifications(
+      claims({ hasCustomerEmail: false, hasCustomerPhone: false })
+    );
+    assert.equal(plan.adminNewOrder, true);
+    assert.equal(plan.customerEmail, false);
+    assert.equal(plan.customerWhatsapp, false);
   });
 });
 
@@ -46,7 +68,8 @@ describe("planNotifications — pedido cobrado sin stock", () => {
     // sería mentir sobre el estado real.
     const plan = planNotifications(sinStock);
     assert.equal(plan.adminNewOrder, false);
-    assert.equal(plan.customerConfirmation, false);
+    assert.equal(plan.customerEmail, false);
+    assert.equal(plan.customerWhatsapp, false);
   });
 });
 
@@ -56,16 +79,41 @@ describe("planNotifications — duplicados", () => {
     // columnas ya puestas y no vuelve a enviar nada.
     const primera = planNotifications(claims());
     assert.equal(primera.adminNewOrder, true);
-    assert.equal(primera.customerConfirmation, true);
+    assert.equal(primera.customerEmail, true);
+    assert.equal(primera.customerWhatsapp, true);
 
     const segunda = planNotifications(
       claims({
         adminOrderNotifiedAt: TS,
-        customerNotifiedAt: TS,
+        customerEmailNotifiedAt: TS,
+        customerWhatsappNotifiedAt: TS,
       })
     );
     assert.equal(segunda.adminNewOrder, false);
-    assert.equal(segunda.customerConfirmation, false);
+    assert.equal(segunda.customerEmail, false);
+    assert.equal(segunda.customerWhatsapp, false);
+  });
+
+  test("el reclamo del email NO bloquea el WhatsApp (éxito parcial)", () => {
+    // El escenario que motivó el cambio: el email salió, el WhatsApp no. Solo
+    // debe reintentarse el WhatsApp, no volver a mandar el email.
+    const plan = planNotifications(claims({ customerEmailNotifiedAt: TS }));
+    assert.equal(plan.customerEmail, false);
+    assert.equal(plan.customerWhatsapp, true);
+  });
+
+  test("el reclamo del WhatsApp NO bloquea el email (éxito parcial)", () => {
+    const plan = planNotifications(claims({ customerWhatsappNotifiedAt: TS }));
+    assert.equal(plan.customerEmail, true);
+    assert.equal(plan.customerWhatsapp, false);
+  });
+
+  test("el reclamo legado corta ambos canales (pedidos históricos)", () => {
+    // customer_notified_at cubría email y WhatsApp a la vez: un pedido viejo con
+    // esa marca no debe reenviar ninguno de los dos.
+    const plan = planNotifications(claims({ legacyCustomerNotifiedAt: TS }));
+    assert.equal(plan.customerEmail, false);
+    assert.equal(plan.customerWhatsapp, false);
   });
 
   test("alerta sin stock repetida NO se reenvía", () => {
@@ -86,7 +134,8 @@ describe("planNotifications — duplicados", () => {
     // salir: los reclamos son independientes.
     const plan = planNotifications(claims({ adminOrderNotifiedAt: TS }));
     assert.equal(plan.adminNewOrder, false);
-    assert.equal(plan.customerConfirmation, true);
+    assert.equal(plan.customerEmail, true);
+    assert.equal(plan.customerWhatsapp, true);
   });
 
   test("el estado del pedido no cambia el plan si no hay falta de stock", () => {

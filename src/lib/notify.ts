@@ -11,6 +11,7 @@ import {
   dispatchMessageParams,
   normalizeWhatsAppPhone,
 } from "./shipping/dispatch-message.ts";
+import { orderConfirmationMessageParams } from "./order-confirmation-message.ts";
 
 function money(value: number): string {
   return "$" + Math.round(value).toLocaleString("es-AR");
@@ -116,10 +117,14 @@ interface MailMessage {
 // NUNCA se loguea el contenido del mensaje ni las credenciales: si nodemailer
 // falla, el error puede traer portions de la respuesta del servidor SMTP. Solo
 // se registra el motivo generico.
-async function sendMail(message: MailMessage): Promise<void> {
+// Devuelve true SOLO si el proveedor aceptó el mensaje. Devuelve false cuando no
+// hay SMTP configurado (se omite con un warn): quien necesite distinguir "se
+// envió" de "se omitió" (la confirmación al comprador, que decide si marca el
+// canal como notificado) no puede tratar un skip como un envío exitoso.
+async function sendMail(message: MailMessage): Promise<boolean> {
   if (!hasSmtpConfig()) {
     console.warn("[notify] Email no enviado: SMTP_HOST/SMTP_USER/SMTP_PASS no configurados.");
-    return;
+    return false;
   }
   const transporter = createSmtpTransporter();
   await transporter.sendMail({
@@ -129,6 +134,7 @@ async function sendMail(message: MailMessage): Promise<void> {
     text: message.text,
     html: message.html,
   });
+  return true;
 }
 
 function adminFrom(): string {
@@ -465,18 +471,21 @@ export function canNotifyCustomer(order: Order): boolean {
   return isValidEmail(order.customerEmail);
 }
 
-export async function sendCustomerOrderEmail(order: Order): Promise<void> {
+// Devuelve true solo si el email salió de verdad. Un skip (pedido no pagado,
+// email inutilizable, SMTP sin configurar) devuelve false: el llamador no debe
+// marcar el canal como notificado.
+export async function sendCustomerOrderEmail(order: Order): Promise<boolean> {
   if (order.status !== "pagado") {
     console.warn(
       "[notify] Email al cliente omitido: el texto confirma el pago y este pedido no está pagado."
     );
-    return;
+    return false;
   }
   if (!canNotifyCustomer(order)) {
     console.warn("[notify] Email al cliente omitido: el pedido no tiene email utilizable.");
-    return;
+    return false;
   }
-  await sendMail({
+  return sendMail({
     to: order.customerEmail!.trim(),
     from: customerFrom(),
     subject: customerOrderEmailSubject(order),
@@ -817,6 +826,81 @@ export async function sendWhatsAppDispatchNotification(order: Order): Promise<vo
 }
 
 // ---------------------------------------------------------------------------
+// Confirmacion de compra al cliente (WhatsApp)
+// ---------------------------------------------------------------------------
+
+// Plantilla de WhatsApp para confirmar la compra al CLIENTE. NO tiene fallback:
+// si no esta definida no se envia. Mandar otra plantilla (p.ej. la de nueva
+// orden, que va al admin) le llega al comprador un mensaje que no corresponde.
+export function orderConfirmTemplateName(): string {
+  return (process.env.WHATSAPP_ORDER_CONFIRM_TEMPLATE_NAME ?? "").trim();
+}
+
+// La confirmacion al cliente usa el numero emisor primario y el destinatario es
+// el TELEFONO DEL CLIENTE (no WHATSAPP_TO, que es el numero del admin). Por eso
+// ademas de la config de WhatsApp hace falta que esta plantilla este definida.
+export function hasWhatsAppOrderConfirmConfig(): boolean {
+  return hasWhatsAppConfig() && Boolean(orderConfirmTemplateName());
+}
+
+// Confirmacion de compra al cliente, con codigo, total y enlace de seguimiento.
+// Plantilla con 4 variables: {{1}} nombre, {{2}} pedido, {{3}} total,
+// {{4}} enlace. El contenido y el orden se arman en order-confirmation-message.ts
+// para poder testearlos sin llamar a la API.
+//
+// Se envia SOLO para pedidos pagados: el texto confirma que el pago fue recibido
+// (igual que el email al cliente). Si WhatsApp o la plantilla no estan
+// configurados, o el pedido no tiene telefono valido, se OMITE con un warn y NO
+// lanza: el pago ya quedo confirmado y no se revierte por un canal que falle.
+//
+// Devuelve true solo si la API confirmo el envio; false en cada skip. El reclamo
+// por canal (customer_whatsapp_notified_at) lo escribe checkout-finalize recien
+// despues de ver este true, asi un skip o un fallo no marca el canal como
+// notificado.
+export async function sendWhatsAppOrderConfirmation(order: Order): Promise<boolean> {
+  if (!hasWhatsAppConfig()) {
+    console.warn("[notify] Confirmacion por WhatsApp omitida: WhatsApp no configurado.");
+    return false;
+  }
+  const template = orderConfirmTemplateName();
+  if (!template) {
+    console.warn(
+      "[notify] Confirmacion por WhatsApp omitida: falta WHATSAPP_ORDER_CONFIRM_TEMPLATE_NAME."
+    );
+    return false;
+  }
+  // Este mensaje afirma que el pago fue recibido: nunca para un pedido pendiente,
+  // cancelado ni sin stock.
+  if (order.status !== "pagado") {
+    console.warn(
+      `[notify] Confirmacion por WhatsApp omitida: el pedido no esta pagado (${order.status}).`
+    );
+    return false;
+  }
+  const phone = normalizeWhatsAppPhone(order.customerPhone);
+  if (!phone) {
+    console.warn(
+      "[notify] Confirmacion por WhatsApp omitida: el pedido no tiene un telefono valido."
+    );
+    return false;
+  }
+
+  const params = orderConfirmationMessageParams({
+    customerName: order.customerName,
+    code: order.code,
+    total: order.total,
+    link: customerOrderUrl(order),
+  });
+  await sendWhatsAppTemplate({
+    to: phone,
+    template,
+    label: "order confirm",
+    params: [params.name, params.code, params.amount, params.link],
+  });
+  return true;
+}
+
+// ---------------------------------------------------------------------------
 // Despacho
 // ---------------------------------------------------------------------------
 
@@ -846,7 +930,15 @@ function safeErrorSummary(error: unknown): string {
 // pagado y no se revierte por un correo caido).
 export interface ChannelResult {
   channel: string;
+  // No falló de forma definitiva. Un canal omitido (skip) cuenta como ok: no es
+  // un error, simplemente no había nada que enviar. Un canal cuya función lanzó
+  // en todos los intentos queda ok:false.
   ok: boolean;
+  // El proveedor confirmó el envío. Es distinto de ok: un skip es ok:true pero
+  // sent:false. Solo la confirmación al comprador usa este dato para decidir qué
+  // canal marcar como notificado; en los canales del admin (que no reportan
+  // skip) vale lo mismo que ok.
+  sent: boolean;
 }
 
 async function withRetry(
@@ -857,7 +949,7 @@ async function withRetry(
   for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
       await fn();
-      return { channel: label, ok: true };
+      return { channel: label, ok: true, sent: true };
     } catch (error) {
       if (attempt < attempts) {
         await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
@@ -868,44 +960,119 @@ async function withRetry(
       }
     }
   }
-  return { channel: label, ok: false };
+  return { channel: label, ok: false, sent: false };
 }
 
-// Avisos de un pedido recien finalizado. Cada canal se intenta hasta 3 veces de
-// forma independiente y los fallos NO se propagan: el pago ya esta confirmado y
-// un correo caido no puede deshacer una compra (el pedido ya quedo 'pagado' y el
+// Igual que withRetry, pero para los canales del comprador, cuya función
+// devuelve un booleano (true = enviado, false = omitido). Un skip (false) NO es
+// un fallo: se registra como ok:true / sent:false y NO se reintenta (reintentar
+// una omisión no cambia nada). Solo un throw reintenta con backoff.
+async function withRetrySent(
+  label: string,
+  fn: () => Promise<boolean>,
+  attempts = 3
+): Promise<ChannelResult> {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const sent = await fn();
+      return { channel: label, ok: true, sent };
+    } catch (error) {
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      } else {
+        console.error(
+          `[notify] ${label}: fallo tras ${attempts} intentos (${safeErrorSummary(error)})`
+        );
+      }
+    }
+  }
+  return { channel: label, ok: false, sent: false };
+}
+
+// Envios del comprador. Inyectables para los tests: permiten simular una falla
+// del email o del WhatsApp sin tocar SMTP ni la red. Devuelven true si el
+// proveedor confirmo el envio y false si el canal se omitio (skip).
+export interface NotifySenders {
+  customerEmail: (order: Order) => Promise<boolean>;
+  customerWhatsapp: (order: Order) => Promise<boolean>;
+}
+
+export interface NotifyOptions {
+  // Intentos por canal (con backoff creciente). Los tests usan 1 para no esperar.
+  attempts?: number;
+  // Envios del comprador inyectables. Por defecto, los reales.
+  senders?: Partial<NotifySenders>;
+  // Se invoca UNA vez, despues de intentar todos los avisos, con el resultado
+  // de cada canal. El llamador la usa para persistir la confirmacion SOLO si el
+  // proveedor confirmo el envio, nunca antes.
+  onResults?: (results: ChannelResult[]) => void | Promise<void>;
+}
+
+// ¿El email de confirmacion al comprador llego a enviarse? Mira solo el
+// resultado de ese canal y exige sent:true (un skip o un fallo devuelven false).
+// Es la senal que usa checkout-finalize para escribir customer_email_notified_at.
+export function customerEmailDelivered(results: ChannelResult[]): boolean {
+  return results.some((r) => r.channel === "cliente-email" && r.sent);
+}
+
+// ¿El WhatsApp de confirmacion al comprador llego a enviarse? Independiente del
+// email: un exito parcial marca solo el canal que realmente salio.
+export function customerWhatsappDelivered(results: ChannelResult[]): boolean {
+  return results.some((r) => r.channel === "cliente-whatsapp" && r.sent);
+}
+
+// Avisos de un pedido recien finalizado. Cada canal se intenta de forma
+// independiente y los fallos NO se propagan: el pago ya esta confirmado y un
+// correo caido no puede deshacer una compra (el pedido ya quedo 'pagado' y el
 // stock ya se desconto dentro de la transaccion, antes de esta llamada).
 //
-// La deduplicacion NO vive aqui: el plan lo decide checkout-finalize a partir de
-// los reclamos leidos y escritos dentro de la transaccion de finalizacion.
+// El email y el WhatsApp al comprador son DOS intentos separados: una falla de
+// uno no impide ni condiciona el otro. La deduplicacion NO vive aqui: el plan lo
+// decide checkout-finalize a partir de los reclamos leidos dentro de la
+// transaccion de finalizacion.
 export async function notifyNewOrder(
   order: Order,
-  plan: NotificationPlan
-): Promise<void> {
+  plan: NotificationPlan,
+  options: NotifyOptions = {}
+): Promise<ChannelResult[]> {
+  const attempts = options.attempts ?? 3;
+  const customerEmail = options.senders?.customerEmail ?? sendCustomerOrderEmail;
+  const customerWhatsapp =
+    options.senders?.customerWhatsapp ?? sendWhatsAppOrderConfirmation;
+
   const jobs: Promise<ChannelResult>[] = [];
 
   if (plan.adminNewOrder) {
     jobs.push(
-      withRetry("email", () => sendOrderEmail(order)),
-      withRetry("whatsapp", () => sendWhatsAppOrderNotification(order))
+      withRetry("email", () => sendOrderEmail(order), attempts),
+      withRetry("whatsapp", () => sendWhatsAppOrderNotification(order), attempts)
     );
   }
 
   if (plan.adminStockAlert) {
     jobs.push(
-      withRetry("alerta-sin-stock-email", () => sendStockAlertEmail(order)),
-      withRetry("alerta-sin-stock-whatsapp", () => sendWhatsAppStockAlert(order))
+      withRetry("alerta-sin-stock-email", () => sendStockAlertEmail(order), attempts),
+      withRetry("alerta-sin-stock-whatsapp", () => sendWhatsAppStockAlert(order), attempts)
     );
   }
 
-  // Se envia solo con el pedido pagado. El texto de este correo afirma que el
+  // Se envia solo con el pedido pagado. El texto de estos avisos afirma que el
   // pago fue recibido, asi que nunca debe usarse para un pedido pendiente,
-  // rechazado o sin stock.
-  if (plan.customerConfirmation && order.status === "pagado") {
-    jobs.push(withRetry("cliente-email", () => sendCustomerOrderEmail(order)));
+  // rechazado o sin stock. Email y WhatsApp son intentos SEPARADOS: cada uno se
+  // agrega por su cuenta y una falla de uno no cancela el otro.
+  if (order.status === "pagado") {
+    if (plan.customerEmail) {
+      jobs.push(withRetrySent("cliente-email", () => customerEmail(order), attempts));
+    }
+    if (plan.customerWhatsapp) {
+      jobs.push(withRetrySent("cliente-whatsapp", () => customerWhatsapp(order), attempts));
+    }
   }
 
-  if (jobs.length === 0) return;
+  if (jobs.length === 0) {
+    if (options.onResults) await options.onResults([]);
+    return [];
+  }
 
   // withRetry nunca rechaza: devuelve el resultado de cada canal, asi que el
   // pedido nunca ve una exception por un correo caido.
@@ -917,6 +1084,9 @@ export async function notifyNewOrder(
       `[notify] Pedido ${order.code}: aviso no entregado por ${failed.join(", ")}`
     );
   }
+
+  if (options.onResults) await options.onResults(results);
+  return results;
 }
 
 // Reexportado para que los tests puedan construir pedidos sin duplicar la

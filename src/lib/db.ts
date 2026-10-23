@@ -1,31 +1,16 @@
 import { createClient, type Client } from "@libsql/client";
 import seed from "./seed.json";
+import { assertDatabaseConfig } from "./db-guard";
 
 let client: Client | null = null;
 
 function getDbSync(): Client {
   if (!client) {
+    // FAIL-CLOSED: en producción no se admite SQLite local. La decisión está en
+    // db-guard.ts (pura y testeable) y se evalúa ANTES de resolver la URL.
+    assertDatabaseConfig();
     const url = process.env.TURSO_DATABASE_URL || "file:./data/pirates.db";
     const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
-    // Guard Etapa E — FAIL-CLOSED en producción:
-    //  • NODE_ENV=production EXIGE TURSO_DATABASE_URL + TURSO_AUTH_TOKEN. Si
-    //    falta cualquiera, NO se cae a SQLite local (una BD local en prod
-    //    perde datos y se comporta distinto que Turso). Se lanza un error
-    //    claro y controlado ANTES de crear el client.
-    //  • El error jamás incluye el token ni valores de env.
-    //  • En desarrollo se conserva el fallback a SQLite local (archivo)
-    //    cuando no hay Turso configurado, para no romper el flujo local.
-    //  • La conexión Turso real (createClient + credenciales) NO se toca.
-    if (process.env.NODE_ENV === "production") {
-      const { TURSO_DATABASE_URL, TURSO_AUTH_TOKEN } = process.env;
-      if (!TURSO_DATABASE_URL || !TURSO_AUTH_TOKEN) {
-        throw new Error(
-          "TURSO_DATABASE_URL y TURSO_AUTH_TOKEN son obligatorios en producción. " +
-            "Configuralos en el entorno (ver .env.example). " +
-            "No se puede usar una base local en producción."
-        );
-      }
-    }
     client = createClient({ url, authToken });
   }
   return client;
@@ -116,6 +101,8 @@ const SCHEMA = `
     notified_at TEXT,
     stock_alerted_at TEXT,
     customer_notified_at TEXT,
+    customer_email_notified_at TEXT,
+    customer_whatsapp_notified_at TEXT,
     mp_payment_id TEXT,
     paid_at TEXT,
     created_at TEXT NOT NULL
@@ -308,7 +295,10 @@ async function migrate(database: Client) {
   // estado ni se reenvia nada retroactivamente.
   //
   //  - stock_alerted_at:   aviso urgente de pedido cobrado sin stock.
-  //  - customer_notified_at: email de confirmacion enviado al comprador.
+  //  - customer_notified_at: reclamo LEGADO de la confirmacion al comprador.
+  //    Antes cubria email y WhatsApp a la vez; hoy solo se sigue LEYENDO para
+  //    los pedidos historicos (equivale a "ambos canales ya avisados", ver
+  //    src/lib/notification-plan.ts). No se elimina ni se migra.
   // Cada columna se comprueba por separado a proposito. Si las dos se agregaran
   // juntas bajo un unico "if", una base que quedo a medio migrar (tiene
   // stock_alerted_at pero todavia no customer_notified_at) nunca receberia la
@@ -319,6 +309,26 @@ async function migrate(database: Client) {
   }
   if (!orderColumns.some((c) => c.name === "customer_notified_at")) {
     await database.execute("ALTER TABLE orders ADD COLUMN customer_notified_at TEXT");
+  }
+
+  // Reclamo de la confirmacion al comprador, UNO POR CANAL. Reemplaza al reclamo
+  // compartido (customer_notified_at, arriba): el email y el WhatsApp se marcan
+  // por separado, asi un exito parcial (salio uno y fallo el otro) no bloquea el
+  // canal que todavia falta y cada uno se puede reintentar sin arrastrar al otro.
+  //
+  // TEXT nullable a proposito: las ordenes existentes quedan en NULL (= canal
+  // sin avisar todavia) sin alterar su estado ni reenviar nada retroactivamente.
+  // Cada columna se comprueba por separado (mismo criterio que arriba): una base
+  // a medio migrar que ya tenga una de las dos no pierde la otra.
+  if (!orderColumns.some((c) => c.name === "customer_email_notified_at")) {
+    await database.execute(
+      "ALTER TABLE orders ADD COLUMN customer_email_notified_at TEXT"
+    );
+  }
+  if (!orderColumns.some((c) => c.name === "customer_whatsapp_notified_at")) {
+    await database.execute(
+      "ALTER TABLE orders ADD COLUMN customer_whatsapp_notified_at TEXT"
+    );
   }
 
   // Modalidad sucursal de Correo Argentino y observaciones del cliente.

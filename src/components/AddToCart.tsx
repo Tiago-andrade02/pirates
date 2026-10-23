@@ -4,6 +4,12 @@ import { useState } from "react";
 import { useCart, type SizeKey } from "./cart/CartProvider";
 import type { Prices, Stocks } from "@/lib/types";
 import { formatARS } from "@/lib/format";
+import {
+  availableSizes,
+  defaultSize,
+  sizeLabel,
+  type PerfumeSize,
+} from "@/lib/variants";
 import { TruckIcon } from "./icons";
 
 interface AddToCartProps {
@@ -15,12 +21,6 @@ interface AddToCartProps {
   stockBySize: Stocks;
 }
 
-const SIZES: { key: SizeKey; label: string }[] = [
-  { key: "30", label: "30 ml" },
-  { key: "50", label: "50 ml" },
-  { key: "100", label: "100 ml" },
-];
-
 export function AddToCart({
   slug,
   name,
@@ -30,15 +30,16 @@ export function AddToCart({
   stockBySize,
 }: AddToCartProps) {
   const { addItem } = useCart();
-  const [size, setSize] = useState<SizeKey | null>(
-    (["50", "100", "30"] as SizeKey[]).find(
-      (s) => prices[s] !== null && stockBySize[s] > 0
-    ) ?? null
+  // Solo las presentaciones con precio cargado: un tamaño sin precio no existe
+  // para la tienda y no debe ofrecerse.
+  const sizes = availableSizes(prices);
+  const [size, setSize] = useState<PerfumeSize | null>(() =>
+    defaultSize(prices, stockBySize)
   );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
-  if (size === null) {
+  if (sizes.length === 0 || size === null) {
     return (
       <div className="rounded-xl border border-line bg-surface p-4 text-sm text-muted">
         Producto agotado temporalmente.
@@ -46,17 +47,16 @@ export function AddToCart({
     );
   }
 
-  const currentSize: SizeKey = size;
+  const currentSize: PerfumeSize = size;
   const price = prices[currentSize];
   const currentStock = stockBySize[currentSize];
   const outOfStock = currentStock <= 0;
-  const installment = price !== null ? Math.round(price / 3) : null;
 
   function handleAdd() {
     if (price === null || outOfStock) return;
     addItem({
       slug,
-      size: currentSize,
+      size: currentSize as SizeKey,
       name,
       brandName,
       image,
@@ -73,30 +73,31 @@ export function AddToCart({
         <p className="text-[10px] uppercase tracking-widest text-faint sm:text-xs">
           Presentación
         </p>
-        <div className="mt-2 grid grid-cols-3 gap-1.5 sm:mt-3 sm:gap-2">
-          {SIZES.map((option) => {
-            const optionPrice = prices[option.key];
-            const optionStock = stockBySize[option.key];
+        <div className="mt-2 flex gap-1.5 sm:mt-3 sm:gap-2">
+          {sizes.map((option) => {
+            const optionPrice = prices[option];
+            const optionStock = stockBySize[option];
             const unavailable = optionPrice === null || optionStock <= 0;
-            const active = size === option.key;
+            const active = size === option;
             return (
               <button
-                key={option.key}
+                key={option}
                 type="button"
                 disabled={unavailable}
                 onClick={() => {
-                  setSize(option.key);
+                  setSize(option);
                   setQty(1);
+                  setAdded(false);
                 }}
-                className={`mi-size rounded-lg border px-2 py-2 text-left sm:rounded-xl sm:px-3 sm:py-2.5 ${
+                className={`mi-size flex-1 rounded-lg border px-2 py-2 text-left sm:rounded-xl sm:px-3 sm:py-2.5 ${
                   active
                     ? "border-white bg-white text-black shadow-[0_0_12px_rgba(255,255,255,0.08)]"
                     : "border-line bg-surface-2 text-white hover:border-white/40"
                 } ${unavailable ? "cursor-not-allowed opacity-40" : ""}`}
-                aria-label={`${option.label}${unavailable ? " (agotado)" : ""}`}
+                aria-label={`${sizeLabel(option)}${unavailable ? " (agotado)" : ""}`}
               >
                 <span className="block text-xs font-semibold sm:text-sm">
-                  {option.label}
+                  {sizeLabel(option)}
                 </span>
                 <span
                   className={`block text-[10px] sm:text-xs ${
@@ -118,24 +119,18 @@ export function AddToCart({
           <p className="text-[10px] uppercase tracking-widest text-faint sm:text-xs">
             Métodos de pago
           </p>
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:mt-3 sm:grid-cols-2 sm:gap-2">
-            <div className="flex items-center gap-3 sm:block">
-              <p className="text-[9px] uppercase tracking-wide text-faint sm:mb-0.5 sm:text-[11px]">
-                Precio lista
-              </p>
-              <p className="text-xs font-semibold text-white sm:text-sm">
-                {formatARS(price)}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 sm:block">
-              <p className="text-[9px] uppercase tracking-wide text-faint sm:mb-0.5 sm:text-[11px]">
-                3 cuotas sin interés
-              </p>
-              <p className="text-xs font-semibold text-white sm:text-sm">
-                {installment !== null ? `${formatARS(installment)} c/u` : "—"}
-              </p>
-            </div>
+          <div className="mt-2 flex items-baseline justify-between gap-3">
+            <span className="text-[10px] uppercase tracking-wide text-muted sm:text-[11px]">
+              Precio de lista
+            </span>
+            <span className="text-sm font-semibold text-white sm:text-base">
+              {formatARS(price)}
+            </span>
           </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted sm:text-xs">
+            Se paga con Mercado Pago. Las cuotas y promociones que ofrezca se
+            eligen al pagar.
+          </p>
         </div>
       )}
 

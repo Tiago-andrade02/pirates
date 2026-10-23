@@ -14,6 +14,7 @@ export function Gallery({ slug, name }: { slug: string; name: string }) {
           alt={`${name} — foto ${active}`}
           className="h-full w-full object-contain"
           variant={active}
+          sizes="(min-width: 640px) 50vw, 100vw"
         />
       </div>
       <div className="grid grid-cols-2 gap-1.5 sm:gap-2.5">
@@ -34,6 +35,7 @@ export function Gallery({ slug, name }: { slug: string; name: string }) {
               alt=""
               className="h-full w-full object-cover"
               variant={variant}
+              sizes="(min-width: 640px) 25vw, 50vw"
             />
           </button>
         ))}

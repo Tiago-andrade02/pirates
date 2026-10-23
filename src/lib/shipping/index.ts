@@ -22,8 +22,9 @@ export { CUSTOMER_SHIPPING_COST, isFreeShipping, shippingCostFor } from "./free-
 // implementados y se siguen usando para despacho y tracking, pero
 // quedan fuera del cálculo del precio al cliente.
 //
-// La ÚNICA modalidad de entrega es "a domicilio": el retiro en persona
-// está desactivado (ver ./pickup.ts).
+// Las modalidades vigentes son envío a domicilio y a sucursal de Correo
+// Argentino, ambas gratuitas; el retiro en persona está desactivado
+// (ver ./pickup.ts).
 // ═══════════════════════════════════════════════════════════════════
 
 function isProduction(): boolean {

@@ -1,0 +1,102 @@
+-- ============================================================================
+-- 002_catalog_presentaciones.sql
+--
+--  ⚠  NO EJECUTAR ESTE ARCHIVO.  ⚠
+--  Es SOLO REFERENCIA (todo el SQL está comentado a propósito). Si lo corrés,
+--  no hace absolutamente nada: no hay ninguna sentencia activa.
+--
+--  POR QUÉ: un archivo .sql de varias sentencias NO puede garantizar, por sí
+--  solo, que (a) cada UPDATE afecte exactamente una fila, (b) no quede una
+--  aplicación parcial si una guarda no se cumple, ni (c) una transacción real
+--  según el método con que se lo ejecute. Por eso la aplicación se hace con el
+--  runner transaccional en Node:
+--
+--      node scripts/apply-catalog-migration.mjs            # dry-run (ROLLBACK)
+--      node scripts/apply-catalog-migration.mjs --apply     # aplica (COMMIT)
+--
+--  El runner:
+--    - abre una transacción real y persistente (client.transaction),
+--    - comprueba invariante y precondiciones completas (precios Y stock),
+--    - exige 1 fila afectada por UPDATE,
+--    - verifica el estado final (precios, stock por talla, total e invariante),
+--    - COMMIT solo si todo pasa; ante cualquier fallo, ROLLBACK y código != 0.
+--  Estado y diff previos, en solo lectura: node scripts/catalog-audit.mjs
+--
+--  La FUENTE ÚNICA DE VERDAD del cambio es:
+--      src/lib/catalog-migration.ts  (CATALOG_CHANGES)
+--  La auditoría y el runner derivan de ahí; NO mantienen copias que puedan
+--  divergir.
+--
+--  PRECONDICIÓN ESTRICTA: el valor previo de jpg-le-beau.stock_30 debe
+--  verificarse contra Producción (auditoría de solo lectura) y configurarse en
+--  LE_BEAU_STOCK_30_BEFORE (src/lib/catalog-migration.ts). Mientras siga en
+--  `null` (= SIN VERIFICAR), el runner y la auditoría quedan BLOQUEADOS
+--  (código 5) y NO se escribe nada. No se inventa ese valor.
+--
+--  Cambio aprobado (precios en pesos; kingdom NO se toca):
+--    asad               : +30ml a 32990, stock_30 = 10 (10 u.)
+--    jpg-le-beau        : 30ml a 39990 con stock_30 = 10 (fijo, NO aditivo);
+--                         +50ml a 54990, stock_50 = 10
+--    erba-pura          : +30ml a 39990, stock_30 = 10
+--    jpg-le-male-elixir : +30ml a 39990 y +50ml a 54990, stock 10 en cada una
+--    eclaire            : retirar 30ml (price_30 = NULL), CONSERVAR stock_30 = 10
+--    hawas-tropical     : retirar 30ml (price_30 = NULL), CONSERVAR stock_30 = 10
+--
+--  Invariante preservada: stock = stock_30 + stock_50 + stock_100.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- Referencia (NO ACTIVO). El runner genera estos UPDATE con guardas y con el
+-- total recalculado como suma de las tallas finales.
+--
+-- BEGIN IMMEDIATE;
+--
+-- UPDATE perfumes
+--    SET price_30 = 32990,
+--        stock    = stock - stock_30 + 10,
+--        stock_30 = 10
+--  WHERE slug = 'asad' AND price_30 IS NULL AND stock_30 = 0;
+--
+-- UPDATE perfumes
+--    SET price_50 = 54990,
+--        stock    = stock - stock_30 + 10 - stock_50 + 10,
+--        stock_30 = 10,
+--        stock_50 = 10
+--  WHERE slug = 'jpg-le-beau'
+--    AND price_30 = 39990 AND price_50 IS NULL AND stock_50 = 0
+--    AND stock_30 = /* LE_BEAU_STOCK_30_BEFORE (verificado) */ ?;
+--
+-- UPDATE perfumes
+--    SET price_30 = 39990,
+--        stock    = stock - stock_30 + 10,
+--        stock_30 = 10
+--  WHERE slug = 'erba-pura' AND price_30 IS NULL AND stock_30 = 0;
+--
+-- UPDATE perfumes
+--    SET price_30 = 39990,
+--        price_50 = 54990,
+--        stock    = stock - stock_30 + 10 - stock_50 + 10,
+--        stock_30 = 10,
+--        stock_50 = 10
+--  WHERE slug = 'jpg-le-male-elixir'
+--    AND price_30 IS NULL AND price_50 IS NULL AND stock_30 = 0 AND stock_50 = 0;
+--
+-- UPDATE perfumes
+--    SET price_30 = NULL
+--  WHERE slug = 'eclaire' AND price_30 = 39990 AND stock_30 = 10;
+--
+-- UPDATE perfumes
+--    SET price_30 = NULL
+--  WHERE slug = 'hawas-tropical' AND price_30 = 32990 AND stock_30 = 10;
+--
+-- COMMIT;
+-- ---------------------------------------------------------------------------
+
+-- Verificación (solo lectura), por si se corre a mano:
+-- SELECT slug, price_30, price_50, price_100,
+--        stock, stock_30, stock_50, stock_100,
+--        stock - (stock_30 + stock_50 + stock_100) AS delta
+--   FROM perfumes
+--  WHERE slug IN ('asad','jpg-le-beau','erba-pura','jpg-le-male-elixir',
+--                 'eclaire','hawas-tropical','kingdom')
+--  ORDER BY slug;

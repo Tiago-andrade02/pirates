@@ -1,8 +1,8 @@
 import { getAdminProducts, getLowStockItems } from "@/lib/admin-data";
-import { productImageUrl } from "@/lib/images";
 import { updateProductStock, restockLow, requireAdminPage } from "../actions";
 import { formatARS } from "@/lib/format";
 import { PageHeader, Th, Td } from "@/components/admin/ui";
+import { ProductImage } from "@/components/ProductImage";
 import { CheckIcon } from "@/components/icons";
 
 export default async function AdminStockPage({
@@ -83,10 +83,11 @@ export default async function AdminStockPage({
                 >
                   <Td>
                     <span className="flex items-center gap-3">
-                      <img
-                        src={productImageUrl(p.image)}
+                      <ProductImage
+                        image={p.image}
                         alt=""
                         className="h-9 w-9 shrink-0 rounded-lg border border-line bg-background object-cover"
+                        sizes="36px"
                       />
                       <span className="min-w-0">
                         <span className="block truncate font-medium text-white">{p.name}</span>

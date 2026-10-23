@@ -56,6 +56,7 @@ export function CartView() {
                   image={item.image}
                   alt={item.name}
                   className="h-full w-full object-cover"
+                  sizes="(min-width: 640px) 112px, 72px"
                 />
               </Link>
 

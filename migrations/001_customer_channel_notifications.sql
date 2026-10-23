@@ -1,0 +1,33 @@
+-- Migración aditiva: idempotencia independiente por canal de la confirmación
+-- al comprador.
+--
+-- Agrega una columna de reclamo por CADA canal, para poder registrar por
+-- separado el email y el WhatsApp. Son NULLABLE y sin DEFAULT: los pedidos
+-- existentes quedan con NULL (= canal sin avisar todavía), sin alterar su
+-- estado ni disparar reenvíos retroactivos.
+--
+-- La columna legada `orders.customer_notified_at` NO se elimina ni se migra:
+-- queda como reclamo de los pedidos históricos. El código la interpreta como
+-- "ambos canales ya reclamados" (ver src/lib/notification-plan.ts), así que un
+-- pedido viejo con customer_notified_at no vuelve a notificar por ninguno de los
+-- dos canales.
+--
+-- ORDEN SEGURO DE APLICACIÓN (ver README):
+--   1. Aplicar ESTA migración primero. Solo agrega columnas nullable; el código
+--      viejo (que no las conoce) las ignora por completo.
+--   2. Recién después desplegar el código nuevo (que las lee y escribe).
+-- Aplicar al revés deja al código nuevo leyendo/escribiendo columnas inexistentes
+-- y rompe la finalización de pedidos hasta que la migración se aplique.
+--
+-- NOTA: desde que `src/lib/db.ts` incorporó las dos columnas a su `migrate()`
+-- (idempotente, chequeo por columna), el propio código también las crea al
+-- inicializar una base. Este script pasa a ser OPCIONAL: sirve para dejar las
+-- columnas migradas ANTES del deploy. Ambas vías son equivalentes, son
+-- idempotentes y no se pisan entre sí.
+--
+-- SQLite/libSQL NO soporta `ADD COLUMN IF NOT EXISTS`: este script se corre UNA
+-- sola vez. Si una columna ya existe, el motor devuelve "duplicate column name";
+-- eso significa que la migración ya se aplicó y no hay nada más que hacer.
+
+ALTER TABLE orders ADD COLUMN customer_email_notified_at TEXT;
+ALTER TABLE orders ADD COLUMN customer_whatsapp_notified_at TEXT;
