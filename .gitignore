@@ -58,3 +58,6 @@ auth-*
 .vercel
 .env*
 !.env.example
+
+# OpenNext Cloudflare build output
+/.open-next/
