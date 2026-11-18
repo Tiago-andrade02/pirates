@@ -1,6 +1,7 @@
 name: Generate npm lockfile
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - cf-workers-migration
