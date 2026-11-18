@@ -27,17 +27,23 @@ jobs:
         with:
           node-version: "24.22.1"
 
+      - name: Use the same npm version as Cloudflare
+        run: |
+          npm install --global npm@10.9.2
+          npm --version
+
       - name: Generate package-lock.json
         run: npm install --package-lock-only --ignore-scripts --legacy-peer-deps
 
       - name: Commit generated lockfile
         run: |
-          if git diff --quiet -- package-lock.json; then
-            echo "package-lock.json is already up to date"
-            exit 0
-          fi
+          test -f package-lock.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package-lock.json
+          if git diff --cached --quiet; then
+            echo "package-lock.json is already committed and up to date"
+            exit 0
+          fi
           git commit -m "chore: regenerate npm lockfile"
           git push origin cf-workers-migration
