@@ -3,9 +3,9 @@ import Link from "next/link";
 import { getBrandsWithCounts } from "@/lib/data";
 import { ArrowRightIcon } from "@/components/icons";
 
-// ISR (Etapa 1): caché con regeneración máxima cada 60 s. Se purga al instante
-// desde el admin cuando cambian productos/marcas (revalidatePublicCatalog).
-export const revalidate = 60;
+// Renderizado dinámico: las marcas consultan la DB en runtime. Evita que
+// `next build` abra `file:./data/pirates.db` o congele datos incompletos.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Marcas",

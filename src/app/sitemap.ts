@@ -3,11 +3,9 @@ import { getPerfumeSlugs } from "@/lib/data";
 
 const BASE = process.env.SITE_URL || "https://piratesarg.com";
 
-// Cacheable (Etapa 1): se regenera como máximo cada hora en lugar de emitir una
-// fecha nueva en cada solicitud. No se emite `lastModified`: la base no guarda
-// un timestamp de modificación de producto, así que cualquier fecha sería
-// inventada (y ensuciaría el rastreo de los buscadores).
-export const revalidate = 3600;
+// Dinámico: se genera en runtime para no consultar la DB durante `next build` ni
+// cachear un sitemap incompleto. No se emite `lastModified` inventado.
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [

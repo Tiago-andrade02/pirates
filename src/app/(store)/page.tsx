@@ -11,10 +11,9 @@ import {
   TruckIcon,
 } from "@/components/icons";
 
-// ISR (Etapa 1): la home se sirve desde caché y se regenera como máximo cada
-// 60 s. Las acciones del admin que cambian productos/precios/stock la purgan de
-// inmediato con revalidatePublicCatalog (src/app/admin/actions.ts).
-export const revalidate = 60;
+// Renderizado dinámico: la home consulta la DB en runtime. Evita que `next build`
+// abra `file:./data/pirates.db` o congele un catálogo incompleto en el bundle.
+export const dynamic = "force-dynamic";
 
 const BENEFITS = [
   {

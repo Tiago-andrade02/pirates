@@ -3,13 +3,10 @@ import { getBrands, getCatalog } from "@/lib/data";
 import { EMPTY_FILTERS } from "@/lib/catalog-filters";
 import { CatalogClient } from "@/components/CatalogClient";
 
-// ISR (Etapa 1 → Paso 2): el catálogo se prerenderiza una sola vez y se sirve
-// desde la caché (revalidación máxima cada 60 s). El filtrado, orden y búsqueda
-// corren en el navegador (CatalogClient) sobre los datos ya incluidos en la
-// página, así que ninguna combinación de filtros (?marca=…, ?talla=…) ejecuta la
-// función ni consulta Turso. Las acciones del admin purgan esta ruta al instante
-// vía revalidatePublicCatalog (src/lib/catalog-revalidation.ts).
-export const revalidate = 60;
+// Renderizado dinámico: el catálogo consulta la DB en runtime. Evita que
+// `next build` abra `file:./data/pirates.db` o congele un catálogo incompleto.
+// El filtrado, orden y búsqueda siguen corriendo en el navegador (CatalogClient).
+export const dynamic = "force-dynamic";
 
 // SEO: una única URL canónica (/perfumes). Las URLs con filtros se bloquean a
 // nivel de crawler en robots.ts ("/*?") para no generar miles de variantes.

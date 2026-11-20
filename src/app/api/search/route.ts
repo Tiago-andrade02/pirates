@@ -1,12 +1,9 @@
 import { getDb } from "@/lib/db";
 
-// Índice del buscador. Antes este handler consultaba Turso en cada petición
-// (una por tecla tipeada). Ahora es estático: se prerenderiza en el build, se
-// sirve desde la caché de Vercel y se revalida cada 60 s o al instante cuando el
-// admin cambia el catálogo (catalogPaths incluye /api/search). El cliente baja
-// la lista una vez y filtra en el navegador, así tipear no ejecuta funciones.
-export const dynamic = "force-static";
-export const revalidate = 60;
+// Índice del buscador. Dinámico: se genera en runtime para no consultar la DB
+// durante `next build` ni cachear un índice incompleto. El cliente baja la lista
+// una vez y filtra en el navegador, así tipear no ejecuta funciones.
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const db = await getDb();

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPerfumeBySlug, getRelated, getPerfumeSlugs } from "@/lib/data";
+import { getPerfumeBySlug, getRelated } from "@/lib/data";
 import type { Aroma, Occasion, Season } from "@/lib/types";
 import { Gallery } from "@/components/Gallery";
 import { AddToCart } from "@/components/AddToCart";
@@ -14,12 +14,11 @@ import { ArrowRightIcon } from "@/components/icons";
 // así que una ficha cacheada no puede vender una variante agotada.
 export const revalidate = 60;
 
-// Prerenderiza las fichas conocidas y deja el resto (productos nuevos) para
-// generación on-demand (dynamicParams por defecto). El admin purga cada slug
-// puntual vía revalidatePublicCatalog.
+// No prerenderiza fichas en build: la primera visita genera la ficha con datos
+// reales de runtime y luego se mantiene el ISR de 60 s. Evita que `next build`
+// abra `file:./data/pirates.db` o congele un catálogo incompleto.
 export async function generateStaticParams() {
-  const slugs = await getPerfumeSlugs();
-  return slugs.map((slug) => ({ slug }));
+  return [];
 }
 
 const GENDER_LABELS: Record<string, string> = {
